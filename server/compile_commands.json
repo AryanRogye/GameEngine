@@ -1,0 +1,14 @@
+[
+{
+  "directory": "/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/server/build",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/server/include -std=gnu++17 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk -o CMakeFiles/server.dir/src/main.cpp.o -c /Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/server/src/main.cpp",
+  "file": "/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/server/src/main.cpp",
+  "output": "CMakeFiles/server.dir/src/main.cpp.o"
+},
+{
+  "directory": "/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/server/build",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/server/include -std=gnu++17 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk -o CMakeFiles/server.dir/src/udp_server.cpp.o -c /Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/server/src/udp_server.cpp",
+  "file": "/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/server/src/udp_server.cpp",
+  "output": "CMakeFiles/server.dir/src/udp_server.cpp.o"
+}
+]

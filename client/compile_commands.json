@@ -1,0 +1,26 @@
+[
+{
+  "directory": "/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/build",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include/client -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include/core -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include/server -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include/shared -isystem /Library/Frameworks/SDL2.framework/Headers -iframework /Library/Frameworks -std=gnu++17 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk -o CMakeFiles/client.dir/src/client/client.cpp.o -c /Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/src/client/client.cpp",
+  "file": "/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/src/client/client.cpp",
+  "output": "CMakeFiles/client.dir/src/client/client.cpp.o"
+},
+{
+  "directory": "/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/build",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include/client -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include/core -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include/server -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include/shared -isystem /Library/Frameworks/SDL2.framework/Headers -iframework /Library/Frameworks -std=gnu++17 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk -o CMakeFiles/client.dir/src/client/packet.cpp.o -c /Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/src/client/packet.cpp",
+  "file": "/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/src/client/packet.cpp",
+  "output": "CMakeFiles/client.dir/src/client/packet.cpp.o"
+},
+{
+  "directory": "/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/build",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include/client -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include/core -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include/server -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include/shared -isystem /Library/Frameworks/SDL2.framework/Headers -iframework /Library/Frameworks -std=gnu++17 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk -o CMakeFiles/client.dir/src/shared/game.cpp.o -c /Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/src/shared/game.cpp",
+  "file": "/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/src/shared/game.cpp",
+  "output": "CMakeFiles/client.dir/src/shared/game.cpp.o"
+},
+{
+  "directory": "/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/build",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include/client -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include/core -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include/server -I/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/include/shared -isystem /Library/Frameworks/SDL2.framework/Headers -iframework /Library/Frameworks -std=gnu++17 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk -o CMakeFiles/client.dir/src/main.cpp.o -c /Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/src/main.cpp",
+  "file": "/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/client/src/main.cpp",
+  "output": "CMakeFiles/client.dir/src/main.cpp.o"
+}
+]

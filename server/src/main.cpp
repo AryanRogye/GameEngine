@@ -1,7 +1,6 @@
-#include <iostream>
+#include "udp_server.h"
 
-int main()
-{
-    std::cout << "Hello, World!" << std::endl;
+int main() {
+    UDPServer server = UDPServer();
     return 0;
 }
