@@ -45,9 +45,22 @@ bool Client::handlePlayerJoined(
     return false;
 }
 
-/** Not Yet Implimented **/
-bool Client::handlePlayerMoved()
+bool Client::handlePlayerMoved(
+    int id,
+    float x,
+    float y
+)
 {
+    // Create A Player Moved Object
+    PlayerMoved movedPlayer = PlayerMoved(id, x, y);
+    // Serialize The Player Object
+    uint8_t buffer[1024];
+    uint8_t offset = movedPlayer.serialize(buffer);
+    // Send The Serialized Data To The Server
+    if (!sendMessageToServer(offset, buffer)) {
+        std::cout << "there Was An Error Sending The PlayerMoved Object To The Server" << std::endl;
+        return false;
+    }
     return true;
 }
 

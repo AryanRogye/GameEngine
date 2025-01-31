@@ -8,6 +8,7 @@ PacketType Serializable::get_packet_type(const uint8_t *buffer, size_t *offset) 
     return type;
 }
 
+
 PlayerJoined::PlayerJoined(const std::string& name)
 {
     this->id = -1;
@@ -61,6 +62,13 @@ PlayerMoved::PlayerMoved(int id, float x, float y)
     this->x = x;
     this->y = y;
 }
+
+void PlayerMoved::setID(int id) { this->id = id; }
+int PlayerMoved::getID() const { return this->id; }
+void PlayerMoved::setX(float x) { this->x = x; }
+float PlayerMoved::getX() const { return this->x; }
+void PlayerMoved::setY(float y) { this->y = y; }
+float PlayerMoved::getY() const { return this->y; }
 
 size_t PlayerMoved::serialize(uint8_t *buffer)
 {

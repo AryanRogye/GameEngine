@@ -27,6 +27,7 @@ void Game::renderPlayer()
 void Game::start_game()
 {
     this->client->handlePlayerJoined(this->player->getName());
+    float oldX = this->player->getX(), oldY = this->player->getY();
     while(this->keep_window_open)
     {
         SDL_Event e;
@@ -37,22 +38,28 @@ void Game::start_game()
         SDL_RenderClear(renderer);
         
         // Constanty send Player Position to Server
-        this->updateServer();
+        this->updateServer(&oldX,&oldY);
 
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
     }
 }
 
-void Game::updateServer()
+void Game::updateServer(float *oldX, float *oldY)
 {
     this->renderPlayer();
+    // Only Call This if the Player has Moved
+    if(*oldX != this->player->getX() || *oldY != this->player->getY()) {
+        this->client->handlePlayerMoved(this->player->getId(), this->player->getX(), this->player->getY());
+        *oldX = this->player->getX();
+        *oldY = this->player->getY();
+    }
 }
 
 
 void Game::handleEvent(SDL_Event e)
 {
-    switch (e.type) 
+    switch (e.type)
     {
         case SDL_QUIT:
             this->keep_window_open = false;
@@ -60,24 +67,24 @@ void Game::handleEvent(SDL_Event e)
     }
     switch (e.key.keysym.sym) {
         case SDLK_w:
-            std::cout << "w pressed" << std::endl;
+            /*std::cout << "w pressed" << std::endl;*/
             // Move player up
-            this->player->setY(this->player->getY() - 1);
+            this->player->setY(this->player->getY() - this->player->getSpeed());
             break;
         case SDLK_a:
-            std::cout << "a pressed" << std::endl;
+            /*std::cout << "a pressed" << std::endl;*/
             // Move player left
-            this->player->setX(this->player->getX() - 1);
+            this->player->setX(this->player->getX() - this->player->getSpeed());
             break;
         case SDLK_s:
-            std::cout << "s pressed" << std::endl;
+            /*std::cout << "s pressed" << std::endl;*/
             // Move player down
-            this->player->setY(this->player->getY() + 1);
+            this->player->setY(this->player->getY() + this->player->getSpeed());
             break;
         case SDLK_d:
-            std::cout << "d pressed" << std::endl;
+            /*std::cout << "d pressed" << std::endl;*/
             // Move player right
-            this->player->setX(this->player->getX() + 1);
+            this->player->setX(this->player->getX() + this->player->getSpeed());
             break;
     }
 }

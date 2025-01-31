@@ -12,6 +12,7 @@
 enum PacketType 
 {
     PLAYER_JOINED,
+    ASSIGN_PLAYER_ID,
     PLAYER_MOVED,
 };
 
@@ -62,6 +63,22 @@ private:
     float y;
 public:
     PlayerMoved(int id = 0, float x = 0.0f, float y = 0.0f);
+    size_t serialize(uint8_t *buffer) override;
+    void deserialize(const uint8_t *buffer, size_t *offset) override;
+    void    setID(int id);
+    int     getID() const;
+    void    setX(float x);
+    float   getX() const;
+    void    setY(float y);
+    float   getY() const;
+};
+
+class AssignPlayerID : Serializable
+{
+private:
+    int id;
+public:
+    AssignPlayerID(int id = 0);
     size_t serialize(uint8_t *buffer) override;
     void deserialize(const uint8_t *buffer, size_t *offset) override;
 };

@@ -23,6 +23,6 @@ public:
     Client();
     ~Client();
     bool handlePlayerJoined(std::string name);
-    bool handlePlayerMoved();
+    bool handlePlayerMoved(int id, float x, float y);
     bool sendMessageToServer(size_t offset, uint8_t *buffer);
 };

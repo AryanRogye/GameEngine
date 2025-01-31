@@ -3,6 +3,7 @@
 #include <iostream>
 #include "client/client.h"
 #include "player.h"
+#include <unordered_map>
 
 
 class Game {
@@ -19,5 +20,5 @@ public:
     void initWindow();
     void initRenderer();
     void renderPlayer();
-    void updateServer();
+    void updateServer(float *oldX, float *oldY);
 };

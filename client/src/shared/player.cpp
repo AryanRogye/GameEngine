@@ -11,6 +11,8 @@ Player::Player(int id, const char* name)
     // Initialize the player's Widtht and Height
     this->width = 20;
     this->height = 20;
+    // Initialize the player's speed
+    this->speed = 5;
 }
 
 // Setter Functions
@@ -22,6 +24,7 @@ void Player::setY(float y) { this->position.y = y; }
 void Player::setID(int id) { this->id = id; }
 void Player::setWidth(int width) { this->width = width; }
 void Player::setHeight(int height) { this->height = height; }
+void Player::setSpeed(float speed) { this->speed = speed; }
 void Player::setName(const std::string& name) 
 {
     std::strncpy(this->name, name.c_str(), sizeof(this->name) - 1);
@@ -37,6 +40,7 @@ float       Player::getX() { return this->position.x; }
 float       Player::getY() { return this->position.y; }
 int         Player::getWidth() { return this->width; }
 int         Player::getHeight() { return this->height; }
+float       Player::getSpeed() { return this->speed; }
 
 
 

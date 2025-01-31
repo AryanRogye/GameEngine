@@ -1,7 +1,9 @@
 #include "udp_server.h"
+#include <cstdint>
 
 UDPServer::UDPServer()
 {
+
     this->nextPlayerId = 0;
     this->players = std::vector<Player>();
     this ->client_addr_len = sizeof(client_addr);
@@ -9,7 +11,6 @@ UDPServer::UDPServer()
     setupServerAdress();
     bindSocket();
     std::thread t(&UDPServer::listenForClients, this);
-    
     // This is to make sure that the main thread waits for the listenForClients thread to finish
     t.join();
 }
@@ -93,32 +94,58 @@ void UDPServer::listenForClients()
                 exit(EXIT_FAILURE);
             }
         }
-        /** 
-         * Over Here Need to Deserialize the data and then
-         * figure out what the packetType is
-         **/
-        size_t offset = 0;
-        switch(Serializable::get_packet_type(reinterpret_cast<uint8_t*>(this->buffer), &offset)) 
-        {
-            case PacketType::PLAYER_JOINED:
-                std::cout << "Player Joined" << std::endl;
-                handlePlayerJoined(reinterpret_cast<uint8_t*>(buffer), &offset);
-                break;
-            case PacketType::PLAYER_MOVED:
-                std::cout << "Player Moved" << std::endl;
-                break;
-            default:
-                std::cout << "Unknown Packet Type" << std::endl;
-                break;
-        }
-
-        /*// Send a response back to the client*/
-        /*const char *msg = "Hello from server";*/
-        /*sendto(this->sockfd, msg, strlen(msg), 0, (const struct sockaddr *)&this->client_addr, this->client_addr_len);*/
+        sockaddr_in clientCopy = client_addr;
+        std::thread(&UDPServer::handlePacket, this, std::vector<uint8_t>(buffer, buffer + n), clientCopy).detach();
     }
 }
 
-void UDPServer::handlePlayerJoined(uint8_t* buffer, size_t *offset) 
+void UDPServer::handlePacket(std::vector<uint8_t>packetData, sockaddr_in clientAddr)
+{
+    size_t offset = 0;
+    PacketType packetType = Serializable::get_packet_type(packetData.data(), &offset);
+
+
+    switch (packetType) 
+    {
+        case PacketType::PLAYER_JOINED:
+            handlePlayerJoined(packetData.data(), &offset, clientAddr);
+            break;
+        case PacketType::PLAYER_MOVED:
+            std::cout << "Player Moved" << std::endl;
+            /*handlePlayerMoved(packetData.data(), &offset);*/
+            break;
+        default:
+            std::cout << "Unknown Packet Type" << std::endl;
+            break;
+    }
+}
+
+void UDPServer::handlePlayerMoved(uint8_t* buffer, size_t *offset) 
+{
+    // Create A Player Moved Object
+    PlayerMoved movedPlayer = PlayerMoved();
+    // Deserialize the buffer and offset into the player object
+    movedPlayer.deserialize(buffer, offset);
+    // Need to read the buffer and offset to get the values of the player
+    // Find the player in the players vector
+    // Update the player's position
+    // Send the updated player position to all the clients
+    sendAllClientsPosition(movedPlayer.getID());
+}
+
+void UDPServer::sendAllClientsPosition(int avoidPlayerID)
+{
+    for (auto const& player : this->clientAddresses)
+    {
+        if (player.first != avoidPlayerID)
+        {
+            // For Now Print All THe IDS were going to send the position to
+            std::cout << "Sending Position to Player: " << player.first << std::endl;
+        }
+    }
+}
+
+void UDPServer::handlePlayerJoined(uint8_t* buffer, size_t *offset, sockaddr_in clientAddr) 
 {
     // Create A Player Joined Object
     PlayerJoined joinedPlayer = PlayerJoined("");
@@ -127,8 +154,11 @@ void UDPServer::handlePlayerJoined(uint8_t* buffer, size_t *offset)
     // Need to read the buffer and offset to get the values of the player
     // Generate A Unique ID for the player
     generateUnqiuePlayerId(&joinedPlayer);
-    std::cout << "Player ID: " << joinedPlayer.getID() << std::endl;
-    std::cout << "Player Name: " << joinedPlayer.getName() << std::endl;
+    // Add the player addresses to the map
+    this->clientAddresses[joinedPlayer.getID()] = clientAddr;
+
+    // Print the player's name and ID
+    std::cout << "Player Joined: " << joinedPlayer.getName() << " ID: " << joinedPlayer.getID() << std::endl;
 }
 
 void UDPServer::generateUnqiuePlayerId(PlayerJoined* joinedPlayer)

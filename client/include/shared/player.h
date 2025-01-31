@@ -15,6 +15,7 @@ private:
     int score;
     Position position;
     int width, height;
+    float speed;
 public:
     // Constructor
     Player(int id, const char* name);
@@ -28,6 +29,7 @@ public:
     void setID(int id);
     void setWidth(int width);
     void setHeight(int height);
+    void setSpeed(float speed);
 
     // Getters
     int         getId();
@@ -38,6 +40,7 @@ public:
     float       getY();
     int         getWidth();
     int         getHeight();
+    float         getSpeed();
 
     // Debug
     void print();

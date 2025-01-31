@@ -21,6 +21,8 @@ private:
     struct sockaddr_in client_addr;
     char buffer[1024];
     socklen_t client_addr_len;
+    // Map player IDs to client addresses
+    std::unordered_map<int, sockaddr_in> clientAddresses;
     std::vector<Player> players;
     int nextPlayerId;
 public:
@@ -34,6 +36,9 @@ public:
     socklen_t getClientAddrLen() const ;
     std::vector<Player> getPlayers() const;
     int getNextPlayerId() const;
+    // Getters For Client Addresses
+    sockaddr_in getClientAddress(int playerID);
+    std::unordered_map<int, sockaddr_in> getClientAddresses();
     // #########################################
     // Setters
     // #########################################
@@ -50,8 +55,11 @@ public:
     void setupServerAdress();
     void bindSocket();
     void listenForClients();
-    void handlePlayerJoined(uint8_t* buffer, size_t *offset);
+    void handlePlayerJoined(uint8_t* buffer, size_t *offset, sockaddr_in clientAddr);
     void addPlayer(Player player);
     void generateUnqiuePlayerId(PlayerJoined* joinedPlayer);
+    void handlePacket(std::vector<uint8_t>buffer, sockaddr_in client_addr);
+    void handlePlayerMoved(uint8_t* buffer, size_t *offset);
+    void sendAllClientsPosition(int avoidPlayerID);
 };
 
