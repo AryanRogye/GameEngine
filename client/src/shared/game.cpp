@@ -36,7 +36,6 @@ void Game::start_game()
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
         
-        this->renderPlayer();
         // Constanty send Player Position to Server
         this->updateServer();
 
@@ -47,7 +46,7 @@ void Game::start_game()
 
 void Game::updateServer()
 {
-
+    this->renderPlayer();
 }
 
 

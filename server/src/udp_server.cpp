@@ -127,14 +127,14 @@ void UDPServer::handlePlayerJoined(uint8_t* buffer, size_t *offset)
     // Need to read the buffer and offset to get the values of the player
     // Generate A Unique ID for the player
     generateUnqiuePlayerId(&joinedPlayer);
-    std::cout << "Player ID: " << joinedPlayer.get_id() << std::endl;
-    std::cout << "Player Name: " << joinedPlayer.get_name() << std::endl;
+    std::cout << "Player ID: " << joinedPlayer.getID() << std::endl;
+    std::cout << "Player Name: " << joinedPlayer.getName() << std::endl;
 }
 
 void UDPServer::generateUnqiuePlayerId(PlayerJoined* joinedPlayer)
 {
     int player_id = this->getNextPlayerId();
     this->setNextPlayerId(++player_id);
-    joinedPlayer->set_id(player_id);
+    joinedPlayer->setID(player_id);
 }
 
