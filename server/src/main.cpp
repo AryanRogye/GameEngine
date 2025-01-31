@@ -1,6 +1,7 @@
 #include "udp_server.h"
 
-int main() {
+int main() 
+{
     UDPServer server = UDPServer();
     return 0;
 }

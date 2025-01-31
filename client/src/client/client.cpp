@@ -5,16 +5,16 @@
 #include <sys/_types/_socklen_t.h>
 #include <sys/socket.h>
 
+/** Deconstructor For The Client Class **/
 Client::~Client() 
 {
     close(this->sockfd);
 }
 
-Player* Client::getPlayer()
-{
-    return this->player;
-}
+/** Get The Player Object **/
+Player* Client::getPlayer() { return this->player; }
 
+/** Client Constructor Main Logic For Client In Here **/
 Client::Client() 
 {
     this->player = new Player(0, "Player 1");
@@ -34,11 +34,15 @@ Client::Client()
     int n;
     socklen_t len;
 
-    // Listen for incoming Messages From The Server
+    // Listen for incoming Messages From The Server in a new thread
     std::thread t(&Client::listenToServer, this);
     t.detach();
 }
 
+/** 
+ * This Function is For Listening To The Server
+ * This Function Will Run In A Seperate Thread
+ **/
 void Client::listenToServer()
 {
     while(true)
@@ -63,6 +67,11 @@ void Client::listenToServer()
     }
 }
 
+/** 
+ * This Function is For Handling The Recieved Packet
+ * This Function Will Figure Out What The Packet Type is
+ * And Call The Correct Function To Handle The Packet
+ **/
 void Client::handleRecievedPacket(uint8_t* buffer,ssize_t bytesRecieved)
 {
     // Figure Out What The Packet Type is
@@ -117,6 +126,10 @@ bool Client::handlePlayerJoined(
     return false;
 }
 
+/** 
+ * This Function is For Handling When The Player Moves
+ * This Function Will Send The PlayerMoved Object To The Server
+ **/
 bool Client::handlePlayerMoved(
     int id,
     float x,
@@ -136,6 +149,12 @@ bool Client::handlePlayerMoved(
     return true;
 }
 
+/** 
+ * This Function is For Sending A Message To The Server
+ * This Function Will Send The Message To The Server
+ * This is used by every other function to send data to the server
+ * TODO : Change to private
+ **/
 bool Client::sendMessageToServer(size_t offset, uint8_t *buffer) 
 {
     if (!offset || !buffer)

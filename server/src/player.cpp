@@ -1,27 +1,46 @@
 #include "player.h"
 
-Player::Player() {}
-Player::Player(char* name, int id, int score) {}
-Player::Player(char* name, int id) {}
-Player::Player(char* name) {}
+Player::Player(int id, const char* name) 
+{
+    // Initialize the player's position
+    this->position = {20, 20};
+    // Initialize the player's id
+    this->id = id;
+    // Initialize the player's name
+    this->setName(name);
+    // Initialize the player's Widtht and Height
+    this->width = 20;
+    this->height = 20;
+    // Initialize the player's speed
+    this->speed = 5;
+}
 
-char* Player::getName() {
-    return this->name;
-}
-int   Player::getId() {
-    return this->id;
-}
-int   Player::getScore() {
-    return this->score;
-}
-
-void  Player::setName(const std::string& name) {
+// Setter Functions
+void Player::setScore(int score) { this->score = score; }
+void Player::setPosition(float x, float y) { this->position = {x, y}; }
+void Player::setPosition(Position position) { this->position = position; }
+void Player::setX(float x) { this->position.x = x; }
+void Player::setY(float y) { this->position.y = y; }
+void Player::setID(int id) { this->id = id; }
+void Player::setWidth(int width) { this->width = width; }
+void Player::setHeight(int height) { this->height = height; }
+void Player::setSpeed(float speed) { this->speed = speed; }
+void Player::setName(const std::string& name) 
+{
     std::strncpy(this->name, name.c_str(), sizeof(this->name) - 1);
     this->name[sizeof(this->name) - 1] = '\0';
 }
-void  Player::setId(int id) {
-    this->id = id;
-}
-void  Player::setScore(int score) {
-    this->score = score;
-}
+
+// Getter Functions
+int         Player::getId() { return this->id; }
+const char* Player::getName() { return this->name; }
+int         Player::getScore() { return this->score; }
+Position    Player::getPosition() { return this->position; }
+float       Player::getX() { return this->position.x; }
+float       Player::getY() { return this->position.y; }
+int         Player::getWidth() { return this->width; }
+int         Player::getHeight() { return this->height; }
+float       Player::getSpeed() { return this->speed; }
+
+
+

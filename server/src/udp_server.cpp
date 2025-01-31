@@ -2,12 +2,14 @@
 #include "packet.h"
 #include <cstdint>
 
+/** Constructor **/
 UDPServer::UDPServer()
 {
-
+    // Initialize The Server Variables
     this->nextPlayerId = 0;
     this->players = std::vector<Player>();
-    this ->client_addr_len = sizeof(client_addr);
+    this ->client_addr_len = sizeof(this->client_addr);
+    // Start Server Functions
     createUDPSocket();
     setupServerAdress();
     bindSocket();
@@ -16,23 +18,28 @@ UDPServer::UDPServer()
     t.join();
 }
 
-int UDPServer::getSockfd() const { return this->sockfd; }
-struct sockaddr_in UDPServer::getServerAddr() const { return server_addr; }
-struct sockaddr_in UDPServer::getClientAddr() const { return client_addr; }
-socklen_t UDPServer::getClientAddrLen() const { return client_addr_len; }
+// Getters For the UDP Server Class
+int                 UDPServer::getSockfd() const { return this->sockfd; }
+struct sockaddr_in  UDPServer::getServerAddr() const { return server_addr; }
+struct sockaddr_in  UDPServer::getClientAddr() const { return client_addr; }
+socklen_t           UDPServer::getClientAddrLen() const { return client_addr_len; }
 std::vector<Player> UDPServer::getPlayers() const { return players; }
-int UDPServer::getNextPlayerId() const { return nextPlayerId; }
+int                 UDPServer::getNextPlayerId() const { return nextPlayerId; }
 
+// Setters For the UDP Server Class
 void UDPServer::setSockfd(int sockfd) { this->sockfd = sockfd; }
 void UDPServer::setServerAddr(struct sockaddr_in server_addr) { this->server_addr = server_addr; }
 void UDPServer::setClientAddr(struct sockaddr_in client_addr) { this->client_addr = client_addr;}
 void UDPServer::setPlayers(std::vector<Player> players) { this->players = players; }
 void UDPServer::setNextPlayerId(int nextPlayerId) { this->nextPlayerId = nextPlayerId; }
 // #########################################
-// Methods
+// Class Level Function Implementations
 // #########################################
+
+/** Create The UDP Socket **/
 void UDPServer::createUDPSocket()
 {
+    // Create a UDP socket
     if ((this->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) 
     {
         perror("socket creation failed");
@@ -45,10 +52,12 @@ void UDPServer::createUDPSocket()
     // Set the socket to non-blocking mode
     int flags = fcntl(this->sockfd, F_GETFL, 0);
     fcntl(this->sockfd, F_SETFL, flags | O_NONBLOCK);
-
+    
+    // Clear the server address structure
     memset(&this->server_addr, 0, sizeof(this->server_addr));
 }
 
+/** Setup The Server Address **/
 void UDPServer::setupServerAdress()
 {
     // Set up the server address structure
@@ -57,6 +66,7 @@ void UDPServer::setupServerAdress()
     this->server_addr.sin_port = htons(PORT);
 }
 
+/** Bind The Socket **/
 void UDPServer::bindSocket()
 {
     // Bind the socket to the specified address and port
@@ -67,6 +77,7 @@ void UDPServer::bindSocket()
     }
 }
 
+/** Listen For Clients **/
 void UDPServer::listenForClients()
 {
     std::cout << "Server listening on port " << PORT << std::endl;
@@ -95,13 +106,17 @@ void UDPServer::listenForClients()
                 exit(EXIT_FAILURE);
             }
         }
+        // Create a copy of the client address
         sockaddr_in clientCopy = client_addr;
+        // Handle the packet in a new thread
         std::thread(&UDPServer::handlePacket, this, std::vector<uint8_t>(buffer, buffer + n), clientCopy).detach();
     }
 }
 
+/** Handle Packet **/
 void UDPServer::handlePacket(std::vector<uint8_t>packetData, sockaddr_in clientAddr)
 {
+    // Get The Packet Type And Handle it based on what it is
     size_t offset = 0;
     PacketType packetType = Serializable::get_packet_type(packetData.data(), &offset);
 
@@ -111,8 +126,7 @@ void UDPServer::handlePacket(std::vector<uint8_t>packetData, sockaddr_in clientA
         case PacketType::PLAYER_JOINED:
             handlePlayerJoined(packetData.data(), &offset, clientAddr);
             break;
-        case PacketType::PLAYER_MOVED:
-            /*std::cout << "Player Moved" << std::endl;*/
+        case PacketType::PLAYER_MOVED: // TODO <- Work in this
             handlePlayerMoved(packetData.data(), &offset);
             break;
         default:
@@ -121,6 +135,11 @@ void UDPServer::handlePacket(std::vector<uint8_t>packetData, sockaddr_in clientA
     }
 }
 
+/** 
+ * This Function will handle the movement of the player
+ * will send to the other clients the position of the player
+ * so that they can update the position of the player on their screen
+ **/
 void UDPServer::handlePlayerMoved(uint8_t* buffer, size_t *offset) 
 {
     // Create A Player Moved Object
@@ -135,6 +154,7 @@ void UDPServer::handlePlayerMoved(uint8_t* buffer, size_t *offset)
     /*sendAllClientsPosition(movedPlayer.getID());*/
 }
 
+/** Send All Clients Position **/
 void UDPServer::sendAllClientsPosition(int avoidPlayerID)
 {
     for (auto const& player : this->clientAddresses)
@@ -147,6 +167,7 @@ void UDPServer::sendAllClientsPosition(int avoidPlayerID)
     }
 }
 
+/** Handle Player Joined **/
 void UDPServer::handlePlayerJoined(uint8_t* buffer, size_t *offset, sockaddr_in clientAddr) 
 {
     // Create A Player Joined Object
@@ -164,6 +185,7 @@ void UDPServer::handlePlayerJoined(uint8_t* buffer, size_t *offset, sockaddr_in 
     sendPlayerID(joinedPlayer.getID(), clientAddr);
 }
 
+/** Send Player ID **/
 bool UDPServer::sendPlayerID(int playerID, sockaddr_in clientAddr)
 {
     AssignPlayerID assignedID = AssignPlayerID(playerID);
@@ -181,6 +203,7 @@ bool UDPServer::sendPlayerID(int playerID, sockaddr_in clientAddr)
     return true;
 }
 
+/** Send Message To Client **/
 bool UDPServer::sendMessageToClient(size_t offset, uint8_t* buffer, sockaddr_in clientAddr)
 {
     if (!offset || !buffer)
@@ -206,6 +229,7 @@ bool UDPServer::sendMessageToClient(size_t offset, uint8_t* buffer, sockaddr_in 
     return true;
 }
 
+/** Generate Unique Player ID **/
 void UDPServer::generateUnqiuePlayerId(PlayerJoined* joinedPlayer)
 {
     int player_id = this->getNextPlayerId();

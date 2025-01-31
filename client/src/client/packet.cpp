@@ -1,6 +1,13 @@
 #include "packet.h"
 
-PacketType Serializable::get_packet_type(const uint8_t *buffer, size_t *offset) {
+/**
+ * Figure Out What the Packet Type is
+ * @param buffer: The buffer that contains the packet
+ * @param offset: The offset in the buffer where the packet type is located
+ *  This gets updated to the next offset so that you can continue reading the rest of the packet
+ **/
+PacketType Serializable::get_packet_type(const uint8_t *buffer, size_t *offset) 
+{
     // The First Byte of the buffer is the packet type
     PacketType type;
     std::memcpy(&type, buffer, sizeof(type));
@@ -8,7 +15,11 @@ PacketType Serializable::get_packet_type(const uint8_t *buffer, size_t *offset) 
     return type;
 }
 
+// ############################################################
+// ############# Player Joined Implementation #################
+// ############################################################
 
+/** Init A Player Joined Object with a name **/
 PlayerJoined::PlayerJoined(const std::string& name)
 {
     this->id = -1;
@@ -16,17 +27,21 @@ PlayerJoined::PlayerJoined(const std::string& name)
     std::strncpy(this->name, name.c_str(), sizeof(this->name) - 1);
 }
 
+/** Init A Player Joined Object with an id and name **/
 PlayerJoined::PlayerJoined(int id, const std::string& name) : id(id)
 {
     std::memset(this->name, 0, sizeof(this->name));
     std::strncpy(this->name, name.c_str(), sizeof(this->name) - 1);
 }
 
+// Setters for PlayerJoined
 void PlayerJoined::setID(int id) { this->id = id; }
-int PlayerJoined::getID() const { return this->id; }
 void PlayerJoined::setName(const std::string& name) { std::strncpy(this->name, name.c_str(), sizeof(this->name) - 1); }
+// Getters for PlayerJoined
+int PlayerJoined::getID() const { return this->id; }
 std::string PlayerJoined::getName() const { return std::string(this->name); }
 
+/** Serialize the PlayerJoined Packet **/
 size_t PlayerJoined::serialize(uint8_t* buffer)
 {
     size_t offset = 0;
@@ -45,6 +60,7 @@ size_t PlayerJoined::serialize(uint8_t* buffer)
     return offset;
 }
 
+/** Deserialize the PlayerJoined Packet **/
 void PlayerJoined::deserialize(const uint8_t *buffer, size_t *offset)
 {
     // Deserialize id
@@ -56,6 +72,11 @@ void PlayerJoined::deserialize(const uint8_t *buffer, size_t *offset)
     *offset += sizeof(this->name);
 }
 
+// ############################################################
+// ############### PlayerMoved Implementation #################
+// ############################################################
+
+/** Init The Player Moved with an id and x,y positions **/
 PlayerMoved::PlayerMoved(int id, float x, float y) 
 {
     this->id = id;
@@ -63,13 +84,16 @@ PlayerMoved::PlayerMoved(int id, float x, float y)
     this->y = y;
 }
 
+// Setters for PlayerMoved
 void PlayerMoved::setID(int id) { this->id = id; }
-int PlayerMoved::getID() const { return this->id; }
 void PlayerMoved::setX(float x) { this->x = x; }
-float PlayerMoved::getX() const { return this->x; }
 void PlayerMoved::setY(float y) { this->y = y; }
+// Getters for PlayerMoved
+int PlayerMoved::getID() const { return this->id; }
+float PlayerMoved::getX() const { return this->x; }
 float PlayerMoved::getY() const { return this->y; }
 
+/** Serialize the PlayerMoved Packet **/
 size_t PlayerMoved::serialize(uint8_t *buffer)
 {
     size_t offset = 0;
@@ -92,6 +116,7 @@ size_t PlayerMoved::serialize(uint8_t *buffer)
     return offset;
 }
 
+/** Deserialize the PlayerMoved Packet **/
 void PlayerMoved::deserialize(const uint8_t *buffer, size_t *offset)
 {
     // Deserialize id
@@ -107,11 +132,19 @@ void PlayerMoved::deserialize(const uint8_t *buffer, size_t *offset)
     *offset += sizeof(this->y);
 }
 
+// ############################################################
+// ############# AssignID Implementation ######################
+// ############################################################
+
+/** Init The AssignPlayerID with an id **/
 AssignPlayerID::AssignPlayerID(int id) 
 {
     this->id = id;
 }
+// Getters for AssignPlayerID
 int AssignPlayerID::getID() const { return this->id; }
+
+/** Serialize the AssignPlayerID Packet **/
 size_t AssignPlayerID::serialize(uint8_t *buffer)
 {
     size_t offset = 0;
@@ -127,6 +160,7 @@ size_t AssignPlayerID::serialize(uint8_t *buffer)
     return offset;
 }
 
+/** Deserialize the AssignPlayerID Packet **/
 void AssignPlayerID::deserialize(const uint8_t *buffer, size_t *offset)
 {
     // Deserialize id
