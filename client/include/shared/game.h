@@ -4,6 +4,7 @@
 #include "client/client.h"
 #include "player.h"
 #include <unordered_map>
+#include <thread>
 
 
 class Game {
@@ -12,7 +13,6 @@ private:
     SDL_Renderer *renderer;
     bool keep_window_open;
     Client *client;
-    Player *player;
 public:
     Game();
     void start_game();

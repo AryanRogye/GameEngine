@@ -81,6 +81,7 @@ public:
     AssignPlayerID(int id = 0);
     size_t serialize(uint8_t *buffer) override;
     void deserialize(const uint8_t *buffer, size_t *offset) override;
+    int getID() const;
 };
 
 #endif

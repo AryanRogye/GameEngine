@@ -1,4 +1,5 @@
 #include "udp_server.h"
+#include "packet.h"
 #include <cstdint>
 
 UDPServer::UDPServer()
@@ -111,8 +112,8 @@ void UDPServer::handlePacket(std::vector<uint8_t>packetData, sockaddr_in clientA
             handlePlayerJoined(packetData.data(), &offset, clientAddr);
             break;
         case PacketType::PLAYER_MOVED:
-            std::cout << "Player Moved" << std::endl;
-            /*handlePlayerMoved(packetData.data(), &offset);*/
+            /*std::cout << "Player Moved" << std::endl;*/
+            handlePlayerMoved(packetData.data(), &offset);
             break;
         default:
             std::cout << "Unknown Packet Type" << std::endl;
@@ -126,11 +127,12 @@ void UDPServer::handlePlayerMoved(uint8_t* buffer, size_t *offset)
     PlayerMoved movedPlayer = PlayerMoved();
     // Deserialize the buffer and offset into the player object
     movedPlayer.deserialize(buffer, offset);
+    std::cout << "Player ID That Moved: " << movedPlayer.getID() << std::endl;
     // Need to read the buffer and offset to get the values of the player
     // Find the player in the players vector
     // Update the player's position
     // Send the updated player position to all the clients
-    sendAllClientsPosition(movedPlayer.getID());
+    /*sendAllClientsPosition(movedPlayer.getID());*/
 }
 
 void UDPServer::sendAllClientsPosition(int avoidPlayerID)
@@ -156,9 +158,52 @@ void UDPServer::handlePlayerJoined(uint8_t* buffer, size_t *offset, sockaddr_in 
     generateUnqiuePlayerId(&joinedPlayer);
     // Add the player addresses to the map
     this->clientAddresses[joinedPlayer.getID()] = clientAddr;
-
     // Print the player's name and ID
     std::cout << "Player Joined: " << joinedPlayer.getName() << " ID: " << joinedPlayer.getID() << std::endl;
+    // We Want to Send the player their assigned ID
+    sendPlayerID(joinedPlayer.getID(), clientAddr);
+}
+
+bool UDPServer::sendPlayerID(int playerID, sockaddr_in clientAddr)
+{
+    AssignPlayerID assignedID = AssignPlayerID(playerID);
+
+    // Serialize the assignedID object
+    uint8_t buffer[1024];
+    uint8_t offset = assignedID.serialize(buffer);
+
+    // Send the assignedID object to the client
+    if (!sendMessageToClient(offset, buffer, clientAddr))
+    {
+        std::cout << "Failed to send player ID to client" << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool UDPServer::sendMessageToClient(size_t offset, uint8_t* buffer, sockaddr_in clientAddr)
+{
+    if (!offset || !buffer)
+    {
+        return false;
+    }
+    // Send the buffer to the client
+    ssize_t bytesSent = sendto(
+        this->sockfd,          // Socket file descriptor
+        buffer,                // Data to send
+        offset,                // Length of data
+        0,                     // Flags (0 for default)
+        (struct sockaddr*)&clientAddr, // Client address
+        sizeof(clientAddr)     // Size of client address
+    );
+
+    // Check if the data was sent successfully
+    if (bytesSent < 0) {
+        std::cerr << "Error sending data to client: " << strerror(errno) << std::endl;
+        return false;
+    }
+
+    return true;
 }
 
 void UDPServer::generateUnqiuePlayerId(PlayerJoined* joinedPlayer)

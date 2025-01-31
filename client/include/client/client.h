@@ -6,6 +6,7 @@
 #include "packet.h"
 #include <string.h>
 #include "thread"
+#include "player.h"
 
 // Create a UDP Socket
 // Bind the socket to the server address
@@ -19,10 +20,15 @@ private:
     char buffer[1024];
     struct sockaddr_in serverAddress;
     std::string helloMessage = "Hello from client";
+    Player* player;
 public:
     Client();
     ~Client();
+    Player* getPlayer();
     bool handlePlayerJoined(std::string name);
     bool handlePlayerMoved(int id, float x, float y);
     bool sendMessageToServer(size_t offset, uint8_t *buffer);
+    void listenToServer();
+    void handleRecievedPacket(uint8_t* buffer,ssize_t bytesRecieved);
+    void handleIDRecieved(uint8_t* buffer,ssize_t bytesRecieved, size_t* offset);
 };

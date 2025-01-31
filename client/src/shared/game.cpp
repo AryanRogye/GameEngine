@@ -1,7 +1,6 @@
 #include "shared/game.h"
 
 Game::Game() {
-    this->player = new Player(0, "Player 1");
     this->client = new Client();
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -16,18 +15,21 @@ Game::Game() {
 void Game::renderPlayer()
 {
     SDL_Rect playerRect;
-    playerRect.x = this->player->getX();
-    playerRect.y = this->player->getY();
-    playerRect.w = this->player->getWidth();
-    playerRect.h = this->player->getHeight();
+    Player* player = this->client->getPlayer();
+    playerRect.x = player->getX();
+    playerRect.y = player->getY();
+    playerRect.w = player->getWidth();
+    playerRect.h = player->getHeight();
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderFillRect(renderer, &playerRect);
 }
 
 void Game::start_game()
 {
-    this->client->handlePlayerJoined(this->player->getName());
-    float oldX = this->player->getX(), oldY = this->player->getY();
+    this->client->handlePlayerJoined(this->client->getPlayer()->getName());
+    float oldX = this->client->getPlayer()->getX();
+    float oldY = this->client->getPlayer()->getY();
+
     while(this->keep_window_open)
     {
         SDL_Event e;
@@ -48,17 +50,19 @@ void Game::start_game()
 void Game::updateServer(float *oldX, float *oldY)
 {
     this->renderPlayer();
+    Player* player = this->client->getPlayer();
     // Only Call This if the Player has Moved
-    if(*oldX != this->player->getX() || *oldY != this->player->getY()) {
-        this->client->handlePlayerMoved(this->player->getId(), this->player->getX(), this->player->getY());
-        *oldX = this->player->getX();
-        *oldY = this->player->getY();
+    if(*oldX != player->getX() || *oldY != player->getY()) {
+        this->client->handlePlayerMoved(player->getId(), player->getX(), player->getY());
+        *oldX = player->getX();
+        *oldY = player->getY();
     }
 }
 
 
 void Game::handleEvent(SDL_Event e)
 {
+    Player *player = this->client->getPlayer();
     switch (e.type)
     {
         case SDL_QUIT:
@@ -67,24 +71,24 @@ void Game::handleEvent(SDL_Event e)
     }
     switch (e.key.keysym.sym) {
         case SDLK_w:
-            /*std::cout << "w pressed" << std::endl;*/
+            std::cout << "w pressed" << std::endl;
             // Move player up
-            this->player->setY(this->player->getY() - this->player->getSpeed());
+            player->setY(player->getY() - player->getSpeed());
             break;
         case SDLK_a:
-            /*std::cout << "a pressed" << std::endl;*/
+            std::cout << "a pressed" << std::endl;
             // Move player left
-            this->player->setX(this->player->getX() - this->player->getSpeed());
+            player->setX(player->getX() - player->getSpeed());
             break;
         case SDLK_s:
-            /*std::cout << "s pressed" << std::endl;*/
+            std::cout << "s pressed" << std::endl;
             // Move player down
-            this->player->setY(this->player->getY() + this->player->getSpeed());
+            player->setY(player->getY() + player->getSpeed());
             break;
         case SDLK_d:
-            /*std::cout << "d pressed" << std::endl;*/
+            std::cout << "d pressed" << std::endl;
             // Move player right
-            this->player->setX(this->player->getX() + this->player->getSpeed());
+            player->setX(player->getX() + player->getSpeed());
             break;
     }
 }

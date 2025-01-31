@@ -106,3 +106,33 @@ void PlayerMoved::deserialize(const uint8_t *buffer, size_t *offset)
     std::memcpy(&this->y, buffer + *offset, sizeof(this->y));
     *offset += sizeof(this->y);
 }
+
+AssignPlayerID::AssignPlayerID(int id) 
+{
+    this->id = id;
+}
+
+int AssignPlayerID::getID() const { return this->id; }
+
+size_t AssignPlayerID::serialize(uint8_t *buffer)
+{
+    size_t offset = 0;
+    // Serialize The Enum cooresponding to the packet type
+    PacketType type = PacketType::ASSIGN_PLAYER_ID;
+    std::memcpy(buffer + offset, &type, sizeof(type));
+    offset += sizeof(type);
+
+    // Serialize id
+    std::memcpy(buffer + offset, &this->id, sizeof(this->id));
+    offset += sizeof(this->id);
+
+    return offset;
+}
+
+void AssignPlayerID::deserialize(const uint8_t *buffer, size_t *offset)
+{
+    // Deserialize id
+    std::memcpy(&this->id, buffer + *offset, sizeof(this->id));
+    *offset += sizeof(this->id);
+}
+

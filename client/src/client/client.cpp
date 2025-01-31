@@ -9,8 +9,15 @@ Client::~Client()
 {
     close(this->sockfd);
 }
+
+Player* Client::getPlayer()
+{
+    return this->player;
+}
+
 Client::Client() 
 {
+    this->player = new Player(0, "Player 1");
     // Create Socket File Descriptor
     if ( (this->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) 
     {
@@ -26,6 +33,71 @@ Client::Client()
 
     int n;
     socklen_t len;
+
+    // Listen for incoming Messages From The Server
+    std::thread t(&Client::listenToServer, this);
+    t.detach();
+}
+
+void Client::listenToServer()
+{
+    while(true)
+    {
+        uint8_t buffer[1024];
+        socklen_t serverAddressLength = sizeof(this->serverAddress);
+        ssize_t bytesReceived = recvfrom(
+            this->sockfd,
+            buffer,
+            1024,
+            0,
+            (struct sockaddr *) &this->serverAddress,
+            &serverAddressLength
+        );
+
+        if (bytesReceived < 0)
+        {
+            std::cerr << "Error Receiving Data From The Server" << std::endl;
+            continue;
+        }
+        this->handleRecievedPacket(buffer, bytesReceived);
+    }
+}
+
+void Client::handleRecievedPacket(uint8_t* buffer,ssize_t bytesRecieved)
+{
+    // Figure Out What The Packet Type is
+    size_t offset = 0;
+    PacketType packetType =Serializable::get_packet_type(buffer, &offset);
+    
+    switch (packetType)
+    {
+        case PacketType::PLAYER_JOINED:
+            break;
+        case PacketType::PLAYER_MOVED:
+            break;
+        case PacketType::ASSIGN_PLAYER_ID:
+            std::cout << "Got Player ID From Server" << std::endl;
+            handleIDRecieved(buffer, bytesRecieved, &offset);
+            break;
+        default:
+            std::cout << "Unknown Packet Type" << std::endl;
+            break;
+    }
+}
+
+/** 
+ * This Function is For When The Server Sends Over The ID of the Player
+ * This is cuz the server will assign the ID of the player based on the
+ * what the server has stored in the database
+ **/
+void Client::handleIDRecieved(uint8_t* buffer, ssize_t bytesRecieved, size_t* offset)
+{
+    AssignPlayerID assignPlayerID = AssignPlayerID();
+    assignPlayerID.deserialize(buffer, offset);
+
+    // Print The ID That was Assigned To the user
+    std::cout << "Player ID: " << assignPlayerID.getID() << std::endl;
+    this->player->setID(assignPlayerID.getID());
 }
 
 bool Client::handlePlayerJoined(
