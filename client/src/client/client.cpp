@@ -1,15 +1,17 @@
 #include "client/client.h"
-#include "packet.h"
-#include "player.h"
-#include <cstdint>
-#include <cstring>
-#include <sys/_types/_socklen_t.h>
-#include <sys/socket.h>
 
 /** Deconstructor For The Client Class **/
 Client::~Client() 
 {
     close(this->sockfd);
+
+    // Lock to safely delete player objects
+    std::lock_guard<std::mutex> lock(this->playersMutex);
+
+    for (Player* player : this->players) {
+        delete player;  // Free memory for each Player
+    }
+    this->players.clear();
 }
 
 /** Get The Player Object **/
@@ -18,8 +20,10 @@ Player* Client::getPlayer() { return this->player; }
 /** Client Constructor Main Logic For Client In Here **/
 Client::Client() 
 {
+    // Initialize The Player Object
     this->player = new Player(0, "Player 1");
-    std::vector<Player*> players = std::vector<Player*>();
+
+    this->players = std::vector<Player*>();
     // Create Socket File Descriptor
     if ( (this->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) 
     {
@@ -39,6 +43,8 @@ Client::Client()
     // Listen for incoming Messages From The Server in a new thread
     std::thread t(&Client::listenToServer, this);
     t.detach();
+
+    // Add A Listener for the players inside the client
 }
 
 /** 
@@ -100,13 +106,15 @@ void Client::handleRecievedPacket(uint8_t* buffer,ssize_t bytesRecieved)
         case PacketType::SEND_NEW_PLAYER_EXISTING_CLIENTS:
             std::cout << "A New Player Has Joined The Game" << std::endl;
             std::cout << "Need To Add Him To The Screen.. Wait" << std::endl;
+            handleNewPlayerJoined(buffer, bytesRecieved, &offset);
             break;
+
         case PacketType::PLAYER_JOINED:
             std::cout << "!!!!!!!!!!!THIS SHOULD NOT GET CALLED BADDDDDD" << std::endl;
-            /*handleNewPlayerJoined(buffer, bytesRecieved, &offset);*/
             break;
         case PacketType::PLAYER_MOVED:
             std::cout << "Some Other Player Moved" << std::endl;
+            this->handleOtherPlayersMoved(buffer, bytesRecieved, &offset);
             break;
         case PacketType::ASSIGN_PLAYER_ID:
             std::cout << "Got Player ID From Server" << std::endl;
@@ -118,6 +126,28 @@ void Client::handleRecievedPacket(uint8_t* buffer,ssize_t bytesRecieved)
     }
 }
 
+/** 
+ * This Function is For Handling When Other Players Move
+ **/
+void Client::handleOtherPlayersMoved(uint8_t* buffer, ssize_t bytesRecieved, size_t* offset)
+{
+    PlayerMoved playerMoved = PlayerMoved();
+    playerMoved.deserialize(buffer, offset);
+
+    // Lock The Players Vector While Looping
+    std::lock_guard<std::mutex> lock(this->playersMutex);
+    for (Player* p : this->players)
+    {
+        if (p->getID() == playerMoved.getID())
+        {
+            p->setX(playerMoved.getX());
+            p->setY(playerMoved.getY());
+            return;  // Found and updated the player; exit the function.
+        }
+    }
+    std::cout << "Player with ID " << playerMoved.getID() << " not found." << std::endl;
+}
+
 void Client::handleNewPlayerJoined(uint8_t* buffer,ssize_t bytesRecieved,size_t* offset)
 {
     PlayerJoined playerJoined = PlayerJoined();
@@ -125,13 +155,11 @@ void Client::handleNewPlayerJoined(uint8_t* buffer,ssize_t bytesRecieved,size_t*
 
     // Add The New Player To The List Of Players
     Player* newPlayer = new Player(playerJoined.getID(), playerJoined.getName().c_str());
-    this->players.push_back(newPlayer);
-    std::cout << "========================" << std::endl;
-    std::cout << "Printing All Players Now" << std::endl;
-    std::cout << "========================" << std::endl;
-    for (Player* player : this->players)
+
     {
-        std::cout << "Player ID: " << player->getID() << " Player Name: " << player->getName() << std::endl;
+        // Lock The Vector for safe modification
+        std::lock_guard<std::mutex> lock(this->playersMutex);
+        this->players.push_back(newPlayer);
     }
 }
 
@@ -150,9 +178,7 @@ void Client::handleIDRecieved(uint8_t* buffer, ssize_t bytesRecieved, size_t* of
     this->player->setID(assignPlayerID.getID());
 }
 
-bool Client::handlePlayerJoined(
-    std::string name
-)
+bool Client::handlePlayerJoined(std::string name)
 {
     // Create A PlayerJoined Object 
     PlayerJoined joinedPlayer = PlayerJoined(name);
@@ -164,7 +190,18 @@ bool Client::handlePlayerJoined(
         std::cout << "there Was An Error Sending The PlayerJoined Object To The Server" << std::endl;
         return false;
     }
-    return false;
+    return true;
+}
+
+const std::vector<Player*>& Client::getPlayers()
+{
+    std::lock_guard<std::mutex> lock(this->playersMutex);
+    return this->players;
+}
+std::vector<Player*> Client::getPlayersSafe() 
+{
+    std::lock_guard<std::mutex> lock(this->playersMutex);
+    return this->players; // returns a copy, safe for iteration
 }
 
 /** 

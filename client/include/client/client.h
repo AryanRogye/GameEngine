@@ -5,7 +5,8 @@
 #include <unistd.h>
 #include "packet.h"
 #include <string.h>
-#include "thread"
+#include <thread>
+#include <mutex>
 #include "player.h"
 
 #define MAX_PLAYERS 10
@@ -24,10 +25,12 @@ private:
     std::string helloMessage = "Hello from client";
     Player* player;
     std::vector<Player*> players;
+    std::mutex playersMutex;
 public:
     Client();
     ~Client();
     Player* getPlayer();
+    const std::vector<Player*>& getPlayers();
     bool handlePlayerJoined(std::string name);
     bool handlePlayerMoved(int id, float x, float y);
     bool sendMessageToServer(size_t offset, uint8_t *buffer);
@@ -35,4 +38,6 @@ public:
     void handleRecievedPacket(uint8_t* buffer,ssize_t bytesRecieved);
     void handleIDRecieved(uint8_t* buffer,ssize_t bytesRecieved, size_t* offset);
     void handleNewPlayerJoined(uint8_t* buffer,ssize_t bytesRecieved,size_t* offset);
+    void handleOtherPlayersMoved(uint8_t* buffer,ssize_t bytesRecieved,size_t* offset);
+    std::vector<Player*> getPlayersSafe();
 };

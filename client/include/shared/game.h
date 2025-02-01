@@ -21,4 +21,12 @@ public:
     void initRenderer();
     void renderPlayer();
     void updateServer(float *oldX, float *oldY);
+    void renderOtherPlayers();
+    
+    // Color functions
+    void drawGreen();
+    void drawBlue();
+    void drawRed();
+    void drawYellow();
 };
+

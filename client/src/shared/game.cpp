@@ -24,6 +24,31 @@ void Game::renderPlayer()
     SDL_RenderFillRect(renderer, &playerRect);
 }
 
+void Game::drawGreen() { SDL_SetRenderDrawColor(this->renderer, 0, 255, 0, 255); }
+void Game::drawBlue() { SDL_SetRenderDrawColor(this->renderer, 0, 0, 255, 255); }
+void Game::drawRed() { SDL_SetRenderDrawColor(this->renderer, 255, 0, 0, 255); }
+void Game::drawYellow() { SDL_SetRenderDrawColor(this->renderer, 255, 255, 0, 255); }
+
+
+void Game::renderOtherPlayers()
+{
+    const auto& remotePlayers = this->client->getPlayersSafe();
+    // Set Different Color For Remote Players
+    this->drawGreen();
+
+    for (Player* remotePlayer : remotePlayers)
+    {
+        if (!remotePlayer) { continue; }
+
+        SDL_Rect remotePlayerRect;
+        remotePlayerRect.x = remotePlayer->getX();
+        remotePlayerRect.y = remotePlayer->getY();
+        remotePlayerRect.w = remotePlayer->getWidth();
+        remotePlayerRect.h = remotePlayer->getHeight();
+        SDL_RenderFillRect(renderer, &remotePlayerRect);
+    }
+}
+
 void Game::start_game()
 {
     this->client->handlePlayerJoined(this->client->getPlayer()->getName());
@@ -33,14 +58,17 @@ void Game::start_game()
     while(this->keep_window_open)
     {
         SDL_Event e;
-        while(SDL_PollEvent(&e)){
-            this->handleEvent(e);
-        }
+
+        while(SDL_PollEvent(&e)){ this->handleEvent(e); }
+
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
         
         // Constanty send Player Position to Server
         this->updateServer(&oldX,&oldY);
+
+        this->renderPlayer();
+        this->renderOtherPlayers();
 
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
@@ -49,7 +77,6 @@ void Game::start_game()
 
 void Game::updateServer(float *oldX, float *oldY)
 {
-    this->renderPlayer();
     Player* player = this->client->getPlayer();
     // Only Call This if the Player has Moved
     if(*oldX != player->getX() || *oldY != player->getY()) {
