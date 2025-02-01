@@ -83,6 +83,7 @@ void Client::handleRecievedPacket(uint8_t* buffer,ssize_t bytesRecieved)
         case PacketType::PLAYER_JOINED:
             break;
         case PacketType::PLAYER_MOVED:
+            std::cout << "Some Other Player Moved" << std::endl;
             break;
         case PacketType::ASSIGN_PLAYER_ID:
             std::cout << "Got Player ID From Server" << std::endl;
@@ -168,5 +169,19 @@ bool Client::sendMessageToServer(size_t offset, uint8_t *buffer)
         0,
         (const struct sockaddr *) &this->serverAddress, sizeof(this->serverAddress)
     );
-    return bytesSent != -1;  // Fix: Proper error checking for sendto()
+
+    // Check if the data was sent successfully
+    if (bytesSent < 0) 
+    {
+        std::cerr << "Error sending data to client: " << strerror(errno) << std::endl;
+        return false;
+    }
+
+    // Check For Partial Data being sent
+    if (bytesSent != offset)
+    {
+        std::cerr << "Partial Data send to client: " << bytesSent << " out of " << offset << std::endl;
+    }
+
+    return true;
 }

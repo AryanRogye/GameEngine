@@ -146,25 +146,44 @@ void UDPServer::handlePlayerMoved(uint8_t* buffer, size_t *offset)
     PlayerMoved movedPlayer = PlayerMoved();
     // Deserialize the buffer and offset into the player object
     movedPlayer.deserialize(buffer, offset);
-    std::cout << "Player ID That Moved: " << movedPlayer.getID() << std::endl;
     // Need to read the buffer and offset to get the values of the player
     // Find the player in the players vector
     // Update the player's position
     // Send the updated player position to all the clients
-    /*sendAllClientsPosition(movedPlayer.getID());*/
+    sendAllClientsPosition(movedPlayer);
 }
 
 /** Send All Clients Position **/
-void UDPServer::sendAllClientsPosition(int avoidPlayerID)
+void UDPServer::sendAllClientsPosition(PlayerMoved movedPlayer)
 {
     for (auto const& player : this->clientAddresses)
     {
-        if (player.first != avoidPlayerID)
+        if (player.first != movedPlayer.getID())
         {
             // For Now Print All THe IDS were going to send the position to
             std::cout << "Sending Position to Player: " << player.first << std::endl;
+            // Send The Postions To The Player
+            if(!sendPlayerPosition(movedPlayer, player.second))
+            {
+                std::cout << "Failed To Send Position To Player: " << player.first << std::endl;
+                continue;
+            }
         }
     }
+}
+
+bool UDPServer::sendPlayerPosition(PlayerMoved movedPlayer,const sockaddr_in& clientAddr)
+{
+    // Serialize The Player Moved Enum
+    uint8_t buffer[1024];
+    size_t offset = movedPlayer.serialize(buffer);
+    
+    if (!sendMessageToClient(offset, buffer, clientAddr))
+    {
+        std::cout << "Failed to send player position to client" << std::endl;
+        return false;
+    }
+    return true;
 }
 
 /** Handle Player Joined **/
@@ -221,9 +240,16 @@ bool UDPServer::sendMessageToClient(size_t offset, uint8_t* buffer, sockaddr_in 
     );
 
     // Check if the data was sent successfully
-    if (bytesSent < 0) {
+    if (bytesSent < 0) 
+    {
         std::cerr << "Error sending data to client: " << strerror(errno) << std::endl;
         return false;
+    }
+
+    // Check For Partial Data being sent
+    if (bytesSent != offset)
+    {
+        std::cerr << "Partial Data send to client: " << bytesSent << " out of " << offset << std::endl;
     }
 
     return true;

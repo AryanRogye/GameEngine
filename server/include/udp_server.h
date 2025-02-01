@@ -60,8 +60,9 @@ public:
     void generateUnqiuePlayerId(PlayerJoined* joinedPlayer);
     void handlePacket(std::vector<uint8_t>buffer, sockaddr_in client_addr);
     void handlePlayerMoved(uint8_t* buffer, size_t *offset);
-    void sendAllClientsPosition(int avoidPlayerID);
+    void sendAllClientsPosition(PlayerMoved movedPlayer);
     bool sendPlayerID(int playerID, sockaddr_in clientAddr);
     bool sendMessageToClient(size_t offset, uint8_t* buffer, sockaddr_in clientAddr);
+    bool sendPlayerPosition(PlayerMoved movedPlayer,const sockaddr_in& clientAddr);
 };
 
