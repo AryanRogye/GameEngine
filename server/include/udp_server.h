@@ -64,5 +64,7 @@ public:
     bool sendPlayerID(int playerID, sockaddr_in clientAddr);
     bool sendMessageToClient(size_t offset, uint8_t* buffer, sockaddr_in clientAddr);
     bool sendPlayerPosition(PlayerMoved movedPlayer,const sockaddr_in& clientAddr);
+    bool sendAllClientsNewPlayerJoined(PlayerJoined joinedPlayer);
+    bool sendNewPlayerExistingClientInformation(PlayerJoined joinedPlayer, sockaddr_in clientAddr);
 };
 

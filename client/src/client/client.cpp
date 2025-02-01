@@ -1,5 +1,6 @@
 #include "client/client.h"
 #include "packet.h"
+#include "player.h"
 #include <cstdint>
 #include <cstring>
 #include <sys/_types/_socklen_t.h>
@@ -18,6 +19,7 @@ Player* Client::getPlayer() { return this->player; }
 Client::Client() 
 {
     this->player = new Player(0, "Player 1");
+    std::vector<Player*> players = std::vector<Player*>();
     // Create Socket File Descriptor
     if ( (this->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) 
     {
@@ -80,7 +82,28 @@ void Client::handleRecievedPacket(uint8_t* buffer,ssize_t bytesRecieved)
     
     switch (packetType)
     {
+        /** 
+         * This is Used For The New Player
+         * To Get Information About The Existing Players
+         **/
+        case PacketType::SEND_EXISTING_CLIENTS_NEW_PLAYER:
+            std::cout << "Just Recieved Data About Other Clients" << std::endl;
+            std::cout << "processing...." << std::endl;
+            break;
+    
+        /** 
+         * This Is When A New Player Has Joined The Game 
+         * This is really used for the existing players to know
+         * when a new player has joined the game
+         **/
+
+        case PacketType::SEND_NEW_PLAYER_EXISTING_CLIENTS:
+            std::cout << "A New Player Has Joined The Game" << std::endl;
+            std::cout << "Need To Add Him To The Screen.. Wait" << std::endl;
+            break;
         case PacketType::PLAYER_JOINED:
+            std::cout << "!!!!!!!!!!!THIS SHOULD NOT GET CALLED BADDDDDD" << std::endl;
+            /*handleNewPlayerJoined(buffer, bytesRecieved, &offset);*/
             break;
         case PacketType::PLAYER_MOVED:
             std::cout << "Some Other Player Moved" << std::endl;
@@ -92,6 +115,23 @@ void Client::handleRecievedPacket(uint8_t* buffer,ssize_t bytesRecieved)
         default:
             std::cout << "Unknown Packet Type" << std::endl;
             break;
+    }
+}
+
+void Client::handleNewPlayerJoined(uint8_t* buffer,ssize_t bytesRecieved,size_t* offset)
+{
+    PlayerJoined playerJoined = PlayerJoined();
+    playerJoined.deserialize(buffer, offset);
+
+    // Add The New Player To The List Of Players
+    Player* newPlayer = new Player(playerJoined.getID(), playerJoined.getName().c_str());
+    this->players.push_back(newPlayer);
+    std::cout << "========================" << std::endl;
+    std::cout << "Printing All Players Now" << std::endl;
+    std::cout << "========================" << std::endl;
+    for (Player* player : this->players)
+    {
+        std::cout << "Player ID: " << player->getID() << " Player Name: " << player->getName() << std::endl;
     }
 }
 

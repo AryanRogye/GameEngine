@@ -9,11 +9,14 @@
 #include <iostream>
 #include <pthread/qos.h>
 
+
 enum PacketType 
 {
     PLAYER_JOINED,
     ASSIGN_PLAYER_ID,
     PLAYER_MOVED,
+    SEND_NEW_PLAYER_EXISTING_CLIENTS,
+    SEND_EXISTING_CLIENTS_NEW_PLAYER,
 };
 
 class Serializable
@@ -82,6 +85,29 @@ public:
     size_t serialize(uint8_t *buffer) override;
     void deserialize(const uint8_t *buffer, size_t *offset) override;
     int getID() const;
+};
+
+    /*SEND_PLAYER_EXISTING_PLAYERS,*/
+    /*SEND_EXISTING_PLAYERS_NEW_PLAYERS,*/
+class SendExistingClientsToNewPlayer : Serializable
+{
+private:
+    std::vector<int> player_ids;
+public:
+    SendExistingClientsToNewPlayer(std::vector<int> player_ids = {});
+    SendExistingClientsToNewPlayer(int num_players, int *player_ids);
+    size_t serialize(uint8_t *buffer) override;
+    void deserialize(const uint8_t *buffer, size_t *offset) override;
+};
+
+class SendToExisitingClientsNewPlayer : Serializable
+{
+private:
+    int id;
+public:
+    SendToExisitingClientsNewPlayer(int id = 0);
+    size_t serialize(uint8_t *buffer) override;
+    void deserialize(const uint8_t *buffer, size_t *offset) override;
 };
 
 #endif

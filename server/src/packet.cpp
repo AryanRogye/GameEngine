@@ -168,3 +168,73 @@ void AssignPlayerID::deserialize(const uint8_t *buffer, size_t *offset)
     *offset += sizeof(this->id);
 }
 
+
+// ############################################################
+// ############# SendExistingClientsToNewPlayer Implementation ############
+// ############################################################
+
+SendExistingClientsToNewPlayer::SendExistingClientsToNewPlayer(std::vector<int> player_ids)
+{
+    this->player_ids = player_ids;
+}
+
+size_t SendExistingClientsToNewPlayer::serialize(uint8_t *buffer)
+{
+    size_t offset = 0;
+    // Serialize The Enum cooresponding to the packet type
+    PacketType type = PacketType::SEND_EXISTING_CLIENTS_NEW_PLAYER;
+    std::memcpy(buffer + offset, &type, sizeof(type));
+    offset += sizeof(type);
+
+    // Serialize The number of players
+    int num_players = this->player_ids.size();
+    std::memcpy(buffer + offset, &num_players, sizeof(num_players));
+    offset += sizeof(num_players);
+
+    // Serialize player_ids
+    for (int id : this->player_ids)
+    {
+        std::memcpy(buffer + offset, &id, sizeof(id));
+        offset += sizeof(id);
+    }
+
+    return offset;
+}
+
+void SendExistingClientsToNewPlayer::deserialize(const uint8_t *buffer, size_t *offset)
+{
+    // Deserialize player_ids
+    while (*offset < sizeof(buffer))
+    {
+        int id;
+        std::memcpy(&id, buffer + *offset, sizeof(id));
+        this->player_ids.push_back(id);
+        *offset += sizeof(id);
+    }
+}
+
+SendToExisitingClientsNewPlayer::SendToExisitingClientsNewPlayer(int id)
+{
+    this->id = id;
+}
+
+size_t SendToExisitingClientsNewPlayer::serialize(uint8_t *buffer)
+{
+    // Serialize The Enum cooresponding to the packet type
+    PacketType type = PacketType::SEND_NEW_PLAYER_EXISTING_CLIENTS;
+    std::memcpy(buffer, &type, sizeof(type));
+    size_t offset = sizeof(type);
+
+    // Serialize id
+    std::memcpy(buffer + offset, &this->id, sizeof(this->id));
+    offset += sizeof(this->id);
+    
+    return offset;
+}
+
+void SendToExisitingClientsNewPlayer::deserialize(const uint8_t *buffer, size_t *offset)
+{
+    // Deserialize id
+    std::memcpy(&this->id, buffer + *offset, sizeof(this->id));
+    *offset += sizeof(this->id);
+}

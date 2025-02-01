@@ -8,6 +8,8 @@
 #include "thread"
 #include "player.h"
 
+#define MAX_PLAYERS 10
+
 // Create a UDP Socket
 // Bind the socket to the server address
 // Send a message to the server
@@ -21,6 +23,7 @@ private:
     struct sockaddr_in serverAddress;
     std::string helloMessage = "Hello from client";
     Player* player;
+    std::vector<Player*> players;
 public:
     Client();
     ~Client();
@@ -31,4 +34,5 @@ public:
     void listenToServer();
     void handleRecievedPacket(uint8_t* buffer,ssize_t bytesRecieved);
     void handleIDRecieved(uint8_t* buffer,ssize_t bytesRecieved, size_t* offset);
+    void handleNewPlayerJoined(uint8_t* buffer,ssize_t bytesRecieved,size_t* offset);
 };

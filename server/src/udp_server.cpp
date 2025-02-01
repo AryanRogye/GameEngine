@@ -126,7 +126,7 @@ void UDPServer::handlePacket(std::vector<uint8_t>packetData, sockaddr_in clientA
         case PacketType::PLAYER_JOINED:
             handlePlayerJoined(packetData.data(), &offset, clientAddr);
             break;
-        case PacketType::PLAYER_MOVED: // TODO <- Work in this
+        case PacketType::PLAYER_MOVED:
             handlePlayerMoved(packetData.data(), &offset);
             break;
         default:
@@ -202,7 +202,68 @@ void UDPServer::handlePlayerJoined(uint8_t* buffer, size_t *offset, sockaddr_in 
     std::cout << "Player Joined: " << joinedPlayer.getName() << " ID: " << joinedPlayer.getID() << std::endl;
     // We Want to Send the player their assigned ID
     sendPlayerID(joinedPlayer.getID(), clientAddr);
+
+    // If Other Players Exist
+    if (this->clientAddresses.size() > 1)
+    {
+        // First Step is To Tell All The Current Users That a New Player Has Joined
+        sendAllClientsNewPlayerJoined(joinedPlayer);
+        // Second Step is to send the new player the information about the other players
+        sendNewPlayerExistingClientInformation(joinedPlayer, clientAddr);
+    } 
+    else 
+    {
+        std::cout << "Your The First One Here" << std::endl;
+    }
+
 }
+
+/** 
+ * This Function Sends The New Client Information about the existing clients
+ **/
+bool UDPServer::sendNewPlayerExistingClientInformation(PlayerJoined joinedPlayer, sockaddr_in clientAddr)
+{
+    std::vector<int> playerIDs;
+    for (auto const& player : this->clientAddresses)
+    {
+        if (player.first != joinedPlayer.getID()) playerIDs.push_back(player.first);
+    }
+    SendExistingClientsToNewPlayer sendExistingClients = SendExistingClientsToNewPlayer(playerIDs);
+    uint8_t buffer[1024];
+    size_t offset = sendExistingClients.serialize(buffer);
+
+    if(!sendMessageToClient(offset, buffer, clientAddr))
+    {
+        std::cout << "Failed to send existing clients to new player" << std::endl;
+        return false;
+    }
+    return true;
+}
+
+/** 
+ * This Function Sends All The Clients that are currently in the game
+ * information about the new client that just joined
+ **/
+bool UDPServer::sendAllClientsNewPlayerJoined(PlayerJoined joinedPlayer) // TODO: Gonna take a break <- Come Back To This Spot
+{
+    SendToExisitingClientsNewPlayer sendExistingClients = SendToExisitingClientsNewPlayer(joinedPlayer.getID());
+    uint8_t buffer[1024];
+    size_t offset = sendExistingClients.serialize(buffer);
+    // Now we need to send the information to all the clients
+    for (auto const& player : this->clientAddresses)
+    {
+        if (player.first != joinedPlayer.getID())
+        {
+            if(!sendMessageToClient(offset, buffer, player.second))
+            {
+                std::cout << "Failed to send new player to existing clients" << std::endl;
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 
 /** Send Player ID **/
 bool UDPServer::sendPlayerID(int playerID, sockaddr_in clientAddr)

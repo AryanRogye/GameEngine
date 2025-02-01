@@ -53,7 +53,7 @@ void Game::updateServer(float *oldX, float *oldY)
     Player* player = this->client->getPlayer();
     // Only Call This if the Player has Moved
     if(*oldX != player->getX() || *oldY != player->getY()) {
-        this->client->handlePlayerMoved(player->getId(), player->getX(), player->getY());
+        this->client->handlePlayerMoved(player->getID(), player->getX(), player->getY());
         *oldX = player->getX();
         *oldY = player->getY();
     }

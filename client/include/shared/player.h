@@ -32,7 +32,7 @@ public:
     void setSpeed(float speed);
 
     // Getters
-    int         getId();
+    int         getID();
     const char* getName();
     int         getScore();
     Position    getPosition();
