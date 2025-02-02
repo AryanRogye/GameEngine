@@ -3,7 +3,9 @@
 Player::Player(int id, const char* name) 
 {
     // Initialize the player's position
-    this->position = {20, 20};
+    this->position = {
+        WIDTH / 2, HEIGHT / 2
+    };
     // Initialize the player's id
     this->id = id;
     // Initialize the player's name

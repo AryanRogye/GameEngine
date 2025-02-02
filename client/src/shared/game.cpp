@@ -1,4 +1,5 @@
 #include "shared/game.h"
+#include "configs.h"
 #include <SDL2/SDL_render.h>
 #include <SDL_hints.h>
 #include <fstream>
@@ -22,9 +23,10 @@ void Game::renderPlayer()
     SDL_Rect playerRect;
     Player* player = this->client->getPlayer();
 
+    int windowWidth = WIDTH; 
+    int windowHeight = HEIGHT;
     // Calculate camera offset based on the player’s position
-    int windowWidth = 800; // or get this from your window
-    int windowHeight = 600;
+    // Basically is the center of the player
     int camX = player->getX() + player->getWidth() / 2 - windowWidth / 2;
     int camY = player->getY() + player->getHeight() / 2 - windowHeight / 2;
 
@@ -51,16 +53,17 @@ void Game::renderOtherPlayers()
 
     // Calculate camera offset based on the local player's position
     Player* localPlayer = this->client->getPlayer();
-    int windowWidth = 800;
-    int windowHeight = 600;
+    int windowWidth = WIDTH;
+    int windowHeight = HEIGHT;
     int camX = localPlayer->getX() + localPlayer->getWidth() / 2 - windowWidth / 2;
     int camY = localPlayer->getY() + localPlayer->getHeight() / 2 - windowHeight / 2;
 
     for (Player* remotePlayer : remotePlayers)
     {
         if (!remotePlayer) { continue; }
-
         SDL_Rect remotePlayerRect;
+        // Placing The Remote Players in a place relative to where the person
+        // is in the game not the screen
         remotePlayerRect.x = remotePlayer->getX() - camX;
         remotePlayerRect.y = remotePlayer->getY() - camY;
         remotePlayerRect.w = remotePlayer->getWidth();
@@ -79,12 +82,6 @@ void Game::start_game()
 
     float oldX = this->client->getPlayer()->getX();
     float oldY = this->client->getPlayer()->getY();
-
-    // Camera Controls
-    // Get the player’s center position.
-    
-    int playerCenterX = this->client->getPlayer()->getX() + this->client->getPlayer()->getWidth() / 2;
-    int playerCenterY = this->client->getPlayer()->getY() + this->client->getPlayer()->getX() + this->client->getPlayer()->getHeight() / 2;
 
     // Load Map
     std::string currentPath = __FILE__;
@@ -206,6 +203,29 @@ void Game::initializeTiles() {
     }
 }
 
+// Temp Data
+std::vector<int> row1 = {
+    0x01,
+    0x02,
+    0x03,
+    0x04,
+    0x05,
+    0x06,
+    0x07,
+    0x08,
+    0x09,
+    0x0A,
+    0x0B,
+    0x0C,
+    0x0D,
+    0x0E,
+    0x0F,
+};
+/** 
+ * This File Will Contain The Map Data
+ * The Map Data will have a value from
+ * 0x00 - 0xFF
+ **/
 void Game::parseMap(std::string path)
 {
     std::cout << "File Path: " << path << std::endl;
@@ -216,16 +236,22 @@ void Game::parseMap(std::string path)
         return;
     }
     std::string line;
-    while(std::getline(file, line))
+    while (std::getline(file, line))
     {
         std::vector<int> row;
-        for (char c: line)
+        std::istringstream iss(line);
+        std::string cell;
+        
+        // Read each hex value (separated by whitespace)
+        while (iss >> cell)
         {
-            if (c >= '0' && c <= '9')
-            {
-                row.push_back(c - '0');
-            } else {
-                row.push_back(-1);
+            try {
+                // Convert the hex string to an integer
+                int cellValue = std::stoi(cell, nullptr, 16);
+                row.push_back(cellValue);
+            }
+            catch(const std::exception &e) {
+                std::cerr << "Error converting '" << cell << "': " << e.what() << std::endl;
             }
         }
         this->mapData.push_back(row);

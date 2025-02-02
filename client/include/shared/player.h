@@ -3,6 +3,7 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 #include <iostream>
+#include "configs.h"
 struct Position {
     float x;
     float y;
