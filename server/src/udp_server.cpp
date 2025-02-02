@@ -160,8 +160,6 @@ void UDPServer::sendAllClientsPosition(PlayerMoved movedPlayer)
     {
         if (player.first != movedPlayer.getID())
         {
-            // For Now Print All THe IDS were going to send the position to
-            std::cout << "Sending Position to Player: " << player.first << std::endl;
             // Send The Postions To The Player
             if(!sendPlayerPosition(movedPlayer, player.second))
             {
@@ -198,10 +196,13 @@ void UDPServer::handlePlayerJoined(uint8_t* buffer, size_t *offset, sockaddr_in 
     generateUnqiuePlayerId(&joinedPlayer);
     // Add the player addresses to the map
     this->clientAddresses[joinedPlayer.getID()] = clientAddr;
+    // Add the plaeyr to the players vector
     // Print the player's name and ID
     std::cout << "Player Joined: " << joinedPlayer.getName() << " ID: " << joinedPlayer.getID() << std::endl;
     // We Want to Send the player their assigned ID
     sendPlayerID(joinedPlayer.getID(), clientAddr);
+    Player player_to_add = Player(joinedPlayer.getID(), joinedPlayer.getName().c_str());
+    this->players.push_back(player_to_add);
 
     // If Other Players Exist
     if (this->clientAddresses.size() > 1)
@@ -223,13 +224,16 @@ void UDPServer::handlePlayerJoined(uint8_t* buffer, size_t *offset, sockaddr_in 
  **/
 bool UDPServer::sendNewPlayerExistingClientInformation(PlayerJoined joinedPlayer, sockaddr_in clientAddr)
 {
-    std::vector<int> playerIDs;
-    for (auto const& player : this->clientAddresses)
+    std::vector<Player> playersInGame;
+    for (Player& player : this->players)
     {
-        if (player.first != joinedPlayer.getID()) playerIDs.push_back(player.first);
+        if (player.getID() == joinedPlayer.getID()) continue;
+        playersInGame.push_back(player);
     }
-    SendExistingClientsToNewPlayer sendExistingClients = SendExistingClientsToNewPlayer(playerIDs);
+
+    SendExistingClientsToNewPlayer sendExistingClients = SendExistingClientsToNewPlayer(playersInGame);
     uint8_t buffer[1024];
+
     size_t offset = sendExistingClients.serialize(buffer);
 
     if(!sendMessageToClient(offset, buffer, clientAddr))

@@ -170,48 +170,63 @@ void AssignPlayerID::deserialize(const uint8_t *buffer, size_t *offset)
 
 
 // ############################################################
-// ############# SendExistingClientsToNewPlayer Implementation ############
+// ##### SendExistingClientsToNewPlayer Implementation ########
 // ############################################################
 
-SendExistingClientsToNewPlayer::SendExistingClientsToNewPlayer(std::vector<int> player_ids)
+SendExistingClientsToNewPlayer::SendExistingClientsToNewPlayer(std::vector<Player>& players)
 {
-    this->player_ids = player_ids;
+    this->players = players;
+}
+
+std::vector<Player>& SendExistingClientsToNewPlayer::getPlayers()
+{
+    return this->players;
 }
 
 size_t SendExistingClientsToNewPlayer::serialize(uint8_t *buffer)
 {
     size_t offset = 0;
-    // Serialize The Enum cooresponding to the packet type
+
+    // Serialize The Enum corresponding to the packet type
     PacketType type = PacketType::SEND_EXISTING_CLIENTS_NEW_PLAYER;
     std::memcpy(buffer + offset, &type, sizeof(type));
     offset += sizeof(type);
 
-    // Serialize The number of players
-    int num_players = this->player_ids.size();
+    // Serialize the number of players
+    int num_players = this->players.size();
     std::memcpy(buffer + offset, &num_players, sizeof(num_players));
     offset += sizeof(num_players);
 
-    // Serialize player_ids
-    for (int id : this->player_ids)
+    // Serialize each Player object
+    for (Player& player : this->players)
     {
-        std::memcpy(buffer + offset, &id, sizeof(id));
-        offset += sizeof(id);
+        size_t playerSize = player.serialize(buffer + offset);
+        offset += playerSize;
     }
-
     return offset;
 }
 
 void SendExistingClientsToNewPlayer::deserialize(const uint8_t *buffer, size_t *offset)
 {
     // Deserialize player_ids
-    while (*offset < sizeof(buffer))
+    int num_players;
+    std::memcpy(&num_players, buffer + *offset, sizeof(num_players));
+    *offset += sizeof(num_players);
+
+    std::cout << "Got The Number of Players: " << num_players << std::endl;
+
+    // Deserialize each player
+    for (int i = 0; i < num_players; i++)
     {
-        int id;
-        std::memcpy(&id, buffer + *offset, sizeof(id));
-        this->player_ids.push_back(id);
-        *offset += sizeof(id);
+        Player player;
+        player.deserialize(buffer, offset);
+        this->players.push_back(player);
     }
 }
+
+// ############################################################
+// ###### SendToExisitingClientsNewPlayer Implementation ######
+// ############################################################
 
 SendToExisitingClientsNewPlayer::SendToExisitingClientsNewPlayer(int id)
 {

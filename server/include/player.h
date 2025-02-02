@@ -18,6 +18,7 @@ private:
     float speed;
 public:
     // Constructor
+    Player() = default;
     Player(int id, const char* name);
     // Setters
     void setScore(int score);
@@ -32,7 +33,7 @@ public:
     void setSpeed(float speed);
 
     // Getters
-    int         getId();
+    int         getID();
     const char* getName();
     int         getScore();
     Position    getPosition();
@@ -51,7 +52,8 @@ public:
     void printAll();
 
     // Functions
-
+    size_t serialize(uint8_t *buffer);
+    void deserialize(const uint8_t *buffer, size_t *offset);
 };
 
 #endif // !PLAYER_H

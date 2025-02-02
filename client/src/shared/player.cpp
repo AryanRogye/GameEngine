@@ -44,3 +44,55 @@ float       Player::getSpeed() { return this->speed; }
 
 
 
+size_t  Player::serialize(uint8_t *buffer)
+{
+    size_t offset = 0;
+    
+    // Serialize the player's id
+    std::memcpy(buffer + offset, &this->id, sizeof(this->id));
+    offset += sizeof(this->id);
+    // Serialize the player's name
+    std::memcpy(buffer + offset, this->name, sizeof(this->name));
+    offset += sizeof(this->name);
+    // Serialize the player's score
+    std::memcpy(buffer + offset, &this->score, sizeof(this->score));
+    offset += sizeof(this->score);
+    // Serialize the player's position
+    std::memcpy(buffer + offset, &this->position, sizeof(this->position));
+    offset += sizeof(this->position);
+    // Serialize the player's width
+    std::memcpy(buffer + offset, &this->width, sizeof(this->width));
+    offset += sizeof(this->width);
+    // Serialize the player's height
+    std::memcpy(buffer + offset, &this->height, sizeof(this->height));
+    offset += sizeof(this->height);
+    // Serialize the player's speed
+    std::memcpy(buffer + offset, &this->speed, sizeof(this->speed));
+    offset += sizeof(this->speed);
+
+    return offset;
+}
+void Player::deserialize(const uint8_t *buffer, size_t *offset)
+{
+    // Deserialize the player's id
+    std::memcpy(&this->id, buffer + *offset, sizeof(this->id));
+    *offset += sizeof(this->id);
+    // Deserialize the player's name
+    std::memcpy(this->name, buffer + *offset, sizeof(this->name));
+    *offset += sizeof(this->name);
+    // Deserialize the player's score
+    std::memcpy(&this->score, buffer + *offset, sizeof(this->score));
+    *offset += sizeof(this->score);
+    // Deserialize the player's position
+    std::memcpy(&this->position, buffer + *offset, sizeof(this->position));
+    *offset += sizeof(this->position);
+    // Deserialize the player's width
+    std::memcpy(&this->width, buffer + *offset, sizeof(this->width));
+    *offset += sizeof(this->width);
+    // Deserialize the player's height
+    std::memcpy(&this->height, buffer + *offset, sizeof(this->height));
+    *offset += sizeof(this->height);
+    // Deserialize the player's speed
+    std::memcpy(&this->speed, buffer + *offset, sizeof(this->speed));
+    *offset += sizeof(this->speed);
+}

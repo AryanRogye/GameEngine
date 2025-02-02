@@ -1,5 +1,6 @@
 #pragma once
 
+#include "player.h"
 #ifndef PACKET_H
 #define PACKET_H
 
@@ -92,10 +93,11 @@ public:
 class SendExistingClientsToNewPlayer : Serializable
 {
 private:
-    std::vector<int> player_ids;
+    std::vector<Player> players;
 public:
-    SendExistingClientsToNewPlayer(std::vector<int> player_ids = {});
-    SendExistingClientsToNewPlayer(int num_players, int *player_ids);
+    SendExistingClientsToNewPlayer() = default;
+    SendExistingClientsToNewPlayer(std::vector<Player>& players);
+    std::vector<Player>& getPlayers();
     size_t serialize(uint8_t *buffer) override;
     void deserialize(const uint8_t *buffer, size_t *offset) override;
 };

@@ -40,4 +40,5 @@ public:
     void handleNewPlayerJoined(uint8_t* buffer,ssize_t bytesRecieved,size_t* offset);
     void handleOtherPlayersMoved(uint8_t* buffer,ssize_t bytesRecieved,size_t* offset);
     std::vector<Player*> getPlayersSafe();
+    void handleExistingPlayers(uint8_t* buffer,ssize_t bytesRecieved,size_t* offset);
 };

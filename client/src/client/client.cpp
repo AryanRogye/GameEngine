@@ -95,6 +95,7 @@ void Client::handleRecievedPacket(uint8_t* buffer,ssize_t bytesRecieved)
         case PacketType::SEND_EXISTING_CLIENTS_NEW_PLAYER:
             std::cout << "Just Recieved Data About Other Clients" << std::endl;
             std::cout << "processing...." << std::endl;
+            this->handleExistingPlayers(buffer, bytesRecieved, &offset);
             break;
     
         /** 
@@ -123,6 +124,25 @@ void Client::handleRecievedPacket(uint8_t* buffer,ssize_t bytesRecieved)
         default:
             std::cout << "Unknown Packet Type" << std::endl;
             break;
+    }
+}
+
+void Client::handleExistingPlayers(uint8_t* buffer,ssize_t bytesRecieved,size_t* offset)
+{
+    // Now That We Have The Data We Want to deserialize it
+    SendExistingClientsToNewPlayer existingClients = SendExistingClientsToNewPlayer();
+    existingClients.deserialize(buffer, offset);
+    // Loop Through The Players And Add Them To The List
+    for (Player player : existingClients.getPlayers())
+    {
+        Player* newPlayer = new Player(player.getID(), player.getName());
+        std::cout << "Got New Player: " << player.getName() << std::endl;
+        std::cout << "Got New Player ID: " << player.getID() << std::endl;
+        {
+            // Lock The Vector For Safe Modification
+            std::lock_guard<std::mutex> lock(this->playersMutex);
+            this->players.push_back(newPlayer);
+        }
     }
 }
 
