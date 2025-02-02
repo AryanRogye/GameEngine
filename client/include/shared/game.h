@@ -12,6 +12,7 @@
 #include <SDL2/SDL_render.h>
 #include <SDL_hints.h>
 #include <core/map_loader.h>
+#include <core/block.h>
 
 
 class Game {

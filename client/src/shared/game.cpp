@@ -1,5 +1,4 @@
 #include "shared/game.h"
-#include "map_loader.h"
 
 Game::Game() 
 {
@@ -33,6 +32,8 @@ void Game::renderPlayer()
     playerRect.h = player->getHeight();
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderFillRect(renderer, &playerRect);
+    
+    Block::printBlockInfoByPosition(player->getX(), player->getY(), this->mapData);
 }
 
 void Game::drawGreen() { SDL_SetRenderDrawColor(this->renderer, 0, 255, 0, 255); }
@@ -118,7 +119,7 @@ void Game::renderMap()
 {
     int srcTileSize = 15;
 
-    const int displayTileSize = 48;
+    const int displayTileSize = TILE_SIZE;
 
     int mapWidthInTiles = (mapData.size() > 0 ? mapData[0].size() : 0);
     int mapHeightInTiles = mapData.size();
@@ -226,22 +227,22 @@ void Game::handleEvent(SDL_Event e)
     }
     switch (e.key.keysym.sym) {
         case SDLK_w:
-            std::cout << "w pressed" << std::endl;
+            /*std::cout << "w pressed" << std::endl;*/
             // Move player up
             player->setY(player->getY() - player->getSpeed());
             break;
         case SDLK_a:
-            std::cout << "a pressed" << std::endl;
+            /*std::cout << "a pressed" << std::endl;*/
             // Move player left
             player->setX(player->getX() - player->getSpeed());
             break;
         case SDLK_s:
-            std::cout << "s pressed" << std::endl;
+            /*std::cout << "s pressed" << std::endl;*/
             // Move player down
             player->setY(player->getY() + player->getSpeed());
             break;
         case SDLK_d:
-            std::cout << "d pressed" << std::endl;
+            /*std::cout << "d pressed" << std::endl;*/
             // Move player right
             player->setX(player->getX() + player->getSpeed());
             break;
