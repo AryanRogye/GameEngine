@@ -20,8 +20,16 @@ void Game::renderPlayer()
 {
     SDL_Rect playerRect;
     Player* player = this->client->getPlayer();
-    playerRect.x = player->getX();
-    playerRect.y = player->getY();
+
+    // Calculate camera offset based on the player’s position
+    int windowWidth = 800; // or get this from your window
+    int windowHeight = 600;
+    int camX = player->getX() + player->getWidth() / 2 - windowWidth / 2;
+    int camY = player->getY() + player->getHeight() / 2 - windowHeight / 2;
+
+    // Apply camera offset when drawing the player
+    playerRect.x = player->getX() - camX;
+    playerRect.y = player->getY() - camY;
     playerRect.w = player->getWidth();
     playerRect.h = player->getHeight();
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
@@ -37,16 +45,23 @@ void Game::drawYellow() { SDL_SetRenderDrawColor(this->renderer, 255, 255, 0, 25
 void Game::renderOtherPlayers()
 {
     const auto& remotePlayers = this->client->getPlayersSafe();
-    // Set Different Color For Remote Players
+    // Set a different color for remote players
     this->drawGreen();
+
+    // Calculate camera offset based on the local player's position
+    Player* localPlayer = this->client->getPlayer();
+    int windowWidth = 800;
+    int windowHeight = 600;
+    int camX = localPlayer->getX() + localPlayer->getWidth() / 2 - windowWidth / 2;
+    int camY = localPlayer->getY() + localPlayer->getHeight() / 2 - windowHeight / 2;
 
     for (Player* remotePlayer : remotePlayers)
     {
         if (!remotePlayer) { continue; }
 
         SDL_Rect remotePlayerRect;
-        remotePlayerRect.x = remotePlayer->getX();
-        remotePlayerRect.y = remotePlayer->getY();
+        remotePlayerRect.x = remotePlayer->getX() - camX;
+        remotePlayerRect.y = remotePlayer->getY() - camY;
         remotePlayerRect.w = remotePlayer->getWidth();
         remotePlayerRect.h = remotePlayer->getHeight();
         SDL_RenderFillRect(renderer, &remotePlayerRect);
@@ -56,9 +71,21 @@ void Game::renderOtherPlayers()
 void Game::start_game()
 {
     this->client->handlePlayerJoined(this->client->getPlayer()->getName());
+
+    // Set The Player X and Y Coordinate To The Center of The Screen
+    this->client->getPlayer()->setX(static_cast<int>(WIDTH) / 2);
+    this->client->getPlayer()->setY(static_cast<int>(HEIGHT) / 2);
+
     float oldX = this->client->getPlayer()->getX();
     float oldY = this->client->getPlayer()->getY();
+
+    // Camera Controls
+    // Get the player’s center position.
     
+    int playerCenterX = this->client->getPlayer()->getX() + this->client->getPlayer()->getWidth() / 2;
+    int playerCenterY = this->client->getPlayer()->getY() + this->client->getPlayer()->getX() + this->client->getPlayer()->getHeight() / 2;
+
+    // Load Map
     std::string currentPath = __FILE__;
     currentPath = currentPath.substr(0, currentPath.find_last_of("/\\") + 1);
     
@@ -101,13 +128,13 @@ void Game::renderMap()
     int mapPixelWidth = mapWidthInTiles * displayTileSize;
     int mapPixelHeight = mapHeightInTiles * displayTileSize;
 
-    // Get Window Dimensions
-    int windowWidth = 800;
-    int windowHeight = 600;
-
-    // Center the Map
-    int offsetX = (windowWidth - mapPixelWidth) / 2;
-    int offsetY = (windowHeight - mapPixelHeight) / 2;
+    // Here, instead of centering the map statically,
+    // we use the camera offset calculated from the player's position.
+    Player* player = this->client->getPlayer();
+    int windowWidth = WIDTH;
+    int windowHeight = HEIGHT;
+    int camX = player->getX() + player->getWidth() / 2 - windowWidth / 2;
+    int camY = player->getY() + player->getHeight() / 2 - windowHeight / 2;
 
     for (int y = 0; y < mapData.size(); y++)
     {
@@ -117,9 +144,11 @@ void Game::renderMap()
             if (tileIndex >= 0 && tileIndex < tiles.size())
             {
                 SDL_Rect destRect = {
-                    offsetX + x * displayTileSize, 
-                    offsetY + y * displayTileSize, 
-                    displayTileSize, displayTileSize};
+                    x * displayTileSize - camX,  // Apply camera offset here
+                    y * displayTileSize - camY,
+                    displayTileSize,
+                    displayTileSize
+                };
                 SDL_RenderCopy(this->renderer, this->tileAtlasTexture, &this->tiles[tileIndex], &destRect);
             }
         }
