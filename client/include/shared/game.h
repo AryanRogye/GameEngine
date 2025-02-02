@@ -7,6 +7,11 @@
 #include <unordered_map>
 #include <thread>
 #include <SDL_image.h>
+#include <string>
+#include <fstream>
+#include <SDL2/SDL_render.h>
+#include <SDL_hints.h>
+#include <core/map_loader.h>
 
 
 class Game {

@@ -1,9 +1,5 @@
 #include "shared/game.h"
-#include "configs.h"
-#include <SDL2/SDL_render.h>
-#include <SDL_hints.h>
-#include <fstream>
-#include <string>
+#include "map_loader.h"
 
 Game::Game() 
 {
@@ -89,14 +85,18 @@ void Game::start_game()
     
     // Load Tileset Atlas
     this->loadTileset(currentPath + "../../Assets/tile_atlas.png");
-    // Load Map
-    this->parseMap(currentPath + "../../Maps/level_1.txt");
+
+    // Load Map Initially
+    MapLoader mapLoader = MapLoader(currentPath + "../../Maps/level_1.txt");
+    mapLoader.parseFile(this->mapData);
 
     while(this->keep_window_open)
     {
         SDL_Event e;
 
         while(SDL_PollEvent(&e)){ this->handleEvent(e); }
+
+        mapLoader.hotReload(this->mapData);
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
@@ -201,62 +201,6 @@ void Game::initializeTiles() {
             this->tiles.push_back(tileRect);
         }
     }
-}
-
-// Temp Data
-std::vector<int> row1 = {
-    0x01,
-    0x02,
-    0x03,
-    0x04,
-    0x05,
-    0x06,
-    0x07,
-    0x08,
-    0x09,
-    0x0A,
-    0x0B,
-    0x0C,
-    0x0D,
-    0x0E,
-    0x0F,
-};
-/** 
- * This File Will Contain The Map Data
- * The Map Data will have a value from
- * 0x00 - 0xFF
- **/
-void Game::parseMap(std::string path)
-{
-    std::cout << "File Path: " << path << std::endl;
-    std::ifstream file(path);
-    if (!file.is_open())
-    {
-        std::cout << "Failed to open file" << std::endl;
-        return;
-    }
-    std::string line;
-    while (std::getline(file, line))
-    {
-        std::vector<int> row;
-        std::istringstream iss(line);
-        std::string cell;
-        
-        // Read each hex value (separated by whitespace)
-        while (iss >> cell)
-        {
-            try {
-                // Convert the hex string to an integer
-                int cellValue = std::stoi(cell, nullptr, 16);
-                row.push_back(cellValue);
-            }
-            catch(const std::exception &e) {
-                std::cerr << "Error converting '" << cell << "': " << e.what() << std::endl;
-            }
-        }
-        this->mapData.push_back(row);
-    }
-    file.close();
 }
 
 void Game::updateServer(float *oldX, float *oldY)
