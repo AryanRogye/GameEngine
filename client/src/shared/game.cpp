@@ -4,7 +4,8 @@
 #include <fstream>
 #include <string>
 
-Game::Game() {
+Game::Game() 
+{
     this->client = new Client();
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -120,7 +121,7 @@ void Game::renderMap()
 {
     int srcTileSize = 15;
 
-    const int displayTileSize = 32;
+    const int displayTileSize = 48;
 
     int mapWidthInTiles = (mapData.size() > 0 ? mapData[0].size() : 0);
     int mapHeightInTiles = mapData.size();
