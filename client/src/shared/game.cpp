@@ -1,5 +1,5 @@
 #include "shared/game.h"
-#include <SDL_timer.h>
+#include "configs.h"
 
 Game::Game() 
 {
@@ -18,7 +18,7 @@ Game::Game()
 void Game::loadPlayerSprites(std::string filePath)
 {
     // Player Character
-    SDL_Surface* playerSurface = IMG_Load((filePath + "../../Assets/char_idle.png").c_str());
+    SDL_Surface* playerSurface = IMG_Load((filePath + "../../Assets/char_idle2.png").c_str());
     if (!playerSurface)
     {
         std::cout << "Failed to Load Player Sprite" << std::endl;
@@ -27,6 +27,7 @@ void Game::loadPlayerSprites(std::string filePath)
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
     this->playerTexture = SDL_CreateTextureFromSurface(this->renderer, playerSurface);
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+
     SDL_FreeSurface(playerSurface);
     if (!this->playerTexture)
     {
@@ -34,7 +35,7 @@ void Game::loadPlayerSprites(std::string filePath)
         return;
     }
     // Running Sprite Loading
-    SDL_Surface* runningSurface = IMG_Load((filePath + "../../Assets/char_run.png").c_str());
+    SDL_Surface* runningSurface = IMG_Load((filePath + "../../Assets/char_run1.png").c_str());
     if (!runningSurface)
     {
         std::cout << "Failed to Load Running Sprite" << std::endl;
@@ -73,9 +74,9 @@ void Game::renderPlayer()
             this->lastFrameTime = now;
         }
         // Define the source rectangle if using a sprite sheet (assuming each sprite is 30x30)
-        SDL_Rect srcRect = { this->currentIdleFrame * 30, 0, 30, 30 };
+        SDL_Rect srcRect = { this->currentIdleFrame * 30, 0, 30, 45 };
         // Destination rectangle based on your camera offset calculations
-        SDL_Rect destRect = { (int)player->getX() - camX, (int)player->getY() - camY, TILE_SIZE, TILE_SIZE};
+        SDL_Rect destRect = { (int)player->getX() - camX, (int)player->getY() - camY, PLAYER_WIDTH, PLAYER_HEIGHT};
         // Determine if the sprite should be flipped horizontally
         SDL_RendererFlip flip = player->getFacingRight() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
         // Render the sprite with the flip
@@ -293,6 +294,9 @@ void Game::handleEvent(SDL_Event e) {
 
     if (e.type == SDL_QUIT) {
         this->keep_window_open = false;
+        SDL_DestroyRenderer(this->renderer);
+        SDL_DestroyWindow(this->window);
+        SDL_Quit();
         return;
     }
 
