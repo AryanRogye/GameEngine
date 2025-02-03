@@ -29,6 +29,10 @@ private:
     int currentRunningFrame;
     int frameCount = 5;
 
+    // House Stuff
+    SDL_Texture* house_one_texture;
+    SDL_Rect house_one_rect;
+
     // Tileset Atlas and its Cells
     SDL_Texture * tileAtlasTexture;
     std::vector<SDL_Rect> tiles;
@@ -45,6 +49,7 @@ public:
     void initRenderer();
     void renderPlayer();
     void loadPlayerSprites(std::string filePath);
+    void loadHouseSprites(std::string filePath);
     void updateServer(float *oldX, float *oldY);
     void renderOtherPlayers();
 
@@ -56,6 +61,7 @@ public:
 
     // Render The Map
     void renderMap();
+    void renderHouse(int x, int y, int width, int height);
     
     // Color functions
     void drawGreen();

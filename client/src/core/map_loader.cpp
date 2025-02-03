@@ -1,4 +1,5 @@
 #include "map_loader.h"
+#include <cctype>
 
 MapLoader::MapLoader(const std::string& map_path) : map_path(map_path), last_timestamp(0) {}
 
@@ -35,10 +36,13 @@ void MapLoader::parseFile(std::vector<std::vector<int>>& mapData)
             try {
                 // Convert the hex string to an integer
                 int cellValue = std::stoi(cell, nullptr, 16);
-                std::cout << "Read cell value: " << cellValue << std::endl;
                 row.push_back(cellValue);
             }
             catch(const std::exception &e) {
+                if (cell == "HH" || cell == "hh") {
+                    row.push_back(-1);
+                    continue;
+                }
                 std::cerr << "Error converting '" << cell << "': " << e.what() << std::endl;
             }
         }

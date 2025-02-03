@@ -153,11 +153,14 @@ void Game::start_game()
     currentPath = currentPath.substr(0, currentPath.find_last_of("/\\") + 1);
     
     // Load Tileset Atlas
-    this->loadTileset(currentPath + "../../Assets/tile_atlas.png");
+    this->loadTileset(currentPath);
 
     // Load Map Initially
     MapLoader mapLoader = MapLoader(currentPath + "../../Maps/level_1.txt");
     mapLoader.parseFile(this->mapData);
+
+    // Load The House Texture
+    this->loadHouseSprites(currentPath);
 
     this->loadPlayerSprites(currentPath);
 
@@ -204,12 +207,24 @@ void Game::renderMap()
     int windowHeight = HEIGHT;
     int camX = player->getX() + player->getWidth() / 2 - windowWidth / 2;
     int camY = player->getY() + player->getHeight() / 2 - windowHeight / 2;
-
+    
+    std::vector<std::vector<bool>> visited(mapHeightInTiles, std::vector<bool>(mapWidthInTiles, false));
     for (int y = 0; y < mapData.size(); y++)
     {
         for (int x = 0; x < mapData[y].size(); x++)
         {
+            if (visited[y][x]) { continue; }
             int tileIndex = mapData[y][x] - 1;
+            // if -1 we need to leave 4 space between
+            if (tileIndex + 1 == -1) {
+                // Render The House1 Texture
+                this->renderHouse(x * displayTileSize - camX, y * displayTileSize - camY, displayTileSize, displayTileSize);
+                // We Want to set the x + 1, y + 1, x + 1 y + 1 to visited
+                if (y + 1 < mapHeightInTiles) visited[y + 1][x] = true;
+                if (x + 1 < mapWidthInTiles) visited[y][x + 1] = true;
+                if (y + 1 < mapHeightInTiles && x + 1 < mapWidthInTiles) visited[y + 1][x + 1] = true;
+                continue;
+            }
             if (tileIndex >= 0 && tileIndex < tiles.size())
             {
                 SDL_Rect destRect = {
@@ -218,15 +233,48 @@ void Game::renderMap()
                     displayTileSize,
                     displayTileSize
                 };
+                visited[y][x] = true;
                 SDL_RenderCopy(this->renderer, this->tileAtlasTexture, &this->tiles[tileIndex], &destRect);
             }
         }
     }
 }
 
+void Game::renderHouse(int x, int y, int width, int height)
+{
+    // Size is 30x30 we can scale it to what the width and height is
+    SDL_Rect destRect = {
+        x,
+        y,
+        width * 2,
+        height * 2
+    };
+    SDL_RenderCopy(this->renderer, this->house_one_texture, NULL, &destRect);
+
+}
+void Game::loadHouseSprites(std::string filePath)
+{
+    SDL_Surface* houseSurface = IMG_Load((filePath + "../../Assets/Houses/house_1.png").c_str());
+    if (!houseSurface)
+    {
+        std::cout << "Failed to Load House Sprite" << std::endl;
+        return;
+    }
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+    this->house_one_texture = SDL_CreateTextureFromSurface(this->renderer, houseSurface);
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+
+    SDL_FreeSurface(houseSurface);
+    if (!this->house_one_texture)
+    {
+        std::cout << "Failed to Create Texture from Surface" << std::endl;
+        return;
+    }
+}
+
 void Game::loadTileset(std::string filePath)
 {
-    SDL_Surface* tileAtlasSurface = IMG_Load(filePath.c_str());
+    SDL_Surface* tileAtlasSurface = IMG_Load((filePath + "../../Assets/tile_atlas.png").c_str());
     if (!tileAtlasSurface)
     {
         std::cout << "Failed to Load Tileset" << std::endl;
