@@ -28,6 +28,8 @@ const std::unordered_map<std::string, BlockType> BLOCK_NAME_MAP =
         {"bottom_right_corner_fence",BlockType::BOTTOM_RIGHT_CORNER_FENCE},
         {"bottom_left_corner_fence",BlockType::BOTTOM_LEFT_CORNER_FENCE},
         {"fence_col",BlockType::FENCE_COL},
+        {"house_big", BlockType::HOUSE_BIG},
+        {"empty", BlockType::EMPTY}
 };
 
 const std::unordered_map<BlockType, std::string> BLOCK_TYPE_NAMES = 
@@ -56,6 +58,8 @@ const std::unordered_map<BlockType, std::string> BLOCK_TYPE_NAMES =
         {BlockType::BOTTOM_RIGHT_CORNER_FENCE, "bottom_right_corner_fence"},
         {BlockType::BOTTOM_LEFT_CORNER_FENCE, "bottom_left_corner_fence"},
         {BlockType::FENCE_COL, "fence_col"},
+        {BlockType::HOUSE_BIG, "house_big"},
+        {BlockType::EMPTY, "empty"}
 };
 
 Block::Block(BlockType type, bool isSolid) : type(type), isSolid(isSolid) 
@@ -92,17 +96,40 @@ void Block::printBlockInfoByPosition(int x, int y, const std::vector<std::vector
     // Block Type is 0 indexed map data is 1 indexed
     if (tileY >= 0 && tileY < mapData.size() && tileX >= 0 && tileX < mapData[tileY].size()) {
         int blockIndex = mapData[tileY][tileX] - 1; // Get block ID from map
-        BlockType blockType = static_cast<BlockType>(blockIndex); // Convert to enum
+        /** 
+         * Special Cases
+         **/
 
-        // ✅ Only print if the block type changed
+        /** Empty Block **/
+        if (blockIndex == -1) {
+            if (Block::oldBlockType == BlockType::EMPTY) {
+                return;
+            }
+            std::cout << "Player is standing on: " << BLOCK_TYPE_NAMES.at(BlockType::EMPTY) << std::endl;
+            Block::oldBlockType = BlockType::EMPTY;
+            return;
+        }
+        
+        /** House_Big **/
+        if (blockIndex == -2) {
+            if (Block::oldBlockType == BlockType::HOUSE_BIG) {
+                return;
+            }
+            std::cout << "Player is standing on: " << BLOCK_TYPE_NAMES.at(BlockType::HOUSE_BIG) << std::endl;
+            Block::oldBlockType = BlockType::HOUSE_BIG;
+            return;
+        }
+
+        /** 
+         * Normal Cases With Regular Indices
+         **/
+        BlockType blockType = static_cast<BlockType>(blockIndex); // Convert to enum
         if (blockType != Block::oldBlockType) {
             if (BLOCK_TYPE_NAMES.find(blockType) != BLOCK_TYPE_NAMES.end()) {
                 std::cout << "Player is standing on: " << BLOCK_TYPE_NAMES.at(blockType) << std::endl;
             } else {
                 std::cout << "Player is standing on an unknown block." << std::endl;
             }
-
-            // ✅ Update oldBlockType to avoid duplicate messages
             Block::oldBlockType = blockType;
         }
     } else {

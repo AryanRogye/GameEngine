@@ -39,6 +39,12 @@ void MapLoader::parseFile(std::vector<std::vector<int>>& mapData)
                 row.push_back(cellValue);
             }
             catch(const std::exception &e) {
+
+                // Deprecated values need to remove soon
+                if (cell == "MM" || cell == "mm") {
+                    row.push_back(0);
+                    continue;
+                }
                 if (cell == "HH" || cell == "hh") {
                     row.push_back(-1);
                     continue;

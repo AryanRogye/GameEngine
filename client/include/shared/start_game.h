@@ -32,8 +32,8 @@ private:
     int selected_character = 0;
     std::vector<SDL_Texture *> character_textures;
     SDL_Rect character_rect;
-    int character_width = PLAYER_WIDTH + 48;
-    int character_height = PLAYER_HEIGHT + 48;
+    int character_width = PLAYER_WIDTH;
+    int character_height = PLAYER_HEIGHT;
     int character_x = (WIDTH / 2 - character_width / 2);
     int character_y = (HEIGHT / 2 - character_height / 2) - 50;
 
@@ -69,7 +69,7 @@ public:
     void initRenderer();
     void handleEvent(SDL_Event e);
 
-    
+
     void loadStartButtonTexture();
     void loadArrowButtonTextures();
     void loadCharacterTextures();

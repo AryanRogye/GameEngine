@@ -81,7 +81,12 @@ void Game::renderPlayer()
         SDL_RendererFlip flip = player->getFacingRight() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
         // Render the sprite with the flip
         SDL_RenderCopyEx(renderer, playerTexture, &srcRect, &destRect, 0.0, NULL, flip);
-        Block::printBlockInfoByPosition(player->getX(), player->getY(), this->mapData);
+
+        // Printing Block Info By Posttion we need to get the feet of the character
+        int feetY = player->getY() + player->getHeight();
+        int centerX = player->getX() + player->getWidth() / 2;
+
+        Block::printBlockInfoByPosition(centerX, feetY, this->mapData);
     }
     else
     {
@@ -100,7 +105,9 @@ void Game::renderPlayer()
         SDL_RendererFlip flip = player->getFacingRight() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
         // Render the sprite with the flip
         SDL_RenderCopyEx(renderer, runningTexture, &srcRect, &destRect, 0.0, NULL, flip);
-        Block::printBlockInfoByPosition(player->getX(), player->getY(), this->mapData);
+        int feetY = player->getY() + player->getHeight();
+        int centerX = player->getX() + player->getWidth() / 2;
+        Block::printBlockInfoByPosition(centerX, feetY, this->mapData);
     }
 }
 
@@ -215,7 +222,18 @@ void Game::renderMap()
         {
             if (visited[y][x]) { continue; }
             int tileIndex = mapData[y][x] - 1;
-            // if -1 we need to leave 4 space between
+
+            // Blank Tile
+            if (tileIndex + 1 == 0) {
+                // Draw Empty Space
+                SDL_Rect destRect = {
+                    x * displayTileSize - camX,  // Apply camera offset here
+                    y * displayTileSize - camY,
+                    displayTileSize,
+                    displayTileSize
+                };
+            }
+            // House Tile
             if (tileIndex + 1 == -1) {
                 // Render The House1 Texture
                 this->renderHouse(x * displayTileSize - camX, y * displayTileSize - camY, displayTileSize, displayTileSize);

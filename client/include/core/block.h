@@ -37,6 +37,7 @@ enum class BlockType {
     BOTTOM_RIGHT_CORNER_FENCE,
     BOTTOM_LEFT_CORNER_FENCE,
     FENCE_COL,
+    HOUSE_BIG,
     EMPTY
 };
 
