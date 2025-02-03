@@ -13,6 +13,7 @@ add_executable(client
     src/client/client.cpp
     src/client/packet.cpp
     src/shared/game.cpp
+    src/shared/start_game.cpp
     src/shared/player.cpp
     src/core/map_loader.cpp
     src/core/block.cpp

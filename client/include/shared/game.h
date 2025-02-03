@@ -19,6 +19,15 @@ class Game {
 private:
     SDL_Window *window;
     SDL_Renderer *renderer;
+    Uint32 lastFrameTime = 0;
+    const Uint32 frameDelay = 180;
+
+    // Player Stuff
+    SDL_Texture* playerTexture;
+    SDL_Texture* runningTexture;
+    int currentIdleFrame;
+    int currentRunningFrame;
+    int frameCount = 5;
 
     // Tileset Atlas and its Cells
     SDL_Texture * tileAtlasTexture;
@@ -35,6 +44,7 @@ public:
     void initWindow();
     void initRenderer();
     void renderPlayer();
+    void loadPlayerSprites(std::string filePath);
     void updateServer(float *oldX, float *oldY);
     void renderOtherPlayers();
 

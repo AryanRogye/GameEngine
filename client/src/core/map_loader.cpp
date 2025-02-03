@@ -35,6 +35,7 @@ void MapLoader::parseFile(std::vector<std::vector<int>>& mapData)
             try {
                 // Convert the hex string to an integer
                 int cellValue = std::stoi(cell, nullptr, 16);
+                std::cout << "Read cell value: " << cellValue << std::endl;
                 row.push_back(cellValue);
             }
             catch(const std::exception &e) {

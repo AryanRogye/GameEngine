@@ -1,7 +1,9 @@
 #include "shared/game.h"
+#include <SDL_timer.h>
 
 Game::Game() 
 {
+    this->currentIdleFrame = 0;
     this->client = new Client();
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -13,9 +15,43 @@ Game::Game()
     this->keep_window_open = true;
 }
 
+void Game::loadPlayerSprites(std::string filePath)
+{
+    // Player Character
+    SDL_Surface* playerSurface = IMG_Load((filePath + "../../Assets/char_idle.png").c_str());
+    if (!playerSurface)
+    {
+        std::cout << "Failed to Load Player Sprite" << std::endl;
+        return;
+    }
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+    this->playerTexture = SDL_CreateTextureFromSurface(this->renderer, playerSurface);
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+    SDL_FreeSurface(playerSurface);
+    if (!this->playerTexture)
+    {
+        std::cout << "Failed to Create Texture from Surface" << std::endl;
+        return;
+    }
+    // Running Sprite Loading
+    SDL_Surface* runningSurface = IMG_Load((filePath + "../../Assets/char_run.png").c_str());
+    if (!runningSurface)
+    {
+        std::cout << "Failed to Load Running Sprite" << std::endl;
+        return;
+    }
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+    this->runningTexture = SDL_CreateTextureFromSurface(this->renderer, runningSurface);
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+    SDL_FreeSurface(runningSurface);
+    if (!this->runningTexture)
+    {
+        std::cout << "Failed to Create Texture from Surface" << std::endl;
+        return;
+    }
+}
 void Game::renderPlayer()
 {
-    SDL_Rect playerRect;
     Player* player = this->client->getPlayer();
 
     int windowWidth = WIDTH; 
@@ -25,15 +61,46 @@ void Game::renderPlayer()
     int camX = player->getX() + player->getWidth() / 2 - windowWidth / 2;
     int camY = player->getY() + player->getHeight() / 2 - windowHeight / 2;
 
-    // Apply camera offset when drawing the player
-    playerRect.x = player->getX() - camX;
-    playerRect.y = player->getY() - camY;
-    playerRect.w = player->getWidth();
-    playerRect.h = player->getHeight();
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderFillRect(renderer, &playerRect);
+    Uint32 now = SDL_GetTicks();
     
-    Block::printBlockInfoByPosition(player->getX(), player->getY(), this->mapData);
+    if (!player->getIsWalking())
+    {
+        // First Thing Reset the Running Frame
+        this->currentRunningFrame = 0;
+        if (now - this->lastFrameTime >= this->frameDelay)
+        {
+            this->currentIdleFrame = (this->currentIdleFrame + 1) % 4;
+            this->lastFrameTime = now;
+        }
+        // Define the source rectangle if using a sprite sheet (assuming each sprite is 30x30)
+        SDL_Rect srcRect = { this->currentIdleFrame * 30, 0, 30, 30 };
+        // Destination rectangle based on your camera offset calculations
+        SDL_Rect destRect = { (int)player->getX() - camX, (int)player->getY() - camY, TILE_SIZE, TILE_SIZE};
+        // Determine if the sprite should be flipped horizontally
+        SDL_RendererFlip flip = player->getFacingRight() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+        // Render the sprite with the flip
+        SDL_RenderCopyEx(renderer, playerTexture, &srcRect, &destRect, 0.0, NULL, flip);
+        Block::printBlockInfoByPosition(player->getX(), player->getY(), this->mapData);
+    }
+    else
+    {
+        // First Thing Reset the Idle Frame
+        this->currentIdleFrame = 0;
+        if (now - this->lastFrameTime >= this->frameDelay)
+        {
+            this->currentRunningFrame = (this->currentRunningFrame + 1) % 4;
+            this->lastFrameTime = now;
+        }
+        // Define the source rectangle if using a sprite sheet (assuming each sprite is 30x30)
+        SDL_Rect srcRect = { this->currentRunningFrame * 30, 0, 30, 30 };
+        // Destination rectangle based on your camera offset calculations
+        SDL_Rect destRect = { (int)player->getX() - camX, (int)player->getY() - camY, TILE_SIZE, TILE_SIZE};
+        // Determine if the sprite should be flipped horizontally
+        SDL_RendererFlip flip = player->getFacingRight() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+        // Render the sprite with the flip
+        SDL_RenderCopyEx(renderer, runningTexture, &srcRect, &destRect, 0.0, NULL, flip);
+        Block::printBlockInfoByPosition(player->getX(), player->getY(), this->mapData);
+    }
 }
 
 void Game::drawGreen() { SDL_SetRenderDrawColor(this->renderer, 0, 255, 0, 255); }
@@ -90,6 +157,8 @@ void Game::start_game()
     // Load Map Initially
     MapLoader mapLoader = MapLoader(currentPath + "../../Maps/level_1.txt");
     mapLoader.parseFile(this->mapData);
+
+    this->loadPlayerSprites(currentPath);
 
     while(this->keep_window_open)
     {
@@ -191,6 +260,9 @@ void Game::initializeTiles() {
     int tilesPerRow = atlasWidth / (tileSize + padding);
     int tilesPerCol = atlasHeight / (tileSize + padding);
 
+    std::cout << "Tiles Per Row: " << tilesPerRow << std::endl;
+    std::cout << "Tiles Per Col: " << tilesPerCol << std::endl;
+
     for (int y = 0; y < tilesPerCol; y++) {
         for (int x = 0; x < tilesPerRow; x++) {
             SDL_Rect tileRect {
@@ -216,36 +288,38 @@ void Game::updateServer(float *oldX, float *oldY)
 }
 
 
-void Game::handleEvent(SDL_Event e)
-{
+void Game::handleEvent(SDL_Event e) {
     Player *player = this->client->getPlayer();
-    switch (e.type)
-    {
-        case SDL_QUIT:
-            this->keep_window_open = false;
-            break;
+
+    if (e.type == SDL_QUIT) {
+        this->keep_window_open = false;
+        return;
     }
-    switch (e.key.keysym.sym) {
-        case SDLK_w:
-            /*std::cout << "w pressed" << std::endl;*/
-            // Move player up
-            player->setY(player->getY() - player->getSpeed());
-            break;
-        case SDLK_a:
-            /*std::cout << "a pressed" << std::endl;*/
-            // Move player left
-            player->setX(player->getX() - player->getSpeed());
-            break;
-        case SDLK_s:
-            /*std::cout << "s pressed" << std::endl;*/
-            // Move player down
-            player->setY(player->getY() + player->getSpeed());
-            break;
-        case SDLK_d:
-            /*std::cout << "d pressed" << std::endl;*/
-            // Move player right
-            player->setX(player->getX() + player->getSpeed());
-            break;
+
+    if (e.type == SDL_KEYDOWN) {
+        switch (e.key.keysym.sym) {
+            case SDLK_w:
+                player->setY(player->getY() - player->getSpeed());
+                break;
+            case SDLK_a:
+                player->setX(player->getX() - player->getSpeed());
+                player->setFacingRight(false);
+                player->setIsWalking(true);
+                break;
+            case SDLK_s:
+                player->setY(player->getY() + player->getSpeed());
+                break;
+            case SDLK_d:
+                player->setX(player->getX() + player->getSpeed());
+                player->setFacingRight(true);
+                player->setIsWalking(true);
+                break;
+        }
+    }
+    else if (e.type == SDL_KEYUP) {
+        if (e.key.keysym.sym == SDLK_a || e.key.keysym.sym == SDLK_d) {
+            player->setIsWalking(false);
+        }
     }
 }
 

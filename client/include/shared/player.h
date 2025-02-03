@@ -17,6 +17,8 @@ private:
     Position position;
     int width, height;
     float speed;
+    bool facingRight;
+    bool isWalking;
 public:
     // Constructor
     Player() = default;
@@ -32,6 +34,8 @@ public:
     void setWidth(int width);
     void setHeight(int height);
     void setSpeed(float speed);
+    void setFacingRight(bool facingRight);
+    void setIsWalking(bool isWalking);
 
     // Getters
     int         getID();
@@ -42,7 +46,9 @@ public:
     float       getY();
     int         getWidth();
     int         getHeight();
-    float         getSpeed();
+    float       getSpeed();
+    bool        getFacingRight();
+    bool        getIsWalking();
 
     // Debug
     void print();

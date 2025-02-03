@@ -15,6 +15,19 @@ const std::unordered_map<std::string, BlockType> BLOCK_NAME_MAP =
         {"left_corner_dirt",BlockType::TOP_LEFT_CORNER_DIRT },
         {"right_corner_dirt",BlockType::TOP_RIGHT_CORNER_DIRT },
         {"bottom_right_corner_dirt", BlockType::BOTTOM_RIGHT_CORNER_DIRT},
+        {"bottom_left_corner_dirt" , BlockType::BOTTOM_LEFT_CORNER_DIRT},
+        {"house", BlockType::HOUSE },
+        {"single_fence",BlockType::SINGLE_FENCE},
+        {"fence_row",BlockType::FENCE_ROW},
+        {"right_end_fence",BlockType::RIGHT_END_FENCE},
+        {"left_end_fence",BlockType::LEFT_END_FENCE},
+        {"top_end_fence",BlockType::TOP_END_FENCE},
+        {"bottom_end_fence",BlockType::BOTTOM_END_FENCE},
+        {"top_left_corner_fence",BlockType::TOP_LEFT_CORNER_FENCE},
+        {"top_right_corner_fence",BlockType::TOP_RIGHT_CORNER_FENCE},
+        {"bottom_right_corner_fence",BlockType::BOTTOM_RIGHT_CORNER_FENCE},
+        {"bottom_left_corner_fence",BlockType::BOTTOM_LEFT_CORNER_FENCE},
+        {"fence_col",BlockType::FENCE_COL},
 };
 
 const std::unordered_map<BlockType, std::string> BLOCK_TYPE_NAMES = 
@@ -31,6 +44,18 @@ const std::unordered_map<BlockType, std::string> BLOCK_TYPE_NAMES =
         {BlockType::TOP_LEFT_CORNER_DIRT, "left_corner_dirt"},
         {BlockType::TOP_RIGHT_CORNER_DIRT, "right_corner_dirt"},
         {BlockType::BOTTOM_RIGHT_CORNER_DIRT, "bottom_right_corner_dirt"},
+        {BlockType::HOUSE, "house"},
+        {BlockType::SINGLE_FENCE, "single_fence"},
+        {BlockType::FENCE_ROW, "fence_row"},
+        {BlockType::RIGHT_END_FENCE, "right_end_fence"},
+        {BlockType::LEFT_END_FENCE, "left_end_fence"},
+        {BlockType::TOP_END_FENCE,"top_end_fence"},
+        {BlockType::BOTTOM_END_FENCE, "bottom_end_fence"},
+        {BlockType::TOP_LEFT_CORNER_FENCE, "top_left_corner_fence"},
+        {BlockType::TOP_RIGHT_CORNER_FENCE, "top_right_corner_fence"},
+        {BlockType::BOTTOM_RIGHT_CORNER_FENCE, "bottom_right_corner_fence"},
+        {BlockType::BOTTOM_LEFT_CORNER_FENCE, "bottom_left_corner_fence"},
+        {BlockType::FENCE_COL, "fence_col"},
 };
 
 Block::Block(BlockType type, bool isSolid) : type(type), isSolid(isSolid) 
