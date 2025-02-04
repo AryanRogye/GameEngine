@@ -197,7 +197,7 @@ void Game::start_game()
 
 void Game::renderMap()
 {
-    int srcTileSize = 15;
+    int srcTileSize = 16;
 
     const int displayTileSize = TILE_SIZE;
 
@@ -318,7 +318,7 @@ void Game::loadTileset(std::string filePath)
  * with 16x16 tiles
  **/
 void Game::initializeTiles() {
-    int tileSize = 15;
+    int tileSize = 16;
     int atlasWidth = 208;
     int atlasHeight = 208;
 

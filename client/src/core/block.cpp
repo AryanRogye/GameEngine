@@ -75,6 +75,10 @@ BlockFactory::BlockFactory()
     this->blocks.at("bottom_right_corner_fence").addComponent<CollisionComponent>(true);
     this->blocks.at("bottom_left_corner_fence").addComponent<CollisionComponent>(true);
     this->blocks.at("fence_col").addComponent<CollisionComponent>(true);
+
+    // Add Collision to House
+    this->blocks.at("house_big").addComponent<CollisionComponent>(true);
+    this->blocks.at("empty").addComponent<CollisionComponent>(true);
 }
 
 
@@ -175,6 +179,26 @@ bool BlockFactory::checkCollision(int x, int y, const std::vector<std::vector<in
 
     // Get ID of block
     int blockIndex = mapData[tileY][tileX] - 1;
+    if (blockIndex == -1) 
+    {
+        if (BlockFactory::oldBlockType != BlockType::EMPTY) 
+        {
+            BlockFactory::oldBlockType = BlockType::EMPTY;
+            return true;
+        }
+        return false;
+    }
+
+    /** House_Big **/
+    if (blockIndex == -2) 
+    {
+        if (BlockFactory::oldBlockType != BlockType::HOUSE_BIG) 
+        {
+            BlockFactory::oldBlockType = BlockType::HOUSE_BIG;
+            return true;
+        }
+        return false;
+    }
 
     /** Convert BlockIndex to BlockType **/
     BlockType blockType = static_cast<BlockType>(blockIndex);
