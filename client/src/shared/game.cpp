@@ -3,6 +3,7 @@
 
 Game::Game() 
 {
+    this->bf = BlockFactory();
     this->currentIdleFrame = 0;
     this->client = new Client();
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -63,7 +64,7 @@ void Game::renderPlayer()
     int camY = player->getY() + player->getHeight() / 2 - windowHeight / 2;
 
     Uint32 now = SDL_GetTicks();
-    
+
     if (!player->getIsWalking())
     {
         // First Thing Reset the Running Frame
@@ -81,12 +82,11 @@ void Game::renderPlayer()
         SDL_RendererFlip flip = player->getFacingRight() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
         // Render the sprite with the flip
         SDL_RenderCopyEx(renderer, playerTexture, &srcRect, &destRect, 0.0, NULL, flip);
-
         // Printing Block Info By Posttion we need to get the feet of the character
         int feetY = player->getY() + player->getHeight();
         int centerX = player->getX() + player->getWidth() / 2;
-
-        Block::printBlockInfoByPosition(centerX, feetY, this->mapData);
+        
+        this->bf.printBlockInfoByPosition(centerX, feetY, this->mapData);
     }
     else
     {
@@ -107,7 +107,7 @@ void Game::renderPlayer()
         SDL_RenderCopyEx(renderer, runningTexture, &srcRect, &destRect, 0.0, NULL, flip);
         int feetY = player->getY() + player->getHeight();
         int centerX = player->getX() + player->getWidth() / 2;
-        Block::printBlockInfoByPosition(centerX, feetY, this->mapData);
+        this->bf.printBlockInfoByPosition(centerX, feetY, this->mapData);
     }
 }
 
@@ -367,24 +367,40 @@ void Game::handleEvent(SDL_Event e) {
     }
 
     if (e.type == SDL_KEYDOWN) {
+        int newX = player->getX();
+        int newY = player->getY();
+        int speed = player->getSpeed();
+
         switch (e.key.keysym.sym) {
             case SDLK_w:
-                player->setY(player->getY() - player->getSpeed());
+                newY -= speed;
                 break;
             case SDLK_a:
-                player->setX(player->getX() - player->getSpeed());
+                newX -= speed;
                 player->setFacingRight(false);
                 player->setIsWalking(true);
                 break;
             case SDLK_s:
-                player->setY(player->getY() + player->getSpeed());
+                newY += speed;
                 break;
             case SDLK_d:
-                player->setX(player->getX() + player->getSpeed());
+                newX += speed;
                 player->setFacingRight(true);
                 player->setIsWalking(true);
                 break;
         }
+
+        // Check if the new position is valid
+        int feetY = newY + player->getHeight();
+        int centerX = newX + player->getWidth() / 2;
+
+        if (!this->bf.checkCollision(centerX, feetY, this->mapData)) {
+            player->setX(newX);
+            player->setY(newY);
+        } else {
+            std::cout << "Collision Detected" << std::endl;
+        }
+
     }
     else if (e.type == SDL_KEYUP) {
         if (e.key.keysym.sym == SDLK_a || e.key.keysym.sym == SDLK_d) {

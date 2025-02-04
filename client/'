@@ -12,6 +12,7 @@
  **/
 
 #pragma once
+#include <memory>
 #ifndef BLOCK_H
 #define BLOCK_H
 
@@ -20,9 +21,6 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <memory>
-#include <utility>
-
 
 enum class BlockType {
     GRASS,
@@ -55,77 +53,55 @@ enum class BlockType {
 };
 class BlockComponent {
 public:
-    BlockComponent() = default;
     virtual ~BlockComponent() = default;
 };
-
 class CollisionComponent : public BlockComponent {
     bool isSolid;
 public:
     CollisionComponent(bool isSolid);
-    CollisionComponent();
     bool getIsSolid() const;
 };
-
 class Block {
 public:
-
     BlockType type;
     std::string name;
     std::vector<std::unique_ptr<BlockComponent>> components;
-    /** Functions **/
-    Block(BlockType type);
-    Block(BlockType type, std::string name);
-    /** 
-     * This Looks Very Complicated byt its very simple
-     * this is a variadic template function that takes in a type T
-     * and a bunch of arguments and creates a new instance of T and
-     * adds it to the components vector
 
-     * The Components that can be used are right now:
-     *       - CollisionComponent
-     * Example : addComponent<CollisionComponent>(true);
-     **/
-    /** Add Components **/
+    Block(BlockType type);
+
     template <typename T, typename... Args>
-    void addComponent(Args&&... args)
-    {
-        std::cout << "Adding component of type: " << typeid(T).name() << " to block: " << this->name << std::endl;
+    void addComponent(Args&&... args) {
         components.push_back(std::make_unique<T>(std::forward<Args>(args)...));
     }
-    
-    /** 
-     * This Function is a getter function 
-     **/
+
     template <typename T>
-    T* getComponent() const
-    {
-        for (auto& comp : components) 
-        {
-            if (auto ptr = dynamic_cast<T*>(comp.get()))
-                return ptr;
+    T* getComponent() {
+        for (auto& comp : components) {
+            if (auto ptr = dynamic_cast<T*>(comp.get())) return ptr;
         }
         return nullptr;
     }
 };
 
-/** 
- * Purpose of this class is to create a bunch of blocks
- * which is kind of like a "Factory" Design Pattern
- **/
-class BlockFactory {
-    std::unordered_map<std::string, Block> blocks;
+
+class Block {
+private:
+    /** This is used to store the old block type 
+     *  so we dont spam the console with the same block type
+     **/
     static BlockType oldBlockType;
 public:
-    BlockFactory();
-    template <typename T, typename... Args>
-    void addBlock(BlockType type, Args&&... args);
+    BlockType type;
+    std::string name;
+    bool isSolid;
 
-    BlockType getBlockTypeFromString(const std::string& name);
-    std::string getBlockName(BlockType type);
+    Block(BlockType type, bool isSolid = false);
+
+    static BlockType getBlockTypeFromString(const std::string& name);
+    static std::string getBlockName(BlockType type);
+
     void printBlockInfo() const;
-    void printBlockInfoByPosition(int x, int y, const std::vector<std::vector<int>>& mapData);
-    bool checkCollision(int x, int y, const std::vector<std::vector<int>>& mapData);
+    static void printBlockInfoByPosition(int x, int y, const std::vector<std::vector<int>>& mapData);
 };
 
 #endif // BLOCK_H

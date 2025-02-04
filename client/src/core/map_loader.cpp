@@ -33,19 +33,21 @@ void MapLoader::parseFile(std::vector<std::vector<int>>& mapData)
         // Read each hex value (separated by whitespace)
         while (iss >> cell)
         {
-            try {
+            try 
+            {
                 // Convert the hex string to an integer
                 int cellValue = std::stoi(cell, nullptr, 16);
                 row.push_back(cellValue);
             }
-            catch(const std::exception &e) {
-
-                // Deprecated values need to remove soon
-                if (cell == "MM" || cell == "mm") {
+            catch(const std::exception &e) 
+            {
+                if (cell == "MM" || cell == "mm") 
+                {
                     row.push_back(0);
                     continue;
                 }
-                if (cell == "HH" || cell == "hh") {
+                if (cell == "HH" || cell == "hh") 
+                {
                     row.push_back(-1);
                     continue;
                 }
@@ -60,7 +62,8 @@ void MapLoader::parseFile(std::vector<std::vector<int>>& mapData)
 
 void MapLoader::hotReload(std::vector<std::vector<int>>& mapData)
 {
-    if (this->getFileTimestamp() > this->last_timestamp) {
+    if (this->getFileTimestamp() > this->last_timestamp) 
+    {
         std::cout << "Reloading map due to changes detected!" << std::endl;
         this->parseFile(mapData);
     }

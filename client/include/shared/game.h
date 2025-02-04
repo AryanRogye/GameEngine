@@ -17,6 +17,9 @@
 
 class Game {
 private:
+
+    BlockFactory bf;
+
     SDL_Window *window;
     SDL_Renderer *renderer;
     Uint32 lastFrameTime = 0;

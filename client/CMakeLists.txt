@@ -9,6 +9,7 @@ find_package(SDL2 REQUIRED)
 set(SDL2_IMAGE_DIR "/opt/homebrew/opt/sdl2_image/lib/cmake/SDL2_image")
 find_package(SDL2_image REQUIRED)
 
+
 add_executable(client
     src/client/client.cpp
     src/client/packet.cpp
