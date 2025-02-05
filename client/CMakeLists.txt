@@ -18,7 +18,10 @@ add_executable(client
     src/shared/player.cpp
     src/core/map_loader.cpp
     src/core/block.cpp
+    src/core/world.cpp
     src/main.cpp
+
+    src/rendering/texture.cpp
 )
 
 target_include_directories(client PRIVATE
@@ -29,6 +32,7 @@ target_include_directories(client PRIVATE
         ${CMAKE_SOURCE_DIR}/include/core
         ${CMAKE_SOURCE_DIR}/include/server
         ${CMAKE_SOURCE_DIR}/include/shared
+        ${CMAKE_SOURCE_DIR}/include/rendering
 )
 
 target_link_libraries(client PRIVATE

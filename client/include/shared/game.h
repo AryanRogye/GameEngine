@@ -2,8 +2,8 @@
 #include "configs.h"
 #include <SDL2/SDL_render.h>
 #include <iostream>
-#include "client/client.h"
 #include "player.h"
+#include <memory>
 #include <unordered_map>
 #include <thread>
 #include <SDL_image.h>
@@ -14,10 +14,12 @@
 #include <core/map_loader.h>
 #include <core/block.h>
 #include "core/sprite.h"
+#include "world.h"
 
 
 class Game {
 private:
+    std::unique_ptr<World> world;
 
     BlockFactory bf;
 
@@ -29,9 +31,6 @@ private:
     // Player Stuff
     SDL_Texture* playerTexture;
     SDL_Texture* runningTexture;
-    Sprite playerIdle;
-    Sprite playerRun;
-    int frameCount = 5;
 
     // House Stuff
     bool enterHouse;
@@ -48,7 +47,6 @@ private:
     Client *client;
 public:
     Game(Sprite playerIdle, Sprite playerRun);
-    Game();
     void start_game();
     void handleEvent(SDL_Event e);
     void initWindow();

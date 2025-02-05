@@ -1,5 +1,4 @@
 #include "start_game.h"
-#include <SDL_render.h>
 
 void StartGame::start_screen()
 {
