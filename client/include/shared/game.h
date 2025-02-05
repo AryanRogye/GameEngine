@@ -13,6 +13,7 @@
 #include <SDL_hints.h>
 #include <core/map_loader.h>
 #include <core/block.h>
+#include "core/sprite.h"
 
 
 class Game {
@@ -28,8 +29,8 @@ private:
     // Player Stuff
     SDL_Texture* playerTexture;
     SDL_Texture* runningTexture;
-    int currentIdleFrame;
-    int currentRunningFrame;
+    Sprite playerIdle;
+    Sprite playerRun;
     int frameCount = 5;
 
     // House Stuff
@@ -46,13 +47,14 @@ private:
     bool keep_window_open;
     Client *client;
 public:
+    Game(Sprite playerIdle, Sprite playerRun);
     Game();
     void start_game();
     void handleEvent(SDL_Event e);
     void initWindow();
     void initRenderer();
     void renderPlayer();
-    void loadPlayerSprites(std::string filePath);
+    void loadPlayerSprites();
     void loadHouseSprites(std::string filePath);
     void updateServer(float *oldX, float *oldY);
     void renderOtherPlayers();

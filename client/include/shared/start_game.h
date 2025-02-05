@@ -1,27 +1,24 @@
 #pragma once
 
 #include <map>
+#include "shared/game.h"
 #ifndef START_GAME_H
 #define START_GAME_H
 
 #include <iostream>
+#include <thread>
 #include <configs.h>
 #include <SDL2/SDL.h>
 #include <SDL_image.h>
+#include "core/sprite.h"
 
 
-struct Sprite
-{
-    std::string name;
-    std::string path;
-    int currentFrame;
-    int frameCount;
-};
 class StartGame
 {
 private:
     std::string currentPath;
     std::vector<Sprite> sprites;
+    std::vector<Sprite> runSprites;
     SDL_Window *window;
     SDL_Renderer *renderer;
 
@@ -32,8 +29,8 @@ private:
     int selected_character = 0;
     std::vector<SDL_Texture *> character_textures;
     SDL_Rect character_rect;
-    int character_width = PLAYER_WIDTH;
-    int character_height = PLAYER_HEIGHT;
+    int character_width = PLAYER_WIDTH * 2;
+    int character_height = PLAYER_HEIGHT * 2;
     int character_x = (WIDTH / 2 - character_width / 2);
     int character_y = (HEIGHT / 2 - character_height / 2) - 50;
 
@@ -77,6 +74,8 @@ public:
     void renderStartButton();
     void renderArrowButtons();
     void renderCharacterSelection();
+
+    void startGame();
 };
 
 #endif

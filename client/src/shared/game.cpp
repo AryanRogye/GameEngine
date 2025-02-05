@@ -2,11 +2,12 @@
 #include "configs.h"
 #include <cstdio>
 
-Game::Game() 
+Game::Game(Sprite playerIdle, Sprite playerRun) 
 {
     this->enterHouse = false;
+    this->playerIdle = playerIdle;
+    this->playerRun = playerRun;
     this->bf = BlockFactory();
-    this->currentIdleFrame = 0;
     this->client = new Client();
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -16,12 +17,13 @@ Game::Game()
     this->initWindow();
     this->initRenderer();
     this->keep_window_open = true;
+    this->loadPlayerSprites();
 }
 
-void Game::loadPlayerSprites(std::string filePath)
+void Game::loadPlayerSprites()
 {
     // Player Character
-    SDL_Surface* playerSurface = IMG_Load((filePath + "../../Assets/char_idle2.png").c_str());
+    SDL_Surface* playerSurface = IMG_Load(this->playerIdle.path.c_str());
     if (!playerSurface)
     {
         std::cout << "Failed to Load Player Sprite" << std::endl;
@@ -38,7 +40,7 @@ void Game::loadPlayerSprites(std::string filePath)
         return;
     }
     // Running Sprite Loading
-    SDL_Surface* runningSurface = IMG_Load((filePath + "../../Assets/char_run1.png").c_str());
+    SDL_Surface* runningSurface = IMG_Load(this->playerRun.path.c_str());
     if (!runningSurface)
     {
         std::cout << "Failed to Load Running Sprite" << std::endl;
@@ -70,14 +72,14 @@ void Game::renderPlayer()
     if (!player->getIsWalking())
     {
         // First Thing Reset the Running Frame
-        this->currentRunningFrame = 0;
+        this->playerRun.currentFrame = 0;
         if (now - this->lastFrameTime >= this->frameDelay)
         {
-            this->currentIdleFrame = (this->currentIdleFrame + 1) % 4;
+            this->playerIdle.currentFrame = (this->playerIdle.currentFrame + 1) % this->playerIdle.frameCount;
             this->lastFrameTime = now;
         }
         // Define the source rectangle if using a sprite sheet (assuming each sprite is 30x30)
-        SDL_Rect srcRect = { this->currentIdleFrame * 30, 0, 30, 45 };
+        SDL_Rect srcRect = { this->playerIdle.currentFrame * 30, 0, 30, 45 };
         // Destination rectangle based on your camera offset calculations
         SDL_Rect destRect = { (int)player->getX() - camX, (int)player->getY() - camY, PLAYER_WIDTH, PLAYER_HEIGHT};
         // Determine if the sprite should be flipped horizontally
@@ -93,16 +95,16 @@ void Game::renderPlayer()
     else
     {
         // First Thing Reset the Idle Frame
-        this->currentIdleFrame = 0;
+        this->playerIdle.currentFrame = 0;
         if (now - this->lastFrameTime >= this->frameDelay)
         {
-            this->currentRunningFrame = (this->currentRunningFrame + 1) % 4;
+            this->playerRun.currentFrame = (this->playerRun.currentFrame + 1) % this->playerRun.frameCount;
             this->lastFrameTime = now;
         }
         // Define the source rectangle if using a sprite sheet (assuming each sprite is 30x30)
-        SDL_Rect srcRect = { this->currentRunningFrame * 30, 0, 30, 30 };
+        SDL_Rect srcRect = { this->playerRun.currentFrame * 30, 0, 30, 45 };
         // Destination rectangle based on your camera offset calculations
-        SDL_Rect destRect = { (int)player->getX() - camX, (int)player->getY() - camY, TILE_SIZE, TILE_SIZE};
+        SDL_Rect destRect = { (int)player->getX() - camX, (int)player->getY() - camY, PLAYER_WIDTH, PLAYER_HEIGHT};
         // Determine if the sprite should be flipped horizontally
         SDL_RendererFlip flip = player->getFacingRight() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
         // Render the sprite with the flip
@@ -171,7 +173,6 @@ void Game::start_game()
     // Load The House Texture
     this->loadHouseSprites(currentPath);
 
-    this->loadPlayerSprites(currentPath);
 
     while(this->keep_window_open)
     {

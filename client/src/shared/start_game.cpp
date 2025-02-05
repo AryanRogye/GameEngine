@@ -174,11 +174,17 @@ void StartGame::handleEvent(SDL_Event e)
         if(this->checkButtonClicked(this->start_button_rect, mouseX, mouseY))
         {
             std::cout << "Start Button Clicked" << std::endl;
+            // We Will Pass The Selected Character To The Game
+            this->sprites[this->selected_character].currentFrame = 0;
+            
             this->keep_window_open = false;
             // Close This Window And Everything Related To It
             SDL_DestroyRenderer(this->renderer);
             SDL_DestroyWindow(this->window);
             SDL_Quit();
+
+            // Start The game
+            this->startGame();
         }
         if(this->checkButtonClicked(this->forward_arrow_rect, mouseX, mouseY))
         {
@@ -191,6 +197,11 @@ void StartGame::handleEvent(SDL_Event e)
             this->selected_character = (this->selected_character - 1) % this->sprites.size();
         }
     }
+}
+
+void StartGame::startGame() {
+    Game game(this->sprites[this->selected_character], this->runSprites[this->selected_character]);
+    game.start_game();
 }
 
 bool StartGame::checkButtonClicked(SDL_Rect buttonRect, int mouseX, int mouseY)
@@ -210,6 +221,11 @@ StartGame::StartGame() {
         {"Girl", this->currentPath + "../../Assets/char_idle2.png", 0, 7},
         {"Boy" , this->currentPath + "../../Assets/char_idle1.png", 0, 5},
     };
+    this->runSprites = {
+        {"Girl", this->currentPath + "../../Assets/char_idle2.png", 0, 7},
+        {"Boy", this->currentPath + "../../Assets/char_idle1.png", 0, 5},
+    };
+
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
