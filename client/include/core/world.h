@@ -5,7 +5,7 @@
 #include "core/map_loader.h"
 #include "block.h"
 #include "configs.h"
-#include "sprite.h"
+#include "rendering/sprite.h"
 #include <SDL2/SDL.h>
 #include <memory>
 

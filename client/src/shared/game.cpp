@@ -10,7 +10,6 @@ Game::Game(Sprite playerIdle, Sprite playerRun)
     this->initWindow();
     this->initRenderer();
     this->world = std::make_unique<World>(playerIdle, playerRun, this->renderer, this->window);
-    this->keep_window_open = true;
 }
 
 void Game::start_game()

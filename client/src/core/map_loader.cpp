@@ -1,5 +1,4 @@
 #include "map_loader.h"
-#include <cctype>
 
 MapLoader::MapLoader(const std::string& map_path) : map_path(map_path), last_timestamp(0) {}
 

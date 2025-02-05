@@ -22,6 +22,7 @@
 #include <iostream>
 #include <memory>
 #include <utility>
+#include <type_traits>
 
 
 enum class BlockType {
@@ -112,7 +113,7 @@ public:
     {
         for (auto& comp : components) 
         {
-            if(typeid(*comp) == typeid(T))
+            if (comp && dynamic_cast<T*>(comp.get()))
                 return static_cast<T*>(comp.get());
         }
         return nullptr;

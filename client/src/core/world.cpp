@@ -1,6 +1,7 @@
 #include "world.h"
 
 World::World(Sprite playerIdleSprite, Sprite playerRunSprite, SDL_Renderer* renderer, SDL_Window* window)
+: playerIdleSprite(playerIdleSprite), playerRunSprite(playerRunSprite)
 {
     this->window = window;      /** Set Window **/
     this->renderer = renderer;  /** Set Renderer **/
@@ -9,10 +10,6 @@ World::World(Sprite playerIdleSprite, Sprite playerRunSprite, SDL_Renderer* rend
     this->currentPath = __FILE__;
     this->currentPath = currentPath.substr(0, currentPath.find_last_of("/\\") + 1);
 
-    /** Set ClassLevel Sprites **/
-    this->playerIdleSprite = playerIdleSprite;
-    this->playerRunSprite = playerRunSprite;
-    
     /** Block Factory **/
     this->bf = BlockFactory();
 
@@ -157,13 +154,13 @@ void World::setupWorld()
      *      - Run
      **/
     if(!Texture::loadTexture(
-        this->playerIdleSprite.path,
+        this->playerIdleSprite.getPath(),
         &this->playerIdleTexture,
         this->renderer
     )) std::cout << "Failed to load playerIdleTexture" << std::endl;
 
     if(!Texture::loadTexture(
-        this->playerRunSprite.path,
+        this->playerRunSprite.getPath(),
         &this->playerRunTexture,
         this->renderer
     )) std::cout << "Failed to load playerRunTexture" << std::endl;
@@ -247,7 +244,6 @@ void World::renderMap()
             }
             if (tileIndex >= 0 && tileIndex < tiles.size())
             {
-                std::cout << "Tile Index: " << tileIndex << std::endl;
                 SDL_Rect destRect = {
                     x * displayTileSize - camX,  // Apply camera offset here
                     y * displayTileSize - camY,
@@ -288,58 +284,32 @@ void World::updateServer(float *oldX, float *oldY)
 void World::renderPlayer()
 {
     Player* player = this->client->getPlayer();
-
-    int windowWidth = WIDTH; 
-    int windowHeight = HEIGHT;
-    // Calculate camera offset based on the player’s position
-    // Basically is the center of the player
-    int camX = player->getX() + static_cast<int>(player->getWidth() / 2 - windowWidth / 2);
-    int camY = player->getY() + static_cast<int>(player->getHeight() / 2 - windowHeight / 2);
-
     Uint32 now = SDL_GetTicks();
+    int feetY = player->getY() + player->getHeight();
+    int centerX = player->getX() + static_cast<int>(player->getWidth() / 2);
 
     if (!player->getIsWalking())
     {
         // First Thing Reset the Running Frame
-        this->playerRunSprite.currentFrame = 0;
+        this->playerRunSprite.setCurrentFrame(0);
         if (now - this->lastFrameTime >= this->frameDelay)
         {
-            this->playerIdleSprite.currentFrame = (this->playerIdleSprite.currentFrame + 1) % this->playerIdleSprite.frameCount;
+            this->playerIdleSprite.setCurrentFrame((this->playerIdleSprite.getCurrentFrame() + 1) % this->playerIdleSprite.getFrameCount());
             this->lastFrameTime = now;
         }
-        // Define the source rectangle if using a sprite sheet (assuming each sprite is 30x30)
-        SDL_Rect srcRect = { this->playerIdleSprite.currentFrame * 30, 0, 30, 45 };
-        // Destination rectangle based on your camera offset calculations
-        SDL_Rect destRect = { (int)player->getX() - camX, (int)player->getY() - camY, PLAYER_WIDTH, PLAYER_HEIGHT};
-        // Determine if the sprite should be flipped horizontally
-        SDL_RendererFlip flip = player->getFacingRight() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
-        // Render the sprite with the flip
-        SDL_RenderCopyEx(this->renderer, this->playerIdleTexture, &srcRect, &destRect, 0.0, NULL, flip);
-        // Printing Block Info By Posttion we need to get the feet of the character
-        int feetY = player->getY() + player->getHeight();
-        int centerX = player->getX() + static_cast<int>(player->getWidth() / 2);
-        
+        Sprite::renderSprite(this->playerIdleSprite, this->renderer, playerIdleTexture, 30, 45, player);
         this->bf.printBlockInfoByPosition(centerX, feetY, this->mapData);
     }
     else
     {
         // First Thing Reset the Idle Frame
-        this->playerIdleSprite.currentFrame = 0;
+        this->playerIdleSprite.setCurrentFrame(0);
         if (now - this->lastFrameTime >= this->frameDelay)
         {
-            this->playerRunSprite.currentFrame = (this->playerRunSprite.currentFrame + 1) % this->playerRunSprite.frameCount;
+            this->playerRunSprite.setCurrentFrame ( (this->playerRunSprite.getCurrentFrame() + 1) % this->playerRunSprite.getFrameCount());
             this->lastFrameTime = now;
         }
-        // Define the source rectangle if using a sprite sheet (assuming each sprite is 30x30)
-        SDL_Rect srcRect = { this->playerRunSprite.currentFrame * 30, 0, 30, 45 };
-        // Destination rectangle based on your camera offset calculations
-        SDL_Rect destRect = { (int)player->getX() - camX, (int)player->getY() - camY, PLAYER_WIDTH, PLAYER_HEIGHT};
-        // Determine if the sprite should be flipped horizontally
-        SDL_RendererFlip flip = player->getFacingRight() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
-        // Render the sprite with the flip
-        SDL_RenderCopyEx(this->renderer, this->playerRunTexture, &srcRect, &destRect, 0.0, NULL, flip);
-        int feetY = player->getY() + player->getHeight();
-        int centerX = player->getX() + player->getWidth() / 2;
+        Sprite::renderSprite(this->playerRunSprite, this->renderer, this->playerRunTexture, 30, 45, player);
         this->bf.printBlockInfoByPosition(centerX, feetY, this->mapData);
     }
 }

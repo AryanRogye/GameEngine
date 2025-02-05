@@ -1,16 +1,14 @@
 #pragma once
 
-#include <map>
-#include "shared/game.h"
 #ifndef START_GAME_H
 #define START_GAME_H
 
 #include <iostream>
-#include <thread>
 #include <configs.h>
 #include <SDL2/SDL.h>
 #include <SDL_image.h>
-#include "core/sprite.h"
+#include "rendering/sprite.h"
+#include "shared/game.h"
 
 
 class StartGame

@@ -4,7 +4,7 @@ Player::Player(int id, const char* name)
 {
     // Initialize the player's position
     this->position = {
-        WIDTH / 2, HEIGHT / 2
+        static_cast<int>(WIDTH / 2), static_cast<int>(HEIGHT / 2)
     };
     // Initialize the player's id
     this->id = id;

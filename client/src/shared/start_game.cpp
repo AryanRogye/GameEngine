@@ -33,16 +33,19 @@ void StartGame::renderCharacterSelection()
     Uint32 now = SDL_GetTicks();
     if (now - this->lastFrameTime > this->frameDelay)
     {
-        this->sprites[this->selected_character].currentFrame = 
-        (this->sprites[this->selected_character].currentFrame + 1) % this->sprites[this->selected_character].frameCount;
+        this->sprites[this->selected_character].setCurrentFrame(
+        (this->sprites[this->selected_character].getCurrentFrame() + 1) % this->sprites[this->selected_character].getFrameCount());
         this->lastFrameTime = now;
     }
     // Define the source rectangle if using a sprite sheet (assuming each sprite is 30x30)
-    SDL_Rect srcRect = { this->sprites[this->selected_character].currentFrame * 30, 0, 30, 45 };
-    // Destination rectangle based on your camera offset calculations
-    // Render the sprite with the flip
-    SDL_RenderCopyEx(this->renderer, this->character_textures[this->selected_character], &srcRect, &this->character_rect, 0.0, NULL, SDL_FLIP_NONE);
-    /*SDL_RenderCopy(this->renderer, this->character_textures[this->selected_character], NULL, &character_rect);*/
+    Sprite::renderSprite(
+        this->sprites[this->selected_character],
+        this->renderer, 
+        this->character_textures[this->selected_character], 
+        this->character_rect, 
+        30, 
+        45
+    );
 }
 
 void StartGame::renderArrowButtons()
@@ -75,7 +78,7 @@ void StartGame::loadCharacterTextures()
 {
     for (auto& character : this->sprites)
     {
-        SDL_Surface* character_surface = IMG_Load(character.path.c_str());
+        SDL_Surface* character_surface = IMG_Load(character.getPath().c_str());
         if(!character_surface)
         {
             std::cout << "Failed to load character image" << std::endl;
@@ -174,7 +177,7 @@ void StartGame::handleEvent(SDL_Event e)
         {
             std::cout << "Start Button Clicked" << std::endl;
             // We Will Pass The Selected Character To The Game
-            this->sprites[this->selected_character].currentFrame = 0;
+            this->sprites[this->selected_character].setCurrentFrame(0);
             
             this->keep_window_open = false;
             // Close This Window And Everything Related To It
@@ -218,7 +221,7 @@ StartGame::StartGame() {
     this->character_textures = std::vector<SDL_Texture*>();
     this->sprites = {
         {"Girl", this->currentPath + "../../Assets/char_idle2.png", 0, 7},
-        {"Boy" , this->currentPath + "../../Assets/char_idle1.png", 0, 5},
+        {"Boy" , this->currentPath + "../../Assets/char_idle1.png", 0, 5}
     };
     this->runSprites = {
         {"Girl", this->currentPath + "../../Assets/char_idle2.png", 0, 7},

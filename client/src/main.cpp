@@ -1,4 +1,3 @@
-#include <iostream>
 #include "shared/start_game.h"
 
 int main()
