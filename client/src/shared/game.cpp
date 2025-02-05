@@ -1,8 +1,10 @@
 #include "shared/game.h"
 #include "configs.h"
+#include <cstdio>
 
 Game::Game() 
 {
+    this->enterHouse = false;
     this->bf = BlockFactory();
     this->currentIdleFrame = 0;
     this->client = new Client();
@@ -189,6 +191,7 @@ void Game::start_game()
 
         this->renderPlayer();
         this->renderOtherPlayers();
+        this->checkIfPosIsEnterable();
 
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
@@ -371,6 +374,7 @@ void Game::handleEvent(SDL_Event e) {
         int newY = player->getY();
         int speed = player->getSpeed();
 
+
         switch (e.key.keysym.sym) {
             case SDLK_w:
                 newY -= speed;
@@ -388,19 +392,33 @@ void Game::handleEvent(SDL_Event e) {
                 player->setFacingRight(true);
                 player->setIsWalking(true);
                 break;
+            case SDLK_e:
+                if (this->enterHouse)
+                    std::cout << "E Key Pressed (Allowed)" << std::endl;
+                else
+                    std::cout << "E Key Pressed (Not Allowed)" << std::endl;
         }
 
         // Check if the new position is valid
-        int feetY = newY + player->getHeight();
+        int feetY = newY + player->getHeight() + 1;
         int centerX = newX + player->getWidth() / 2;
 
-        if (!this->bf.checkCollision(centerX, feetY, this->mapData)) {
+        bool isColliding = this->bf.checkCollision(centerX, feetY, this->mapData);
+
+        // Add Enterable Here
+        if (!isColliding) 
+        {
             player->setX(newX);
             player->setY(newY);
-        } else {
-            std::cout << "Collision Detected" << std::endl;
         }
-
+        else 
+        {
+            /** 
+             * Dont Really Have to do anything cuz this means that the 
+             * Player cannot move at all im gonna keep the else block
+             * so that its easier to understan what is happening
+             **/
+        }
     }
     else if (e.type == SDL_KEYUP) {
         if (e.key.keysym.sym == SDLK_a || e.key.keysym.sym == SDLK_d) {
@@ -443,5 +461,17 @@ void Game::initRenderer()
         SDL_DestroyWindow(window);
         SDL_Quit();
         return;
+    }
+}
+
+void Game::checkIfPosIsEnterable()
+{
+    if(this->bf.checkEnterable(this->client->getPlayer()->getX(), this->client->getPlayer()->getY(), this->mapData))
+    {
+        this->enterHouse = true;
+    }
+    else
+    {
+        this->enterHouse = false;
     }
 }

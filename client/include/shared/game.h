@@ -33,6 +33,7 @@ private:
     int frameCount = 5;
 
     // House Stuff
+    bool enterHouse;
     SDL_Texture* house_one_texture;
     SDL_Rect house_one_rect;
 
@@ -55,6 +56,9 @@ public:
     void loadHouseSprites(std::string filePath);
     void updateServer(float *oldX, float *oldY);
     void renderOtherPlayers();
+
+    // Interactions With The Map
+    void checkIfPosIsEnterable();
 
     // Read File Map
     void parseMap(std::string filePath);

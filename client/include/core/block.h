@@ -67,6 +67,14 @@ public:
     bool getIsSolid() const;
 };
 
+class Enterable : public BlockComponent {
+    bool isEnterable;
+public:
+    Enterable(bool isEnterable);
+    Enterable();
+    bool getIsEnterable() const;
+};
+
 class Block {
 public:
 
@@ -88,10 +96,12 @@ public:
      **/
     /** Add Components **/
     template <typename T, typename... Args>
-    void addComponent(Args&&... args)
-    {
-        std::cout << "Adding component of type: " << typeid(T).name() << " to block: " << this->name << std::endl;
-        components.push_back(std::make_unique<T>(std::forward<Args>(args)...));
+    void addComponent(Args&&... args) {
+        if (getComponent<T>()) {
+            std::cout << "Component already exists in block: " << this->name << std::endl;
+            return;
+        }
+        components.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
     }
     
     /** 
@@ -102,8 +112,8 @@ public:
     {
         for (auto& comp : components) 
         {
-            if (auto ptr = dynamic_cast<T*>(comp.get()))
-                return ptr;
+            if(typeid(*comp) == typeid(T))
+                return static_cast<T*>(comp.get());
         }
         return nullptr;
     }
@@ -115,17 +125,46 @@ public:
  **/
 class BlockFactory {
     std::unordered_map<std::string, Block> blocks;
+    std::unordered_map<BlockType, Block*> type_to_block;
     static BlockType oldBlockType;
 public:
     BlockFactory();
     template <typename T, typename... Args>
-    void addBlock(BlockType type, Args&&... args);
+    void addComponentToBlock(BlockType type, Args&&... args) 
+    {
+        if (type_to_block.count(type)) 
+        {
+            type_to_block.at(type)->addComponent<T>(std::forward<Args>(args)...);
+        }
+    }
+    void addBlock(BlockType type, std::string name);
+    void addBlock(BlockType type);
+    template <typename... Components, typename... Args>
+    void addBlock(BlockType type, const std::string& name, Args&&... args) {
+        if (blocks.count(name)) {
+            std::cout << "Block already exists: " << name << std::endl;
+            return;
+        }
+        blocks.emplace(name, Block(type, name));
+        type_to_block.emplace(type, &blocks.at(name));
+        addComponentsToBlock<Components...>(blocks.at(name), std::forward<Args>(args)...);
+    }
 
+    template <typename T, typename... Rest, typename... Args>
+    void addComponentsToBlock(Block& block, Args&&... args) {
+        block.addComponent<T>(std::forward<Args>(args)...);
+        if constexpr (sizeof...(Rest) > 0) {
+            addComponentsToBlock<Rest...>(block, std::forward<Args>(args)...);
+        }
+    }
+    
+    Block* getBlockAtPosition(int x, int y, const std::vector<std::vector<int>>& mapData);
     BlockType getBlockTypeFromString(const std::string& name);
     std::string getBlockName(BlockType type);
     void printBlockInfo() const;
     void printBlockInfoByPosition(int x, int y, const std::vector<std::vector<int>>& mapData);
     bool checkCollision(int x, int y, const std::vector<std::vector<int>>& mapData);
+    bool checkEnterable(int x, int y, const std::vector<std::vector<int>>& mapData);
 };
 
 #endif // BLOCK_H
