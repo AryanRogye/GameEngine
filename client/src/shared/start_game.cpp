@@ -17,7 +17,19 @@ void StartGame::start_screen()
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
         
-        this->renderWelcomeText();
+        UI::renderTextAtPosition(
+            this->renderer, 
+            this->font_texture, 
+            this->fonts, 
+            this->welcome_text, 
+            this->welcome_text_x, 
+            this->welcome_text_y, 
+            FONT_WIDTH, 
+            FONT_HEIGHT, 
+            FONT_SCALE, 
+            true
+        );
+
         this->renderStartButton();
         this->renderArrowButtons();
         this->renderCharacterSelection();
@@ -82,47 +94,8 @@ std::vector<int> getCharacterIndices(const std::string& input) {
 }
 void StartGame::renderWelcomeText()
 {
-    // We Need to Find The Index of Each Character in the Font by actual character
-    std::vector<int> indices = getCharacterIndices(welcome_text);
-    
-    int x = welcome_text_x;
-    int y = welcome_text_y;
-
-    // Calculate total width of the text
-    int total_width = 0;
-    for (int index : indices)
-    {
-        if (index != -1 && index != -2)  // Only calculate width for valid characters
-        {
-            total_width += FONT_WIDTH * FONT_SCALE; // 8 is the width of each character
-        }
-         else if (index == -1)
-        {
-            total_width += FONT_WIDTH * FONT_SCALE; // Space width
-        }
-    }
-
-    x = (WIDTH - total_width) / 2;  // Set the starting x position based on screen width and text width
-
-    for (int index : indices)
-    {
-        if (index == -1) 
-        {
-            x += FONT_WIDTH * FONT_SCALE;
-            continue;
-        }
-        if (index == -2) 
-        {
-            continue;
-        }
-
-        SDL_Rect srcRect = this->fonts[index];  // Get the correct font tile
-        SDL_Rect destRect = {x, y, FONT_WIDTH * FONT_SCALE, FONT_HEIGHT * FONT_SCALE}; // Scale the font size
-
-        Sprite::renderSprite(this->renderer, this->font_texture, srcRect, destRect);
-
-        x += FONT_WIDTH * FONT_SCALE; // Move right for next character
-    }
+    UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, this->welcome_text, this->welcome_text_x, this->welcome_text_y, FONT_WIDTH, FONT_HEIGHT, FONT_SCALE, true);
+    // We Need to Find The Index of Each Character in the Font by actual character;
 }
 
 
@@ -297,7 +270,6 @@ bool StartGame::checkButtonClicked(SDL_Rect buttonRect, int mouseX, int mouseY)
 
 
 StartGame::StartGame() {
-    this->welcome_text_x = 0;
     // Get Current File Path
     this->currentPath = __FILE__;
     this->currentPath = this->currentPath.substr(0, this->currentPath.find_last_of("/\\") + 1);

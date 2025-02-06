@@ -9,6 +9,7 @@
 #include <SDL2/SDL.h>
 #include <SDL_image.h>
 #include "rendering/sprite.h"
+#include "rendering/ui.h"
 #include "shared/game.h"
 
 
@@ -31,7 +32,12 @@ private:
     // Welcome Text
     SDL_Rect welcome_text_rect;
     std::string welcome_text = "Welcome To Dusk Watch";
-    int welcome_text_x;
+
+    // Total width of the text: Number of characters * width of each character (scaled)
+    int total_text_width = welcome_text.length() * FONT_WIDTH * FONT_SCALE; 
+
+    // Calculate the starting x position to center the text
+    int welcome_text_x = 0;
     int welcome_text_y = 100;
 
     int selected_character = 0;

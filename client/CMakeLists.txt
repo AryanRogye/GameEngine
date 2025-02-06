@@ -23,6 +23,7 @@ add_executable(client
 
     src/rendering/texture.cpp
     src/rendering/sprite.cpp
+    src/rendering/ui.cpp
 )
 
 target_include_directories(client PRIVATE
