@@ -1,4 +1,5 @@
 #include "rendering/sprite.h"
+#include <_wchar.h>
 
 Sprite::Sprite(std::string name, std::string path, int currentFrame, int frameCount)
 {
@@ -7,10 +8,39 @@ Sprite::Sprite(std::string name, std::string path, int currentFrame, int frameCo
     this->currentFrame = currentFrame;
     this->frameCount = frameCount;
 }
+
+void Sprite::renderSprite(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect srcRect, SDL_Rect destRect)
+{
+    SDL_RenderCopy(renderer, texture, &srcRect, &destRect);
+}
 void Sprite::renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture,SDL_Rect rect, int width, int height)
 {
     SDL_Rect srcRect = { sprite.getCurrentFrame() * width, 0, width, height };
     SDL_RenderCopyEx(renderer, texture, &srcRect, &rect, 0.0, NULL, SDL_FLIP_NONE);
+}
+
+void Sprite::fillRectVector(std::vector<SDL_Rect>& rect, int atlasWidth, int atlasHeight, int gridWidth, int gridHeight)
+{
+    if (gridHeight == -1)
+    {
+        gridHeight = gridWidth;
+    }
+
+    int tilesPerRow = atlasWidth / gridWidth;
+    int tilesPerCol = atlasHeight / gridHeight;
+
+    for (int y = 0; y < tilesPerCol; y++) {
+        for (int x = 0; x < tilesPerRow; x++) {
+            // Fill With Fake Tiles
+            SDL_Rect tileRect {
+                x * gridWidth,  // Calculate actual pixel position
+                y * gridHeight,
+                gridWidth,
+                gridHeight 
+            };
+            rect.push_back(tileRect);
+        }
+    }
 }
 
 void Sprite::renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture, int width, int height, Player* player)
@@ -27,6 +57,7 @@ void Sprite::renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* te
     // Render the sprite with the flip
     SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, 0.0, NULL, flip);
 }
+
 // Getters
 std::string Sprite::getName() { return name; }
 std::string Sprite::getPath(){ return path; }

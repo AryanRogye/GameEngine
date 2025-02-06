@@ -1,5 +1,6 @@
 #pragma once
 
+#include <SDL_rect.h>
 #ifndef START_GAME_H
 #define START_GAME_H
 
@@ -23,6 +24,15 @@ private:
     // Charecter Selection
     Uint32 lastFrameTime = 0;
     const Uint32 frameDelay = 180;
+
+    std::vector<SDL_Rect> fonts;
+    SDL_Texture* font_texture;
+
+    // Welcome Text
+    SDL_Rect welcome_text_rect;
+    std::string welcome_text = "Welcome To Dusk Watch";
+    int welcome_text_x;
+    int welcome_text_y = 100;
 
     int selected_character = 0;
     std::vector<SDL_Texture *> character_textures;
@@ -68,11 +78,12 @@ public:
     void loadStartButtonTexture();
     void loadArrowButtonTextures();
     void loadCharacterTextures();
+    void loadFont();
 
     void renderStartButton();
     void renderArrowButtons();
     void renderCharacterSelection();
-
+    void renderWelcomeText();
     void startGame();
 };
 

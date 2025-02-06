@@ -51,13 +51,30 @@ private:
     SDL_Texture * tileAtlasTexture;
     std::vector<SDL_Rect> tiles;
     std::vector<std::vector<int>> mapData;  // Stores Index of Tile In TileSet
-    
+
+    /** 
+     * Font Rendering
+     *      -- Showing Different Things on the screen
+     *      -- Fonts Are Made inside the shared/start_game.cpp
+     *      -- the texture and vector is getting loaded in from 
+     *              start_game originaly then passed to game then here
+     **/
+    SDL_Texture* fontTexture;
+    std::vector<SDL_Rect> fonts;
+
     MapLoader mapLoader;
     std::unique_ptr<Client> client;
     bool keep_window_open = true;
     std::string currentPath;
 public:
-    World(Sprite playerIdleSprite, Sprite playerRunSprite, SDL_Renderer* renderer, SDL_Window* window);
+    World(
+        Sprite playerIdleSprite, 
+        Sprite playerRunSprite, 
+        SDL_Renderer* renderer, 
+        SDL_Window* window,
+        SDL_Texture* fontTexture,
+        std::vector<SDL_Rect> fonts
+    );
     World();
 
     void handleEvent(SDL_Event e);
@@ -65,7 +82,6 @@ public:
     void updateServer(float *oldX, float *oldY);
 
     void setupWorld();
-    void initializeTiles();
     void updateAndRender();
 
     void renderMap();

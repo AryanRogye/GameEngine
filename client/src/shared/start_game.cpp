@@ -1,10 +1,13 @@
 #include "start_game.h"
+#include "configs.h"
+#include <SDL_rect.h>
 
 void StartGame::start_screen()
 {
     this->loadStartButtonTexture();
     this->loadArrowButtonTextures();
     this->loadCharacterTextures();
+    this->loadFont();
 
     while(this->keep_window_open)
     {
@@ -13,7 +16,8 @@ void StartGame::start_screen()
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
-    
+        
+        this->renderWelcomeText();
         this->renderStartButton();
         this->renderArrowButtons();
         this->renderCharacterSelection();
@@ -21,6 +25,15 @@ void StartGame::start_screen()
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
     }
+}
+
+
+void StartGame::loadFont()
+{
+    /** Font Is Just a Sprite Sheet so we can just use the sprite class **/
+    Sprite::fillRectVector(this->fonts,128,128, 8,7);
+    /** Load Into the texture **/
+    Texture::loadTexture(this->currentPath + "../../Assets/font.png", &this->font_texture, this->renderer);
 }
 
 void StartGame::renderCharacterSelection()
@@ -47,6 +60,71 @@ void StartGame::renderCharacterSelection()
         45
     );
 }
+std::vector<int> getCharacterIndices(const std::string& input) {
+    std::vector<int> indices;
+
+    // Updated character set based on the font sprite sheet
+    std::string characterSet = "abcdefghijklmnopqrstuvwxyz1234567890#,.!?:*%()+-/\\=><áàãâçêéèíóú'\"";
+
+    for (char ch : input) {
+        char lowerCh = std::tolower(ch); // Convert to lowercase
+
+        size_t index = characterSet.find(lowerCh);
+        if (index != std::string::npos) {
+            indices.push_back(static_cast<int>(index)); // Valid character
+        } else if (ch == ' ') {
+            indices.push_back(-1); // Handle spaces manually
+        } else {
+            indices.push_back(-2); // Unknown character placeholder
+        }
+    }
+    return indices;
+}
+void StartGame::renderWelcomeText()
+{
+    // We Need to Find The Index of Each Character in the Font by actual character
+    std::vector<int> indices = getCharacterIndices(welcome_text);
+    
+    int x = welcome_text_x;
+    int y = welcome_text_y;
+
+    // Calculate total width of the text
+    int total_width = 0;
+    for (int index : indices)
+    {
+        if (index != -1 && index != -2)  // Only calculate width for valid characters
+        {
+            total_width += FONT_WIDTH * FONT_SCALE; // 8 is the width of each character
+        }
+         else if (index == -1)
+        {
+            total_width += FONT_WIDTH * FONT_SCALE; // Space width
+        }
+    }
+
+    x = (WIDTH - total_width) / 2;  // Set the starting x position based on screen width and text width
+
+    for (int index : indices)
+    {
+        if (index == -1) 
+        {
+            x += FONT_WIDTH * FONT_SCALE;
+            continue;
+        }
+        if (index == -2) 
+        {
+            continue;
+        }
+
+        SDL_Rect srcRect = this->fonts[index];  // Get the correct font tile
+        SDL_Rect destRect = {x, y, FONT_WIDTH * FONT_SCALE, FONT_HEIGHT * FONT_SCALE}; // Scale the font size
+
+        Sprite::renderSprite(this->renderer, this->font_texture, srcRect, destRect);
+
+        x += FONT_WIDTH * FONT_SCALE; // Move right for next character
+    }
+}
+
 
 void StartGame::renderArrowButtons()
 {
@@ -201,8 +279,13 @@ void StartGame::handleEvent(SDL_Event e)
     }
 }
 
-void StartGame::startGame() {
+void StartGame::startGame() 
+{
     Game game(this->sprites[this->selected_character], this->runSprites[this->selected_character]);
+    // We Also Want To Give The Font Texture and the font vector to the game
+    game.setFontTexture(this->font_texture);
+    game.setFontVector(this->fonts);
+    // Start The Game
     game.start_game();
 }
 
@@ -214,6 +297,7 @@ bool StartGame::checkButtonClicked(SDL_Rect buttonRect, int mouseX, int mouseY)
 
 
 StartGame::StartGame() {
+    this->welcome_text_x = 0;
     // Get Current File Path
     this->currentPath = __FILE__;
     this->currentPath = this->currentPath.substr(0, this->currentPath.find_last_of("/\\") + 1);

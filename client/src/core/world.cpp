@@ -1,7 +1,15 @@
 #include "world.h"
 
-World::World(Sprite playerIdleSprite, Sprite playerRunSprite, SDL_Renderer* renderer, SDL_Window* window)
-: playerIdleSprite(playerIdleSprite), playerRunSprite(playerRunSprite)
+World::World(
+    Sprite playerIdleSprite, 
+    Sprite playerRunSprite, 
+    SDL_Renderer* renderer, 
+    SDL_Window* window,
+    SDL_Texture* fontTexture,
+    std::vector<SDL_Rect> fonts
+)
+: playerIdleSprite(playerIdleSprite), playerRunSprite(playerRunSprite),
+  fontTexture(fontTexture), fonts(fonts)
 {
     this->window = window;      /** Set Window **/
     this->renderer = renderer;  /** Set Renderer **/
@@ -136,7 +144,7 @@ void World::setupWorld()
         this->renderer
     )) std::cout << "Failed to load tileAtlasTexture" << std::endl;
     // Initialize Empty Rect Tiles
-    this->initializeTiles();
+    Sprite::fillRectVector(this->tiles, 208, 208, 16);
 
     // Load The Map
     this->mapLoader.parseFile(this->mapData);
@@ -164,34 +172,6 @@ void World::setupWorld()
         &this->playerRunTexture,
         this->renderer
     )) std::cout << "Failed to load playerRunTexture" << std::endl;
-}
-
-void World::initializeTiles()
-{
-    /** 
-     * 16x16    - Each Tile
-     * 208x208  - Atlas Size
-     **/
-    int tileSize = 16;
-    int atlasWidth = 208;
-    int atlasHeight = 208;
-    
-    /** In all reality this should be 13 **/
-    int tilesPerRow = atlasWidth / tileSize;
-    int tilesPerCol = atlasHeight / tileSize;
-
-    for (int y = 0; y < tilesPerCol; y++) {
-        for (int x = 0; x < tilesPerRow; x++) {
-            // Fill With Fake Tiles
-            SDL_Rect tileRect {
-                x * tileSize,  // Calculate actual pixel position
-                y * tileSize,
-                tileSize,
-                tileSize
-            };
-            this->tiles.push_back(tileRect);
-        }
-    }
 }
 
 void World::renderMap()

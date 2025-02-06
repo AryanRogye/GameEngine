@@ -9,7 +9,7 @@ Game::Game(Sprite playerIdle, Sprite playerRun)
     }
     this->initWindow();
     this->initRenderer();
-    this->world = std::make_unique<World>(playerIdle, playerRun, this->renderer, this->window);
+    this->world = std::make_unique<World>(playerIdle, playerRun, this->renderer, this->window, this->fontTexture, this->fonts);
 }
 
 void Game::start_game()
@@ -53,3 +53,6 @@ void Game::initRenderer()
         return;
     }
 }
+
+void Game::setFontTexture(SDL_Texture *fontTexture) { this->fontTexture = fontTexture; }
+void Game::setFontVector(std::vector<SDL_Rect> fontVector) { this->fonts = fontVector; }
