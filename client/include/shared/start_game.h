@@ -90,7 +90,7 @@ public:
     void renderArrowButtons();
     void renderCharacterSelection();
     void renderWelcomeText();
-    void startGame();
+    void start();
 };
 
 #endif

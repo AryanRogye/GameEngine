@@ -1,15 +1,13 @@
 #include "world.h"
+#include "configs.h"
 
 World::World(
     Sprite playerIdleSprite, 
     Sprite playerRunSprite, 
     SDL_Renderer* renderer, 
-    SDL_Window* window,
-    SDL_Texture* fontTexture,
-    std::vector<SDL_Rect> fonts
+    SDL_Window* window
 )
-: playerIdleSprite(playerIdleSprite), playerRunSprite(playerRunSprite),
-  fontTexture(fontTexture), fonts(fonts)
+: playerIdleSprite(playerIdleSprite), playerRunSprite(playerRunSprite)
 {
     this->window = window;      /** Set Window **/
     this->renderer = renderer;  /** Set Renderer **/
@@ -172,6 +170,17 @@ void World::setupWorld()
         &this->playerRunTexture,
         this->renderer
     )) std::cout << "Failed to load playerRunTexture" << std::endl;
+
+    // Load The Font
+    this->loadFont();
+}
+
+void World::loadFont()
+{
+    /** Font Is Just a Sprite Sheet so we can just use the sprite class **/
+    Sprite::fillRectVector(this->fonts,128,128, 8,7);
+    /** Load Into the texture **/
+    Texture::loadTexture(this->currentPath + "../../Assets/font.png", &this->font_texture, this->renderer);
 }
 
 void World::renderMap()
@@ -259,6 +268,13 @@ void World::updateServer(float *oldX, float *oldY)
         *oldX = player->getX();
         *oldY = player->getY();
     }
+
+    if (this->mapData.size() > 0)
+    {
+        // I want to send The Max Rows and Cols inside Here
+        // The Reason Why is cuz the server will send the palyer where the zombies will spawn
+        /*this->client->handleZombieSpawn(this->mapData.size(), this->mapData[0].size());*/
+    }
 }
 
 void World::renderPlayer()
@@ -331,6 +347,8 @@ void World::checkIfPosIsEnterable()
     if(this->bf.checkEnterable(this->client->getPlayer()->getX(), this->client->getPlayer()->getY(), this->mapData))
     {
         this->enterHouse = true;
+        // Render Text To Screen That tells the person "oh you can enter"
+        UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, "Press [E] to Enter", 20, 20, FONT_WIDTH, FONT_HEIGHT, FONT_SCALE, false, 1);
     }
     else
     {

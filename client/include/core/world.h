@@ -8,6 +8,7 @@
 #include "rendering/sprite.h"
 #include <SDL2/SDL.h>
 #include <memory>
+#include "rendering/ui.h"
 
 #ifndef WORLD_H
 #define WORLD_H
@@ -49,6 +50,7 @@ private:
      *              the index to the tile
      **/
     SDL_Texture * tileAtlasTexture;
+
     std::vector<SDL_Rect> tiles;
     std::vector<std::vector<int>> mapData;  // Stores Index of Tile In TileSet
 
@@ -59,7 +61,7 @@ private:
      *      -- the texture and vector is getting loaded in from 
      *              start_game originaly then passed to game then here
      **/
-    SDL_Texture* fontTexture;
+    SDL_Texture* font_texture;
     std::vector<SDL_Rect> fonts;
 
     MapLoader mapLoader;
@@ -71,9 +73,7 @@ public:
         Sprite playerIdleSprite, 
         Sprite playerRunSprite, 
         SDL_Renderer* renderer, 
-        SDL_Window* window,
-        SDL_Texture* fontTexture,
-        std::vector<SDL_Rect> fonts
+        SDL_Window* window
     );
     World();
 
@@ -82,6 +82,7 @@ public:
     void updateServer(float *oldX, float *oldY);
 
     void setupWorld();
+    void loadFont();
     void updateAndRender();
 
     void renderMap();

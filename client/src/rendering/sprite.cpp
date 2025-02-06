@@ -11,7 +11,14 @@ Sprite::Sprite(std::string name, std::string path, int currentFrame, int frameCo
 
 void Sprite::renderSprite(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect srcRect, SDL_Rect destRect)
 {
-    SDL_RenderCopy(renderer, texture, &srcRect, &destRect);
+    if (!texture)
+    {
+        std::cout << "(Sprite) Texture Error: " << SDL_GetError() << std::endl;
+    }
+    if(SDL_RenderCopy(renderer, texture, &srcRect, &destRect) != 0)
+    {
+        std::cout << "(Sprite) Error: " << SDL_GetError() << std::endl;
+    }
 }
 void Sprite::renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture,SDL_Rect rect, int width, int height)
 {

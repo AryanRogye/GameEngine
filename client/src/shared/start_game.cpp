@@ -237,7 +237,7 @@ void StartGame::handleEvent(SDL_Event e)
             SDL_Quit();
 
             // Start The game
-            this->startGame();
+            this->start();
         }
         if(this->checkButtonClicked(this->forward_arrow_rect, mouseX, mouseY))
         {
@@ -252,12 +252,11 @@ void StartGame::handleEvent(SDL_Event e)
     }
 }
 
-void StartGame::startGame() 
+void StartGame::start() 
 {
-    Game game(this->sprites[this->selected_character], this->runSprites[this->selected_character]);
-    // We Also Want To Give The Font Texture and the font vector to the game
-    game.setFontTexture(this->font_texture);
-    game.setFontVector(this->fonts);
+    Game game(this->sprites[this->selected_character], 
+              this->runSprites[this->selected_character]
+    );
     // Start The Game
     game.start_game();
 }

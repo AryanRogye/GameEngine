@@ -13,9 +13,6 @@ private:
 
     SDL_Window *window;
     SDL_Renderer *renderer;
-
-    SDL_Texture* fontTexture;
-    std::vector<SDL_Rect> fonts;
 public:
     Game(Sprite playerIdle, Sprite playerRun);
     void start_game();
@@ -23,7 +20,5 @@ public:
     void initWindow();
     void initRenderer();
 
-    void setFontTexture(SDL_Texture *fontTexture);
-    void setFontVector(std::vector<SDL_Rect> fontVector);
 };
 

@@ -41,4 +41,6 @@ public:
     void handleOtherPlayersMoved(uint8_t* buffer,ssize_t bytesRecieved,size_t* offset);
     std::vector<Player*> getPlayersSafe();
     void handleExistingPlayers(uint8_t* buffer,ssize_t bytesRecieved,size_t* offset);
+    /*this->client->handleZombieSpawn(this->mapData.size(), this->mapData[0].size());*/
+    void handleZombieSpawn(int maxRows, int maxCols);
 };

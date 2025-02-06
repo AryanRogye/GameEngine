@@ -282,3 +282,9 @@ bool Client::sendMessageToServer(size_t offset, uint8_t *buffer)
 
     return true;
 }
+
+/** Have To Create a packet for this **/
+void Client::handleZombieSpawn(int maxRow, int maxCol)
+{
+
+}
