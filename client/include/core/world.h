@@ -9,7 +9,6 @@
 #include <SDL2/SDL.h>
 #include <memory>
 #include "rendering/ui.h"
-#include "shared/commands.h"
 
 #ifndef WORLD_H
 #define WORLD_H
@@ -108,6 +107,13 @@ public:
     void drawBlue();
     void drawRed();
     void drawYellow();
+
+    // We Want Instance of Client Getter
+    Client* getClient();
 };
 
+#include "shared/commands.h"
+
 #endif // WORLD_H
+
+

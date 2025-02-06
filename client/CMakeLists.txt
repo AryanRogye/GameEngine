@@ -44,6 +44,24 @@ target_include_directories(client PRIVATE
 target_link_libraries(client PRIVATE
     SDL2::SDL2
     SDL2_image::SDL2_image
-    # ${SDL2_LIBRARIES}
-    # ${SDL2_IMAGE_LIBRARIES}
+)
+
+# This Is The SandBox Shared Library
+add_library(sandbox SHARED src/sandbox/sandbox.cpp)
+
+target_include_directories(sandbox PRIVATE
+        ${SDL2_INCLUDE_DIRS}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/include/sandbox
+)
+
+target_link_libraries(sandbox PRIVATE
+    SDL2::SDL2
+    SDL2_image::SDL2_image
+)
+
+# Set output dir for the shared library
+set_target_properties(sandbox PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build
 )

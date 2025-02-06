@@ -112,7 +112,7 @@ void World::handleEvent(SDL_Event e) {
             {
                 std::cout << "Command Entered: " << this->commandInput << std::endl;
                 // Execute The Command
-                CommandSystem::getInstance().executeCommand(this->commandInput);
+                CommandSystem::getInstance().executeCommand(this->commandInput, this);
                 // Reset The Command Input and Turn off Command Mode
                 this->commandInput.clear();
                 this->commandMode = false;
@@ -417,7 +417,7 @@ void World::renderCommandInput()
         }
     }
 }
-
+Client* World::getClient() { return client.get(); }
 void World::checkIfPosIsEnterable()
 {
     if(this->bf.checkEnterable(this->client->getPlayer()->getX(), this->client->getPlayer()->getY(), this->mapData))

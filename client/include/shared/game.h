@@ -13,12 +13,11 @@ private:
 
     SDL_Window *window;
     SDL_Renderer *renderer;
+    void initWindow();
+    void initRenderer();
 public:
     Game(Sprite playerIdle, Sprite playerRun);
     void start_game();
-    void handleEvent(SDL_Event e);
-    void initWindow();
-    void initRenderer();
 
 };
 
