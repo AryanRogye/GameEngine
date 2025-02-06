@@ -9,12 +9,21 @@
 #include <SDL2/SDL.h>
 #include <memory>
 #include "rendering/ui.h"
+#include "shared/commands.h"
 
 #ifndef WORLD_H
 #define WORLD_H
 
 class World {
 private:
+    bool commandMode = false;
+    std::string commandInput = "";
+    SDL_Rect commandBox;
+    int command_box_width = WIDTH;
+    int command_box_height = 30;
+    int command_box_x = 0;
+    int command_box_y = (HEIGHT - 20) - command_box_height;
+
     /** Renderer/Window **/
     SDL_Window* window;
     SDL_Renderer* renderer;
@@ -89,6 +98,7 @@ public:
     void renderHouse(int x, int y, int width, int height);
     void renderPlayer();
     void renderOtherPlayers();
+    void renderCommandInput();
 
     // Interactions With The Map
     void checkIfPosIsEnterable();

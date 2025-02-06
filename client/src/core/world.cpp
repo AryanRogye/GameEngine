@@ -1,5 +1,8 @@
 #include "world.h"
 #include "configs.h"
+#include <SDL_blendmode.h>
+#include <SDL_keycode.h>
+#include <SDL_render.h>
 
 World::World(
     Sprite playerIdleSprite, 
@@ -23,6 +26,7 @@ World::World(
     this->client = std::make_unique<Client>();
     /** Set A MapLoader **/
     this->mapLoader = MapLoader(this->currentPath + "../../Maps/level_1.txt");
+    CommandSystem::getInstance().setupCommands();
 }
 
 void World::updateAndRender()
@@ -47,6 +51,8 @@ void World::updateAndRender()
         this->renderPlayer();
         this->renderOtherPlayers();
         this->checkIfPosIsEnterable();
+        // Kinda Like Minecraft Black Box Chat thing
+        this->renderCommandInput();
 
         SDL_RenderPresent(this->renderer);
         SDL_Delay(16);
@@ -69,32 +75,70 @@ void World::handleEvent(SDL_Event e) {
         int newX = player->getX();
         int newY = player->getY();
         int speed = player->getSpeed();
-
-
-        switch (e.key.keysym.sym) {
-            case SDLK_w:
-                newY -= speed;
-                break;
-            case SDLK_a:
-                newX -= speed;
-                player->setFacingRight(false);
-                player->setIsWalking(true);
-                break;
-            case SDLK_s:
-                newY += speed;
-                break;
-            case SDLK_d:
-                newX += speed;
-                player->setFacingRight(true);
-                player->setIsWalking(true);
-                break;
-            case SDLK_e:
-                if (this->enterHouse)
-                    std::cout << "E Key Pressed (Allowed)" << std::endl;
-                else
-                    std::cout << "E Key Pressed (Not Allowed)" << std::endl;
+        
+        // Regular Movement For The Player
+        if (!this->commandMode)
+        {
+            switch (e.key.keysym.sym) {
+                case SDLK_w:
+                    newY -= speed;
+                    break;
+                case SDLK_a:
+                    newX -= speed;
+                    player->setFacingRight(false);
+                    player->setIsWalking(true);
+                    break;
+                case SDLK_s:
+                    newY += speed;
+                    break;
+                case SDLK_d:
+                    newX += speed;
+                    player->setFacingRight(true);
+                    player->setIsWalking(true);
+                    break;
+                case SDLK_e:
+                    if (this->enterHouse)
+                        std::cout << "E Key Pressed (Allowed)" << std::endl;
+                    else
+                        std::cout << "E Key Pressed (Not Allowed)" << std::endl;
+                    break;
+            }
         }
-
+        // Things Going on in the Command Mode
+        else
+        {
+            // If Enter Is Pressed in Command Mode
+            if (e.key.keysym.sym == SDLK_RETURN)
+            {
+                std::cout << "Command Entered: " << this->commandInput << std::endl;
+                // Execute The Command
+                CommandSystem::getInstance().executeCommand(this->commandInput);
+                // Reset The Command Input and Turn off Command Mode
+                this->commandInput.clear();
+                this->commandMode = false;
+            }
+            // If Backspace is Pressed in Command Mode
+            else if (e.key.keysym.sym == SDLK_BACKSPACE)
+            {
+                // Dont Want to remove nothing lol
+                if (!this->commandInput.empty())
+                {
+                    this->commandInput.pop_back();
+                }
+            }
+            // Turn off Command Mode WIth Escape
+            else if (e.key.keysym.sym == SDLK_ESCAPE)
+            {
+                this->commandInput.clear();
+                this->commandMode = false;
+            } else {
+                // Allow only printable characters (a-z, A-Z, 0-9, symbols)
+                if ((e.key.keysym.sym >= SDLK_SPACE && e.key.keysym.sym <= SDLK_z) ||
+                    (e.key.keysym.sym >= SDLK_0 && e.key.keysym.sym <= SDLK_9)) {
+                    this->commandInput += static_cast<char>(e.key.keysym.sym);
+                }
+            }
+        }
         // Check if the new position is valid
         int feetY = newY + player->getHeight() + 1;
         int centerX = newX + player->getWidth() / 2;
@@ -114,6 +158,14 @@ void World::handleEvent(SDL_Event e) {
              * Player cannot move at all im gonna keep the else block
              * so that its easier to understan what is happening
              **/
+        }
+
+        /** Command Stuff **/
+        switch (e.key.keysym.sym) {
+            case SDLK_SLASH:
+                this->commandMode = !this->commandMode;
+                this->commandInput += '/';
+                break;
         }
     }
     else if (e.type == SDL_KEYUP) {
@@ -339,6 +391,30 @@ void World::renderOtherPlayers()
         remotePlayerRect.w = remotePlayer->getWidth();
         remotePlayerRect.h = remotePlayer->getHeight();
         SDL_RenderFillRect(renderer, &remotePlayerRect);
+    }
+}
+
+// Transparent Skinny Box Stetching across the screen
+void World::renderCommandInput()
+{
+    if (this->commandMode)
+    {
+        this->commandBox.x = this->command_box_x;
+        this->commandBox.y = this->command_box_y;
+        this->commandBox.w = this->command_box_width;
+        this->commandBox.h = this->command_box_height;
+
+        SDL_SetRenderDrawBlendMode(this->renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(this->renderer, 0, 0, 0, 180);
+        SDL_RenderFillRect(this->renderer, &this->commandBox);
+
+        if(!this->commandInput.empty())
+        {
+            UI::renderTextAtPosition(
+                this->renderer,this->font_texture, this->fonts, this->commandInput, 5,
+                this->command_box_y + 5, FONT_WIDTH, FONT_HEIGHT, FONT_SCALE - 1, false, 1
+            );
+        }
     }
 }
 

@@ -13,17 +13,21 @@ find_package(SDL2_image REQUIRED)
 add_executable(client
     src/client/client.cpp
     src/client/packet.cpp
+
     src/shared/game.cpp
     src/shared/start_game.cpp
     src/shared/player.cpp
+    src/shared/commands.cpp
+
     src/core/map_loader.cpp
     src/core/block.cpp
     src/core/world.cpp
-    src/main.cpp
 
     src/rendering/texture.cpp
     src/rendering/sprite.cpp
     src/rendering/ui.cpp
+
+    src/main.cpp
 )
 
 target_include_directories(client PRIVATE
