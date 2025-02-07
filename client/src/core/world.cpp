@@ -194,7 +194,10 @@ void World::setupWorld()
         this->renderer
     )) std::cout << "Failed to load tileAtlasTexture" << std::endl;
     // Initialize Empty Rect Tiles
-    Sprite::fillRectVector(this->tiles, 208, 208, 16);
+    // Get The Size of the Tile Atlas
+    int tileAtlasWidth, tileAtlasHeight;
+    SDL_QueryTexture(this->tileAtlasTexture, NULL, NULL, &tileAtlasWidth, &tileAtlasHeight);
+    Sprite::fillRectVector(this->tiles, tileAtlasWidth, tileAtlasHeight, 16);
 
     // Load The Map
     this->mapLoader.parseFile(this->mapData);

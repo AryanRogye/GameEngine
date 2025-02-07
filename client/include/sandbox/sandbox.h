@@ -74,6 +74,8 @@ private:
     /** 
     This is the texture for the file that is clicked on
     **/
+    int originalImageWidth;
+    int originalImageHeight;
     SDL_Texture* fileClickedTexture;
     SDL_Rect fileClickedRect;
     SDL_Rect fileConfirmedRect;
@@ -88,7 +90,7 @@ private:
     int cancel_file_button_x = 210;
     int confirm_file_button_x = 210;
     
-    int min = 0;
+    int min = 1;
     int max = 64;
     int pixel_width  = min;   /** Min 10 Max 64 **/
     int pixel_height = min;  /** Min 10 Max 64 **/
@@ -114,6 +116,20 @@ private:
     void initRenderer();
     bool checkButtonClicked(SDL_Rect buttonRect, int mouseX, int mouseY);
 
+    
+    
+    int cameraX = 0;
+    int cameraY = 0;
+    SDL_Rect moveCameraRight;
+    SDL_Rect moveCameraLeft;
+    SDL_Rect moveCameraUp;
+    SDL_Rect moveCameraDown;
+    int moveSpeed = 10;
+
+    MapLoader mapLoader;
+    std::vector<std::vector<int>> mapData;  // Stores Index of Tile In TileSet
+    std::vector<SDL_Rect> tiles;
+
 public:
     SandBox();
     ~SandBox();
@@ -125,12 +141,17 @@ public:
 
     void handleOpenFileButtonClick();
     void handleFileClicked(int mouseX, int mouseY);
+    void handleTilePlacement(int mouseX, int mouseY);
 
     void renderOpenFile();
     void renderFiles();
     void renderCloseWindow();
     void renderFileClicked(std::string fileName);
     void renderFileClicked();
+    void renderGridLines();
+    void renderMapGrid();
+    void renderMapInGrid(int startX, int startY);
+    void renderArrowControls();
 };
 
 

@@ -50,6 +50,7 @@ target_link_libraries(client PRIVATE
 add_library(sandbox SHARED 
     src/sandbox/sandbox.cpp
     src/shared/player.cpp
+    src/core/map_loader.cpp
     src/rendering/texture.cpp
     src/rendering/sprite.cpp
     src/rendering/ui.cpp

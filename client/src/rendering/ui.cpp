@@ -32,7 +32,7 @@ void UI::renderTextAtPosition(SDL_Renderer* renderer,SDL_Texture* texture, std::
     int y = textY;
     // Calculate total width of the text
     int total_width = 0;
-    std::string characterSet = "abcdefghijklmnopqrstuvwxyz1234567890#,.!?:*%()+-/\\=><áàãâçêéèíóú'\"[]";
+    std::string characterSet = "abcdefghijklmnopqrstuvwxyz1234567890#,.!?:*%()+-/\\=><^áàãâçêéèíóú'\"[]";
     for (int index : indices)
     {
         if (index != -1 && index != -2)
@@ -73,7 +73,7 @@ std::vector<int> UI::getCharacterIndices(const std::string& input)
 {
     std::vector<int> indices;
     // Keep original character set but we'll convert input to lowercase
-    std::string characterSet = "abcdefghijklmnopqrstuvwxyz1234567890[]#,.!?:*%()+-/\\=><áàãâçêéèíóú'\"";
+    std::string characterSet = "abcdefghijklmnopqrstuvwxyz1234567890[]#,.!?:*%()+-/\\=><^áàãâçêéèíóú'\"";
     
     for (char ch : input) {
         // Convert to lowercase before checking
