@@ -76,6 +76,7 @@ private:
     **/
     SDL_Texture* fileClickedTexture;
     SDL_Rect fileClickedRect;
+    SDL_Rect fileConfirmedRect;
     bool askUserToConfirmFile = false;
 
     int file_clicked_x = 210;
@@ -87,8 +88,21 @@ private:
     int cancel_file_button_x = 210;
     int confirm_file_button_x = 210;
     
+    int min = 0;
+    int max = 64;
+    int pixel_width  = min;   /** Min 10 Max 64 **/
+    int pixel_height = min;  /** Min 10 Max 64 **/
+    
+    SDL_Rect pixelWidthRect;
+    SDL_Rect pixelHeightRect;
 
+    SDL_Rect increasePixelWidth;
+    SDL_Rect decreasePixelWidth;
+    SDL_Rect increasePixelHeight;
+    SDL_Rect decreasePixelHeight;
 
+    SDL_Rect confirmPixelSize;
+    bool confirmed = false;
 
     std::map<std::string, char> fileMap;
 

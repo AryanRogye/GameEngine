@@ -72,13 +72,129 @@ void SandBox::loadTileSet()
     {
         this->showFiles = false;
         // Wel Will In Turn Dispplay The Image Here
-        this->fileClickedRect.x = 10;
-        this->fileClickedRect.y =this->fileRects.at(0).y;
-        this->fileClickedRect.w = this->fileRects.at(0).w;
-        int w, h;
-        SDL_QueryTexture(this->fileClickedTexture, NULL, NULL, &w, &h);
-        this->fileClickedRect = { file_clicked_x, file_clicked_y, w * 2, h * 2 };
-        SDL_RenderCopy(this->renderer, this->fileClickedTexture, NULL, &this->fileClickedRect);
+        fileConfirmedRect = { 
+            this->openFileButton.x, this->openFileButton.y + this->openFileButton.h + 10,
+            300, 300
+        };
+        SDL_RenderCopy(this->renderer, this->fileClickedTexture, NULL, &this->fileConfirmedRect);
+        // Draw THe Pixel Size For the User to confirm on the screen
+        this->pixelWidthRect = {
+            this->openFileButton.x, this->openFileButton.y + this->openFileButton.h + 10 + 300 + 10,
+            150, 30
+        };
+        this->pixelHeightRect = {
+            this->openFileButton.x + 150, this->openFileButton.y + this->openFileButton.h + 10 + 300 + 10,
+            150, 30
+        };
+        SDL_SetRenderDrawColor(this->renderer, 0, 0, 255, 255);
+        SDL_RenderFillRect(this->renderer, &this->pixelWidthRect);
+        SDL_SetRenderDrawColor(this->renderer, 255, 0, 0, 255);
+        SDL_RenderFillRect(this->renderer, &this->pixelHeightRect);
+
+        UI::renderTextAtPosition(
+            this->renderer, 
+            this->font_texture, 
+            this->fonts, 
+            std::to_string(this->pixel_width), 
+            this->pixelWidthRect.x + 5,
+            this->pixelWidthRect.y + 2,
+            FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1
+        );
+        UI::renderTextAtPosition(
+            this->renderer, 
+            this->font_texture, 
+            this->fonts, 
+            std::to_string(this->pixel_height), 
+            this->pixelHeightRect.x + 5,
+            this->pixelHeightRect.y + 2,
+            FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1
+        );
+        // Once Confirmed we dont need to show the rest
+        if (this->confirmed) return;
+        /** 
+            For Width Should Half of the pixel width
+        **/
+        this->decreasePixelWidth = {
+            this->pixelWidthRect.x,
+            this->pixelWidthRect.y + 2 + 30,
+            150/2, 30
+        };
+        this->increasePixelWidth = {
+            this->pixelWidthRect.x + 150/2,
+            this->pixelWidthRect.y + 2 + 30,
+            150/2, 30
+        };
+        SDL_SetRenderDrawColor(this->renderer, 0, 0, 255, 255);
+        SDL_RenderFillRect(this->renderer, &decreasePixelWidth);
+        SDL_RenderFillRect(this->renderer, &increasePixelWidth);
+        UI::renderTextAtPosition(
+            this->renderer, 
+            this->font_texture, 
+            this->fonts, 
+            "-", 
+            decreasePixelWidth.x + 5,
+            decreasePixelWidth.y + 2,
+            FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1
+        );
+        UI::renderTextAtPosition(
+            this->renderer, 
+            this->font_texture, 
+            this->fonts, 
+            "+", 
+            increasePixelWidth.x + 5,
+            increasePixelWidth.y + 2,
+            FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1
+        );
+        // Calc width from the start 
+        int w = this->pixelWidthRect.x + 2* (150/2);
+        this->decreasePixelHeight = {
+            w, this->pixelHeightRect.y + 2 + 30,
+            150/2, 30
+        };
+        
+        this->increasePixelHeight = {
+            w + 150/2, this->pixelHeightRect.y + 2 + 30,
+            150/2, 30
+        };
+        // Draw Red
+        SDL_SetRenderDrawColor(this->renderer, 255, 0, 0, 255);
+        SDL_RenderFillRect(this->renderer, &increasePixelHeight);
+        SDL_RenderFillRect(this->renderer, &decreasePixelHeight);
+        UI::renderTextAtPosition(
+            this->renderer, 
+            this->font_texture, 
+            this->fonts, 
+            "-", 
+            decreasePixelHeight.x + 5,
+            decreasePixelHeight.y + 2,
+            FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1
+        );
+        UI::renderTextAtPosition(
+            this->renderer, 
+            this->font_texture, 
+            this->fonts, 
+            "+", 
+            increasePixelHeight.x + 5,
+            increasePixelHeight.y + 2,
+            FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1
+        );
+        // Draw Confirm Pixel Size
+        this->confirmPixelSize = {
+            this->pixelWidthRect.x, this->pixelWidthRect.y + 2 + 30 + 30,
+            300, 30
+        };
+        // Make Purple
+        SDL_SetRenderDrawColor(this->renderer, 255, 0, 255, 255);
+        SDL_RenderFillRect(this->renderer, &confirmPixelSize);
+        UI::renderTextAtPosition(
+            this->renderer, 
+            this->font_texture, 
+            this->fonts, 
+            "Confirm", 
+            confirmPixelSize.x + 5,
+            confirmPixelSize.y + 2,
+            FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1
+        );
     }
 }
 
@@ -150,6 +266,8 @@ void SandBox::handleEvent(SDL_Event e)
         }
         if (this->checkButtonClicked(this->confirmFileButton, mouseX, mouseY))
         {
+            this->fileConfirmedRect = this->fileClickedRect;
+            this->askUserToConfirmFile = false;
             this->showConfirmAndCancel = false;
             this->tileSetloaded = true;
         }
@@ -158,9 +276,39 @@ void SandBox::handleEvent(SDL_Event e)
             this->askUserToConfirmFile = false;
             this->showConfirmAndCancel = false;
         }
-
         // We need to check if the mouse is in any of the file rects
-        this->handleFileClicked(mouseX, mouseY);
+        if (this->showFiles) 
+        {
+            this->handleFileClicked(mouseX, mouseY);
+        }
+
+
+        // Check For The Pixel Width and Height Buttons and change the values
+        if (this->checkButtonClicked(this->decreasePixelWidth, mouseX, mouseY))
+        {
+            this->pixel_width = std::max(this->min, this->pixel_width - 1);
+        }
+        // Check for increase pixel width
+        if (this->checkButtonClicked(this->increasePixelWidth, mouseX, mouseY))
+        {
+            this->pixel_width = std::min(this->max, this->pixel_width + 1);
+        }
+        // Check For The Pixel Height Buttons and change the values
+        if (this->checkButtonClicked(this->decreasePixelHeight, mouseX, mouseY))
+        {
+            this->pixel_height = std::max(this->min, this->pixel_height - 1);
+        }
+        // Check for increase pixel Height
+        if (this->checkButtonClicked(this->increasePixelHeight, mouseX, mouseY))
+        {
+            this->pixel_height = std::min(this->max, this->pixel_height + 1);
+        }
+        if (this->checkButtonClicked(this->confirmPixelSize, mouseX, mouseY))
+        {
+            // We Wont Allow Pixel Size To get Changed Again 
+            std::cout << "Pixel Size Confirmed: " << this->pixel_width << "x" << this->pixel_height << std::endl;
+            this->confirmed = true;
+        }
     }
     if (e.type == SDL_WINDOWEVENT) {
         if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
@@ -263,6 +411,7 @@ void SandBox::handleOpenFileButtonClick()
         this->showFiles = false;
         this->askUserToConfirmFile = false;
         this->showConfirmAndCancel = false;
+        this->tileSetloaded = false;
         this->fileRects.clear();
         return;
     }
@@ -301,7 +450,7 @@ void SandBox::initWindow()
         800, 600,
         SDL_WINDOW_SHOWN
     );
-    SDL_SetWindowFullscreen(this->window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    /*SDL_SetWindowFullscreen(this->window, SDL_WINDOW_FULLSCREEN_DESKTOP);*/
 
     if (!this->window)
     {
