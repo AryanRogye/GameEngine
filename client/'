@@ -21,7 +21,10 @@ SandBox::SandBox()
     this->loadFont();
 }
 
-SandBox::~SandBox() { this->cleanup(); }
+SandBox::~SandBox()
+{
+    this->cleanup();
+}
 
 void SandBox::cleanup()
 {
@@ -56,52 +59,11 @@ void SandBox::loadSandBox()
         this->renderCloseWindow();
         this->renderOpenFile();
         this->renderFiles();
-        this->renderFileClicked();
-        this->loadTileSet();
 
         SDL_RenderPresent(this->renderer);
         SDL_Delay(16);
     }
     this->cleanup();
-}
-
-void SandBox::loadTileSet()
-{
-    // Basically We Will Close The File System Window
-    if (tileSetloaded)
-    {
-        this->showFiles = false;
-        // Wel Will In Turn Dispplay The Image Here
-        this->fileClickedRect.x = 10;
-        this->fileClickedRect.y =this->fileRects.at(0).y;
-        this->fileClickedRect.w = this->fileRects.at(0).w;
-        int w, h;
-        SDL_QueryTexture(this->fileClickedTexture, NULL, NULL, &w, &h);
-        this->fileClickedRect = { file_clicked_x, file_clicked_y, w * 2, h * 2 };
-        SDL_RenderCopy(this->renderer, this->fileClickedTexture, NULL, &this->fileClickedRect);
-    }
-}
-
-void SandBox::renderFileClicked()
-{
-    if (!this->askUserToConfirmFile) return;
-    int w, h;
-    SDL_QueryTexture(this->fileClickedTexture, NULL, NULL, &w, &h);
-    this->fileClickedRect = { file_clicked_x, file_clicked_y, w * 2, h * 2 };
-    SDL_RenderCopy(this->renderer, this->fileClickedTexture, NULL, &this->fileClickedRect);
-
-    /** Render Confirm Options As Well **/
-    this->confirmFileButton = { this->confirm_file_button_x, (file_clicked_y + h*2) + 10, w*2, this->image_file_button_height };
-    this->cancelFileButton  = { this->cancel_file_button_x , (file_clicked_y + h*2) + 20 + this->image_file_button_height, w*2, this->image_file_button_height };
-
-    if (!this->showConfirmAndCancel) return;
-
-    SDL_SetRenderDrawColor(this->renderer, 0, 0, 255, 255);
-    SDL_RenderFillRect(this->renderer, &this->confirmFileButton);
-    UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, "Confirm", this->confirmFileButton.x + 5, this->confirmFileButton.y + 2, FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1);
-    SDL_SetRenderDrawColor(this->renderer, 255, 0, 0, 255);
-    SDL_RenderFillRect(this->renderer, &this->cancelFileButton);
-    UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, "Cancel", this->cancelFileButton.x + 5, this->cancelFileButton.y + 2, FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1);
 }
 
 void SandBox::renderCloseWindow()
@@ -147,16 +109,6 @@ void SandBox::handleEvent(SDL_Event e)
         if (this->checkButtonClicked(this->closeWindowButton, mouseX, mouseY))
         {
             this->isRunning = false;
-        }
-        if (this->checkButtonClicked(this->confirmFileButton, mouseX, mouseY))
-        {
-            this->showConfirmAndCancel = false;
-            this->tileSetloaded = true;
-        }
-        if (this->checkButtonClicked(this->cancelFileButton, mouseX, mouseY))
-        {
-            this->askUserToConfirmFile = false;
-            this->showConfirmAndCancel = false;
         }
 
         // We need to check if the mouse is in any of the file rects
@@ -207,18 +159,14 @@ void SandBox::renderFileClicked(std::string fileName)
         std::cerr << "Failed to load image: " << IMG_GetError() << std::endl;
         return;
     }
-    this->fileClickedTexture = SDL_CreateTextureFromSurface(this->renderer, surface);
-    if (!this->fileClickedTexture) {
+    SDL_Texture* fileClickedTexture = SDL_CreateTextureFromSurface(this->renderer, surface);
+    if (!texture) {
         std::cerr << "Failed to create texture: " << SDL_GetError() << std::endl;
         SDL_FreeSurface(surface);
         return;
     }
     SDL_FreeSurface(surface);
-    /** 
-    This let the program know that the texture is loaded and to ask
-    the user if they want to open the file
-    **/
-    this->askUserToConfirmFile = true;
+    SDL_Rect dstRect;
 }
 
 void SandBox::renderFiles()
@@ -259,10 +207,8 @@ void SandBox::renderFiles()
 /** Need To Open All The Files **/
 void SandBox::handleOpenFileButtonClick()
 {
-    if (this->showFiles || this->askUserToConfirmFile) {
+    if (this->showFiles) {
         this->showFiles = false;
-        this->askUserToConfirmFile = false;
-        this->showConfirmAndCancel = false;
         this->fileRects.clear();
         return;
     }
@@ -279,7 +225,6 @@ void SandBox::handleOpenFileButtonClick()
             }
         }
         this->showFiles = true;
-        this->showConfirmAndCancel = true;
     } catch (const fs::filesystem_error& e) {
         std::cerr << "Filesystem error: " << e.what() << std::endl;
     }

@@ -1,4 +1,5 @@
 #pragma once
+#include "world.h"
 #include <_wchar.h>
 #include <vector>
 #ifndef SANDBOX_H
@@ -31,7 +32,6 @@
 #include <filesystem>
 #include <map>
 #include "rendering/sprite.h"
-#include "rendering/texture.h"
 #include "rendering/ui.h"
 #include <algorithm>
 #include "configs.h"
@@ -68,6 +68,28 @@ private:
     int c_window_button_y = 10;
 
     bool showFiles = false;
+    bool showConfirmAndCancel = false;
+    bool tileSetloaded = false;
+
+    /** 
+    This is the texture for the file that is clicked on
+    **/
+    SDL_Texture* fileClickedTexture;
+    SDL_Rect fileClickedRect;
+    bool askUserToConfirmFile = false;
+
+    int file_clicked_x = 210;
+    int file_clicked_y = 100;
+
+    SDL_Rect cancelFileButton;
+    SDL_Rect confirmFileButton;
+    int image_file_button_height =50;
+    int cancel_file_button_x = 210;
+    int confirm_file_button_x = 210;
+    
+
+
+
     std::map<std::string, char> fileMap;
 
     SDL_Window *window;
@@ -82,6 +104,7 @@ public:
     SandBox();
     ~SandBox();
     void loadSandBox();
+    void loadTileSet();
     void loadFont();
     void handleEvent(SDL_Event e);
     void cleanup();
@@ -93,7 +116,9 @@ public:
     void renderFiles();
     void renderCloseWindow();
     void renderFileClicked(std::string fileName);
+    void renderFileClicked();
 };
+
 
 
 
