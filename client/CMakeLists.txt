@@ -47,11 +47,19 @@ target_link_libraries(client PRIVATE
 )
 
 # This Is The SandBox Shared Library
-add_library(sandbox SHARED src/sandbox/sandbox.cpp)
+add_library(sandbox SHARED 
+    src/sandbox/sandbox.cpp
+    src/shared/player.cpp
+    src/rendering/texture.cpp
+    src/rendering/sprite.cpp
+    src/rendering/ui.cpp
+)
 
 target_include_directories(sandbox PRIVATE
         ${SDL2_INCLUDE_DIRS}
         ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/include/core
+        ${CMAKE_SOURCE_DIR}/include/shared
         ${CMAKE_SOURCE_DIR}/include/sandbox
 )
 

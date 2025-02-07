@@ -18,7 +18,7 @@ private:
     static std::vector<int> getCharacterIndices(const std::string& input);
 public:
     /** For Start Scree **/
-    static void renderTextAtPosition(SDL_Renderer* renderer,SDL_Texture* texture, std::vector<SDL_Rect> fonts,std::string text, int textX, int textY, int font_width, int font_height, int scale, bool isCentered = false, int spaceDistance = -1);
+    static void renderTextAtPosition(SDL_Renderer* renderer,SDL_Texture* texture, std::vector<SDL_Rect> fonts,std::string text, int textX, int textY, int font_width, int font_height, int scale, bool isCentered = false, float spaceDistance = -1);
 };
 
 
