@@ -56,6 +56,7 @@ void SandBox::loadSandBox()
         SDL_RenderClear(this->renderer);
 
         // Show Box
+        this->renderCloseWindow();
         this->renderOpenFile();
         this->renderFiles();
 
@@ -63,6 +64,20 @@ void SandBox::loadSandBox()
         SDL_Delay(16);
     }
     this->cleanup();
+}
+
+void SandBox::renderCloseWindow()
+{
+    // We Just Wanna Show A Very Small Button in the bottom left corner to clsoe out of the window
+    this->closeWindowButton.x = this->c_window_button_x;
+    this->closeWindowButton.y = this->c_window_button_y;
+    this->closeWindowButton.w = this->c_window_button_width;
+    this->closeWindowButton.h = this->c_window_button_height;
+
+    SDL_SetRenderDrawColor(this->renderer, 0, 0, 255, 255);
+    SDL_RenderFillRect(this->renderer, &this->closeWindowButton);
+
+    UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, "X", this->closeWindowButton.x + 5, this->closeWindowButton.y + 2, FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1);
 }
 
 void SandBox::renderOpenFile()
@@ -90,6 +105,10 @@ void SandBox::handleEvent(SDL_Event e)
         if (this->checkButtonClicked(this->openFileButton, mouseX, mouseY))
         {
             this->handleOpenFileButtonClick();
+        }
+        if (this->checkButtonClicked(this->closeWindowButton, mouseX, mouseY))
+        {
+            this->isRunning = false;
         }
 
         // We need to check if the mouse is in any of the file rects

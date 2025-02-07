@@ -61,6 +61,12 @@ private:
     int o_file_button_x = 10;
     int o_file_button_y = 10;
 
+    SDL_Rect closeWindowButton;
+    int c_window_button_width = 50;
+    int c_window_button_height = 50;
+    int c_window_button_x = 220;
+    int c_window_button_y = 10;
+
     bool showFiles = false;
     std::map<std::string, char> fileMap;
 
@@ -85,6 +91,7 @@ public:
 
     void renderOpenFile();
     void renderFiles();
+    void renderCloseWindow();
     void renderFileClicked(std::string fileName);
 };
 
