@@ -1,5 +1,5 @@
 #include "commands.h"
-#include "core/world.h"
+#include "core/world.h" // NEED THIS HERE
 
 
 typedef void* (*CreateSandBoxFunc)();
@@ -87,7 +87,7 @@ void loadMapBuilder()
         #endif
         return;
     }
-
+    
     runSandBox(sandboxInstance);
 
     #ifdef _WIN32

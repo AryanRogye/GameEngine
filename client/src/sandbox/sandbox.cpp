@@ -1,16 +1,37 @@
 #include "sandbox/sandbox.h"
-#include <SDL_events.h>
 
+bool SandBox::sdlInitialized = false;
 SandBox::SandBox()
 {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
-    {
-        std::cout << "Failed to Initialize SDL2 Library" << std::endl;
-        return;
+    if (!sdlInitialized) {
+        if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+            std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
+            return;
+        }
+        sdlInitialized = true;
     }
     this->initWindow();
     this->initRenderer();
     this->isRunning = false;
+}
+
+SandBox::~SandBox()
+{
+    this->cleanup();
+}
+
+void SandBox::cleanup()
+{
+    if (renderer)
+    {
+        SDL_DestroyRenderer(renderer);
+        renderer = nullptr;
+    }
+    if (window)
+    {
+        SDL_DestroyWindow(window);
+        window = nullptr;
+    }
 }
 
 void SandBox::loadSandBox()
@@ -19,47 +40,59 @@ void SandBox::loadSandBox()
     SDL_Event e;
     while (this->isRunning)
     {
-        while(SDL_PollEvent(&e)){ this->handleEvent(e); }
+        while(SDL_PollEvent(&e)){ 
+            this->handleEvent(e); 
+            if (!this->isRunning) break;
+        }
+        if (!this->isRunning) break;
 
         SDL_SetRenderDrawColor(this->renderer, 0, 0, 0, 255);
         SDL_RenderClear(this->renderer);
 
         // Show Box
-        SDL_Rect rect = { 100, 100, 50, 50 };
-        SDL_SetRenderDrawColor(this->renderer, 255, 0, 0, 255);
-        SDL_RenderFillRect(this->renderer, &rect);
-
+        this->renderOpenFile();
 
         SDL_RenderPresent(this->renderer);
         SDL_Delay(16);
     }
+    this->cleanup();
+}
 
-    SDL_DestroyRenderer(this->renderer);
-    SDL_DestroyWindow(this->window);
-    SDL_Quit();
+void SandBox::renderOpenFile()
+{
+    this->openFileButton.x = this->o_file_button_x;
+    this->openFileButton.y = this->o_file_button_y;
+    this->openFileButton.w = this->o_file_button_width;
+    this->openFileButton.h = this->o_file_button_height;
+
+    SDL_SetRenderDrawColor(this->renderer, 255, 0, 0, 255);
+    SDL_RenderFillRect(this->renderer, &this->openFileButton);
 }
 
 void SandBox::handleEvent(SDL_Event e)
 {
     if (e.type == SDL_MOUSEBUTTONDOWN)
     {
-        // CHeck if the box is clicked
-        if (e.button.x >= 100 && e.button.x <= 150 &&
-            e.button.y >= 100 && e.button.y <= 150)
+        int mouseX = e.button.x;
+        int mouseY = e.button.y;
+
+        if (this->checkButtonClicked(this->openFileButton, mouseX, mouseY))
         {
-            std::cout << "Box Clicked" << std::endl;
+            std::cout << "Open File Button Clicked" << std::endl;
         }
     }
-    if (e.type == SDL_QUIT) {
-        std::cout << "SDL_QUIT event received." << std::endl;
-        this->isRunning = false;
-    } 
-    else if (e.type == SDL_WINDOWEVENT) {
+    if (e.type == SDL_WINDOWEVENT) {
         if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
             std::cout << "SDL_WINDOWEVENT_CLOSE event received." << std::endl;
             this->isRunning = false;
         }
     }
+}
+
+bool SandBox::checkButtonClicked(SDL_Rect buttonRect, int mouseX, int mouseY)
+{
+    return mouseX >= buttonRect.x && mouseX <= (buttonRect.x + buttonRect.w) &&
+    mouseY >= buttonRect.y && mouseY <= (buttonRect.y + buttonRect.h);
 }
 
 void SandBox::initWindow()
@@ -106,5 +139,7 @@ extern "C" SandBox* createSandBox()
 
 extern "C" void runSandBox(void* instance)
 {
-    static_cast<SandBox*>(instance)->loadSandBox();
+    SandBox* sandbox = static_cast<SandBox*>(instance);
+    sandbox->loadSandBox();
+    delete sandbox;  // Add this line to properly clean up
 }

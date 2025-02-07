@@ -10,6 +10,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm> // For std::transform
+#include <thread>
 
 #ifdef _WIN32
 #include <windows.h>
