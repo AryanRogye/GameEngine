@@ -108,6 +108,15 @@ public:
     void drawRed();
     void drawYellow();
 
+    std::unordered_map<SDL_Keycode, bool> keyStates;  // Track held keys
+
+
+    Uint32 lastTime;
+    const Uint8 *state;
+    void handlePlayerMovement(const Uint8* state, float dt);
+    void handleCommandInput(SDL_Event& e);
+
+
     // We Want Instance of Client Getter
     Client* getClient();
 };

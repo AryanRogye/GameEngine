@@ -36,8 +36,13 @@ void World::updateAndRender()
      **/
     float oldX = this->client->getPlayer()->getX();
     float oldY = this->client->getPlayer()->getY();
+
+    Uint32 lastTime = SDL_GetTicks();
     while(this->keep_window_open)
     {
+        Uint32 currentTime = SDL_GetTicks();
+        float dt = (currentTime - lastTime) / 1000.0f;
+        lastTime = currentTime;
         SDL_Event e; while(SDL_PollEvent(&e)){ this->handleEvent(e); }
 
         mapLoader.hotReload(this->mapData);
@@ -51,8 +56,11 @@ void World::updateAndRender()
         this->renderPlayer();
         this->renderOtherPlayers();
         this->checkIfPosIsEnterable();
+        const Uint8 *state = SDL_GetKeyboardState(NULL);
+        handlePlayerMovement(state, dt);
         // Kinda Like Minecraft Black Box Chat thing
         this->renderCommandInput();
+
 
         SDL_RenderPresent(this->renderer);
         SDL_Delay(16);
@@ -60,8 +68,74 @@ void World::updateAndRender()
 }
 
 
-void World::handleEvent(SDL_Event e) {
+void World::handlePlayerMovement(const Uint8* state, float dt) {
+    if (this->commandMode) {
+        return;  // Don't move the player if in command mode
+    }
     Player *player = this->client->getPlayer();
+    float newX = player->getX();
+    float newY = player->getY();
+    float speed = player->getSpeed();  // assume pixels per second
+
+    bool moving = false;
+
+    if (state[SDL_SCANCODE_W]) {
+        newY -= speed * dt;
+        moving = true;
+    }
+    if (state[SDL_SCANCODE_A]) {
+        newX -= speed * dt;
+        player->setFacingRight(false);
+        moving = true;
+    }
+    if (state[SDL_SCANCODE_S]) {
+        newY += speed * dt;
+        moving = true;
+    }
+    if (state[SDL_SCANCODE_D]) {
+        newX += speed * dt;
+        player->setFacingRight(true);
+        moving = true;
+    }
+
+    player->setIsWalking(moving);
+
+    // Perform collision detection with the new coordinates.
+    int feetY = static_cast<int>(newY) + player->getHeight() + 1;
+    int centerX = static_cast<int>(newX) + player->getWidth() / 2;
+    bool isColliding = this->bf.checkCollision(centerX, feetY, this->mapData);
+
+    if (!isColliding) {
+        player->setX(newX);
+        player->setY(newY);
+    }
+}
+
+void World::handleCommandInput(SDL_Event& e) {
+    if (e.key.keysym.sym == SDLK_RETURN) {
+        std::cout << "Command Entered: " << this->commandInput << std::endl;
+        CommandSystem::getInstance().executeCommand(this->commandInput, this);
+        this->commandInput.clear();
+        this->commandMode = false;
+    } 
+    else if (e.key.keysym.sym == SDLK_BACKSPACE) {
+        if (!this->commandInput.empty()) {
+            this->commandInput.pop_back();
+        }
+    } 
+    else if (e.key.keysym.sym == SDLK_ESCAPE) {
+        this->commandInput.clear();
+        this->commandMode = false;
+    } 
+    else {
+        if ((e.key.keysym.sym >= SDLK_SPACE && e.key.keysym.sym <= SDLK_z) ||
+            (e.key.keysym.sym >= SDLK_0 && e.key.keysym.sym <= SDLK_9)) {
+            this->commandInput += static_cast<char>(e.key.keysym.sym);
+        }
+    }
+}
+
+void World::handleEvent(SDL_Event e) {
 
     if (e.type == SDL_QUIT) {
         this->keep_window_open = false;
@@ -72,104 +146,21 @@ void World::handleEvent(SDL_Event e) {
     }
 
     if (e.type == SDL_KEYDOWN) {
-        int newX = player->getX();
-        int newY = player->getY();
-        int speed = player->getSpeed();
-        
-        // Regular Movement For The Player
-        if (!this->commandMode)
+        keyStates[e.key.keysym.sym] = true;  // ✅ Mark key as pressed
+        if (this->commandMode)
         {
-            switch (e.key.keysym.sym) {
-                case SDLK_w:
-                    newY -= speed;
-                    break;
-                case SDLK_a:
-                    newX -= speed;
-                    player->setFacingRight(false);
-                    player->setIsWalking(true);
-                    break;
-                case SDLK_s:
-                    newY += speed;
-                    break;
-                case SDLK_d:
-                    newX += speed;
-                    player->setFacingRight(true);
-                    player->setIsWalking(true);
-                    break;
-                case SDLK_e:
-                    if (this->enterHouse)
-                        std::cout << "E Key Pressed (Allowed)" << std::endl;
-                    else
-                        std::cout << "E Key Pressed (Not Allowed)" << std::endl;
-                    break;
-            }
+            // ✅ Moved command input here!
+            handleCommandInput(e);
         }
-        // Things Going on in the Command Mode
-        else
+        if (e.key.keysym.sym == SDLK_SLASH)
         {
-            // If Enter Is Pressed in Command Mode
-            if (e.key.keysym.sym == SDLK_RETURN)
-            {
-                std::cout << "Command Entered: " << this->commandInput << std::endl;
-                // Execute The Command
-                CommandSystem::getInstance().executeCommand(this->commandInput, this);
-                // Reset The Command Input and Turn off Command Mode
-                this->commandInput.clear();
-                this->commandMode = false;
-            }
-            // If Backspace is Pressed in Command Mode
-            else if (e.key.keysym.sym == SDLK_BACKSPACE)
-            {
-                // Dont Want to remove nothing lol
-                if (!this->commandInput.empty())
-                {
-                    this->commandInput.pop_back();
-                }
-            }
-            // Turn off Command Mode WIth Escape
-            else if (e.key.keysym.sym == SDLK_ESCAPE)
-            {
-                this->commandInput.clear();
-                this->commandMode = false;
-            } else {
-                // Allow only printable characters (a-z, A-Z, 0-9, symbols)
-                if ((e.key.keysym.sym >= SDLK_SPACE && e.key.keysym.sym <= SDLK_z) ||
-                    (e.key.keysym.sym >= SDLK_0 && e.key.keysym.sym <= SDLK_9)) {
-                    this->commandInput += static_cast<char>(e.key.keysym.sym);
-                }
-            }
-        }
-        // Check if the new position is valid
-        int feetY = newY + player->getHeight() + 1;
-        int centerX = newX + player->getWidth() / 2;
-
-        bool isColliding = this->bf.checkCollision(centerX, feetY, this->mapData);
-
-        // Add Enterable Here
-        if (!isColliding) 
-        {
-            player->setX(newX);
-            player->setY(newY);
-        }
-        else 
-        {
-            /** 
-             * Dont Really Have to do anything cuz this means that the 
-             * Player cannot move at all im gonna keep the else block
-             * so that its easier to understan what is happening
-             **/
-        }
-
-        /** Command Stuff **/
-        switch (e.key.keysym.sym) {
-            case SDLK_SLASH:
-                this->commandMode = !this->commandMode;
-                this->commandInput += '/';
-                break;
+            this->commandMode = !this->commandMode;
+            this->commandInput += '/';
         }
     }
     else if (e.type == SDL_KEYUP) {
         if (e.key.keysym.sym == SDLK_a || e.key.keysym.sym == SDLK_d) {
+            Player *player = this->client->getPlayer();
             player->setIsWalking(false);
         }
     }

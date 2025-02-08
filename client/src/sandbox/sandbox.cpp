@@ -689,25 +689,69 @@ void SandBox::handleTilePlacement(int mouseX, int mouseY)
     }
 
     // Check if the click is within map bounds
-    if (tileX >= 0 && tileX < mapData[0].size() &&
-        tileY >= 0 && tileY < mapData.size())
+    bool outOfBounds = (tileX < 0 || tileX >= mapWidth || tileY < 0 || tileY >= mapHeight);
+    bool isAdjacentToExistingTile = false;
+
+    if (outOfBounds)
     {
+        bool isAdjacentToExistingTile = false;
         for (size_t i = 0; i < selectedTiles.size(); i++)
         {
             int placeX = tileX + offsets[i].first;
             int placeY = tileY + offsets[i].second;
 
-            // Ensure we don't go out of bounds
-            if (placeX >= 0 && placeX < mapWidth && placeY >= 0 && placeY < mapHeight)
+            std::vector<std::pair<int, int>> neighbors = {
+                {-1, 0}, {1, 0}, {0, -1}, {0, 1}  // Left, Right, Up, Down
+            };
+
+            for (auto [dx, dy] : neighbors)
             {
-                mapData[placeY][placeX] = selectedTiles[i] + 1;  // Assign the tile index
-                this->edited = true;
-                std::cout << "Placed tile at (" << placeX << ", " << placeY << ") with ID " << selectedTiles[i] << std::endl;
+                int neighborX = placeX + dx;
+                int neighborY = placeY + dy;
+                
+                // Allow Adjacent Placement If Any Part Is Adjacent
+                if (neighborX >= 0 && neighborX < mapWidth &&
+                    neighborY >= 0 && neighborY < mapHeight &&
+                    mapData[neighborY][neighborX] != -1)  // Non-empty tile
+                {
+                    isAdjacentToExistingTile = true;
+                    break;
+                }
             }
+            if (isAdjacentToExistingTile) break;  // No need to check further if at least one part is adjacent
         }
-        // Force a re-render to reflect changes
-        SDL_RenderPresent(this->renderer);
+        if (!isAdjacentToExistingTile)
+        {
+            std::cout << "Cannot place tile out of bounds unless any part is adjacent to an existing tile!" << std::endl;
+            return;
+        }
     }
+    // End Of Checking Out Of Bounds
+    if (tileX >= mapWidth)
+    {
+        for (auto& row : mapData)
+        {
+            row.resize(tileX + 1, -1);  // Expand width with empty tiles
+        }
+        mapWidth = tileX + 1;
+    }
+    if (tileY >= mapHeight)
+    {
+        mapData.resize(tileY + 1, std::vector<int>(mapWidth, -1));  // Expand height
+        mapHeight = tileY + 1;
+    }
+    for (size_t i = 0; i < selectedTiles.size(); i++)
+    {
+        int placeX = tileX + offsets[i].first;
+        int placeY = tileY + offsets[i].second;
+        if (placeX >= 0 && placeX < mapWidth && placeY >= 0 && placeY < mapHeight)
+        {
+            mapData[placeY][placeX] = selectedTiles[i] + 1;  // Assign the tile index
+            this->edited = true;
+            std::cout << "Placed tile at (" << placeX << ", " << placeY << ") with ID " << selectedTiles[i] << std::endl;
+        }
+    }
+    SDL_RenderPresent(this->renderer);
 }
 
 void SandBox::handleFileClicked(int mouseX, int mouseY)

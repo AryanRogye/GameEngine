@@ -14,7 +14,7 @@ Player::Player(int id, const char* name)
     this->width = 20;
     this->height = 20;
     // Initialize the player's speed
-    this->speed = 5;
+    this->speed = 120;
     this->facingRight = false;
     this->isWalking = false;
 }
