@@ -14,6 +14,7 @@
 #include <iostream>
 #include <vector>
 #include <sstream>
+#include <iomanip>
 
 class MapLoader
 {
@@ -28,6 +29,7 @@ public:
     time_t getFileTimestamp();
     void parseFile(std::vector<std::vector<int>>& mapData);
     void hotReload(std::vector<std::vector<int>>& mapData);
+    bool saveFile(const std::vector<std::vector<int>>& mapData);
 };
 
 #endif

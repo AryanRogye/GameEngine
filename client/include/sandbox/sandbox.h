@@ -92,8 +92,8 @@ private:
     
     int min = 1;
     int max = 64;
-    int pixel_width  = min;   /** Min 10 Max 64 **/
-    int pixel_height = min;  /** Min 10 Max 64 **/
+    int pixel_width  = 16;   /** Min 1 Max 64 **/
+    int pixel_height = 16;  /** Min 1 Max 64 **/
     
     SDL_Rect pixelWidthRect;
     SDL_Rect pixelHeightRect;
@@ -102,6 +102,22 @@ private:
     SDL_Rect decreasePixelWidth;
     SDL_Rect increasePixelHeight;
     SDL_Rect decreasePixelHeight;
+
+    /** The User Has To Edit The TileMap WIth a Tile So THey Havve to choose a tile**/
+    int maxTextures = 4;
+    SDL_Texture* tileSetTexture;
+    std::vector<SDL_Rect> tiles;
+    std::vector<int> selectedTiles;
+    /** 
+    Its rlly annoying if you make a edit and u select another one and it ads on instead itll clear the map 
+    so after you edit the map itll be the first selection
+    **/
+    bool edited = false;    
+
+    bool changedTextureOrder = false;
+    SDL_Rect changeTextureOrder;
+    SDL_Rect clear;
+    SDL_Rect save;
 
     SDL_Rect confirmPixelSize;
     bool confirmed = false;
@@ -128,7 +144,6 @@ private:
 
     MapLoader mapLoader;
     std::vector<std::vector<int>> mapData;  // Stores Index of Tile In TileSet
-    std::vector<SDL_Rect> tiles;
 
 public:
     SandBox();
@@ -142,6 +157,7 @@ public:
     void handleOpenFileButtonClick();
     void handleFileClicked(int mouseX, int mouseY);
     void handleTilePlacement(int mouseX, int mouseY);
+    void handleTextureSelected(int mouseX, int mouseY); /** This Needs to checks for the fileCLickedGrids Where it got clicked **/
 
     void renderOpenFile();
     void renderFiles();
@@ -152,6 +168,10 @@ public:
     void renderMapGrid();
     void renderMapInGrid(int startX, int startY);
     void renderArrowControls();
+    void renderSelectedTileTextures();
+    void renderChangeTextureOrder ();
+    void renderClear();
+    void renderSave();
 };
 
 

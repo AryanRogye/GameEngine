@@ -46,7 +46,7 @@ void SandBox::loadSandBox()
     while (this->isRunning)
     {
         while(SDL_PollEvent(&e)){ 
-            this->handleEvent(e); 
+            handleEvent(e);
             if (!this->isRunning) break;
         }
         if (!this->isRunning) break;
@@ -62,11 +62,36 @@ void SandBox::loadSandBox()
         this->renderOpenFile();
         this->renderFiles();
         this->renderFileClicked();
+        this->renderSelectedTileTextures();
+        this->renderChangeTextureOrder();
+        this->renderClear();
+        this->renderSave();
 
         SDL_RenderPresent(this->renderer);
         SDL_Delay(16);
     }
     this->cleanup();
+}
+
+void SandBox::renderSave()
+{
+    if (!this->confirmed) return;
+    this->save = {
+        this->fileConfirmedRect.x,
+        this->pixelWidthRect.y + (this->pixelWidthRect.h * 6),
+        this->fileConfirmedRect.w, 30
+    };
+    SDL_SetRenderDrawColor(this->renderer, 0, 255, 0, 255);
+    SDL_RenderFillRect(this->renderer, &this->save);
+    UI::renderTextAtPosition(
+        this->renderer, 
+        this->font_texture, 
+        this->fonts, 
+        "Save", 
+        this->save.x + 5,
+        this->save.y + 2,
+        FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1
+    );
 }
 
 void SandBox::renderMapGrid()
@@ -218,6 +243,189 @@ void SandBox::renderMapInGrid(int startX, int startY)
                 SDL_RenderCopy(this->renderer, this->fileClickedTexture, &this->tiles[tileIndex], &destRect);
             }
         }
+    }
+}
+
+
+void SandBox::renderChangeTextureOrder()
+{
+    if (!(this->selectedTiles.size() <= this->maxTextures))
+    {
+        // Tell to clear
+        return;
+    }
+    if (!this->confirmed) return;
+    /** We Wanna Show This To The Right of the textures **/
+    this->changeTextureOrder = {
+        this->fileConfirmedRect.x + this->pixelWidthRect.w,
+        this->pixelHeightRect.y + this->pixelHeightRect.h + 10,
+        this->pixelHeightRect.w, 30
+    };
+    SDL_SetRenderDrawColor(this->renderer, 255, 0, 255, 255);
+    SDL_RenderFillRect(this->renderer, &this->changeTextureOrder);
+    UI::renderTextAtPosition(
+        this->renderer, 
+        this->font_texture, 
+        this->fonts, 
+        "Change Order", 
+        this->changeTextureOrder.x + 5,
+        this->changeTextureOrder.y + 2,
+        FONT_WIDTH-2, FONT_HEIGHT-2, 2, false, 1
+    );
+}
+
+void SandBox::renderClear()
+{
+    if (!(this->selectedTiles.size() <= this->maxTextures))
+    {
+        // Tell to clear
+        return;
+    }
+    if (!this->confirmed) return;
+    /** We Wanna Show this under the change texture order **/
+    this->clear = {
+        this->changeTextureOrder.x,
+        this->changeTextureOrder.y + this->changeTextureOrder.h + 10,
+        this->changeTextureOrder.w, 30
+    };
+    SDL_SetRenderDrawColor(this->renderer, 255, 0, 0, 255);
+    SDL_RenderFillRect(this->renderer, &this->clear);
+    UI::renderTextAtPosition(
+        this->renderer, 
+        this->font_texture, 
+        this->fonts, 
+        "Clear", 
+        this->clear.x + 5,
+        this->clear.y + 2,
+        FONT_WIDTH-2, FONT_HEIGHT-2, 2, false, 1
+    );
+}
+/** 
+This Function Renders The Selected Tile Textures
+max right now will allow is 4 so 2x2
+**/
+void SandBox::renderSelectedTileTextures()
+{
+    int previewX = this->fileConfirmedRect.x;  
+    int previewY = this->pixelWidthRect.y + this->pixelWidthRect.h + 10;
+    int tileSizeX = this->pixel_width * 4;
+    int tileSizeY = this->pixel_height * 4;
+
+    // Define offsets based on changedTextureOrder
+    std::vector<std::pair<int, int>> offsets;
+    if (changedTextureOrder)
+    {
+        offsets = {
+            {0, 0},   // 1: Top-left
+            {0, 1},   // 2: Bottom-left
+            {1, 0},   // 3: Top-right
+            {1, 1}    // 4: Bottom-right
+        };
+    }
+    else
+    {
+        offsets = {
+            {0, 0},   // 1: Top-left
+            {1, 0},   // 2: Top-right
+            {0, 1},   // 3: Bottom-left
+            {1, 1}    // 4: Bottom-right
+        };
+    }
+
+    if (confirmed)
+    {
+        // No tile selected → Draw 2x2 grid with numbers (1, 2, 3, 4)
+        for (size_t i = 0; i < 4; i++)
+        {
+            int offsetX = offsets[i].first * tileSizeX;
+            int offsetY = offsets[i].second * tileSizeY;
+
+            SDL_Rect emptyTileRect = {
+                previewX + offsetX, previewY + offsetY, 
+                tileSizeX, tileSizeY
+            };
+
+            // Draw empty tile outline
+            SDL_RenderDrawRect(this->renderer, &emptyTileRect);
+
+            // UI: Draw number inside each tile (1, 2, 3, 4)
+            UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, std::to_string(i + 1), 
+                                     previewX + offsetX + 10, previewY + offsetY + 10, FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1);
+        }
+    }
+
+    if (this->selectedTiles.empty() || !this->tileSetloaded) return;
+
+    SDL_SetRenderDrawColor(this->renderer, 255, 255, 255, 255); // White for grid lines
+
+    for (size_t i = 0; i < this->selectedTiles.size(); i++)
+    {
+        int tileIndex = this->selectedTiles[i];
+
+        int offsetX = offsets[i].first * tileSizeX;
+        int offsetY = offsets[i].second * tileSizeY;
+
+        SDL_Rect destRect = {
+            previewX + offsetX, previewY + offsetY, 
+            tileSizeX, tileSizeY
+        };
+        // Render tile texture
+        SDL_RenderCopy(this->renderer, this->fileClickedTexture, &this->tiles[tileIndex], &destRect);
+        // Draw grid lines (white outline)
+        SDL_RenderDrawRect(this->renderer, &destRect);
+    }
+
+    // Draw additional red borders to enhance the effect
+    SDL_SetRenderDrawColor(this->renderer, 255, 0, 0, 255); // Red for outer border
+    for (size_t i = 0; i < this->selectedTiles.size(); i++)
+    {
+        int offsetX = offsets[i].first * tileSizeX;
+        int offsetY = offsets[i].second * tileSizeY;
+
+        SDL_Rect borderRect = {
+            previewX + offsetX, previewY + offsetY, 
+            tileSizeX, tileSizeY
+        };
+
+        SDL_RenderDrawRect(this->renderer, &borderRect);
+    }
+}
+
+void SandBox::handleTextureSelected(int mouseX, int mouseY)
+{
+    // Check if the click is inside the tileset area
+    if (mouseX < fileConfirmedRect.x || mouseX > fileConfirmedRect.x + fileConfirmedRect.w ||
+        mouseY < fileConfirmedRect.y || mouseY > fileConfirmedRect.y + fileConfirmedRect.h)
+    {
+        return; // Click was outside the tileset
+    }
+
+    // Compute the number of tiles in the tileset
+    int num_tiles_x = originalImageWidth / this->pixel_width;
+    int num_tiles_y = originalImageHeight / this->pixel_height;
+
+    // Compute the actual tile size based on the scaled-up image
+    int tile_width = fileConfirmedRect.w / num_tiles_x;
+    int tile_height = fileConfirmedRect.h / num_tiles_y;
+
+    // Convert mouse position to tile index
+    int tileX = (mouseX - fileConfirmedRect.x) / tile_width;
+    int tileY = (mouseY - fileConfirmedRect.y) / tile_height;
+
+    // Ensure indices are within bounds
+    if (tileX >= 0 && tileX < num_tiles_x && tileY >= 0 && tileY < num_tiles_y)
+    {
+        int selectedTileIndex = tileY * num_tiles_x + tileX; // Convert 2D index to 1D
+        std::cout << "Selected Tile: (" << tileX << ", " << tileY << ") Index: " << selectedTileIndex << std::endl;
+
+        // Store the selected tile index for later use (e.g., placing tiles in the map)
+        // Only allow up to 4 selected tiles
+        if (this->selectedTiles.size() >= this->maxTextures || this->edited) {
+            // Remove All And Add The New One
+            this->selectedTiles.clear();
+            this->edited = false;
+        }
+        this->selectedTiles.push_back(selectedTileIndex);
     }
 }
 
@@ -457,116 +665,48 @@ void SandBox::handleTilePlacement(int mouseX, int mouseY)
     int tileX = (mouseX - startX + this->cameraX) / displayTileSize;
     int tileY = (mouseY - startY + this->cameraY) / displayTileSize;
 
+    // Get Map Dimensions
+    int mapWidth = mapData[0].size();
+    int mapHeight = mapData.size();
+    
+
+    std::vector<std::pair<int, int>> offsets;
+    if(changedTextureOrder)
+    {
+        offsets = {
+            {0, 0},     // Top-left
+            {0, 1},     // Bottom-left
+            {1, 0},     // Top-right
+            {1, 1}      // Bottom-right
+        };
+    } else {
+        offsets = {
+            {0, 0},     // Top-left
+            {1, 0},     // Top-right
+            {0, 1},     // Bottom-left
+            {1, 1}      // Bottom-right
+        };
+    }
+
     // Check if the click is within map bounds
     if (tileX >= 0 && tileX < mapData[0].size() &&
         tileY >= 0 && tileY < mapData.size())
     {
-        std::cout << "Clicked Tile: (" << tileX << ", " << tileY << ")" << std::endl;
+        for (size_t i = 0; i < selectedTiles.size(); i++)
+        {
+            int placeX = tileX + offsets[i].first;
+            int placeY = tileY + offsets[i].second;
 
-        // Change tile at (tileX, tileY) to a new tile (for example, tile ID 1)
-        mapData[tileY][tileX] = 1;  // Replace with the desired tile index
-
+            // Ensure we don't go out of bounds
+            if (placeX >= 0 && placeX < mapWidth && placeY >= 0 && placeY < mapHeight)
+            {
+                mapData[placeY][placeX] = selectedTiles[i] + 1;  // Assign the tile index
+                this->edited = true;
+                std::cout << "Placed tile at (" << placeX << ", " << placeY << ") with ID " << selectedTiles[i] << std::endl;
+            }
+        }
         // Force a re-render to reflect changes
         SDL_RenderPresent(this->renderer);
-    }
-}
-void SandBox::handleEvent(SDL_Event e)
-{
-    if (e.type == SDL_MOUSEBUTTONDOWN)
-    {
-        int mouseX = e.button.x;
-        int mouseY = e.button.y;
-        if (confirmed)
-        {
-            this->handleTilePlacement(mouseX, mouseY);
-        }
-
-        if (this->checkButtonClicked(this->openFileButton, mouseX, mouseY))
-        {
-            this->handleOpenFileButtonClick();
-        }
-        if (this->checkButtonClicked(this->closeWindowButton, mouseX, mouseY))
-        {
-            this->isRunning = false;
-        }
-        if (this->checkButtonClicked(this->confirmFileButton, mouseX, mouseY))
-        {
-            this->fileConfirmedRect = this->fileClickedRect;
-            this->askUserToConfirmFile = false;
-            this->showConfirmAndCancel = false;
-            this->tileSetloaded = true;
-        }
-        if (this->checkButtonClicked(this->cancelFileButton, mouseX, mouseY))
-        {
-            this->askUserToConfirmFile = false;
-            this->showConfirmAndCancel = false;
-        }
-        // We need to check if the mouse is in any of the file rects
-        if (this->showFiles) 
-        {
-            this->handleFileClicked(mouseX, mouseY);
-        }
-
-
-        // Check For The Pixel Width and Height Buttons and change the values
-        if (this->checkButtonClicked(this->decreasePixelWidth, mouseX, mouseY))
-        {
-            this->pixel_width = std::max(this->min, this->pixel_width - 1);
-        }
-        // Check for increase pixel width
-        if (this->checkButtonClicked(this->increasePixelWidth, mouseX, mouseY))
-        {
-            this->pixel_width = std::min(this->max, this->pixel_width + 1);
-        }
-        // Check For The Pixel Height Buttons and change the values
-        if (this->checkButtonClicked(this->decreasePixelHeight, mouseX, mouseY))
-        {
-            this->pixel_height = std::max(this->min, this->pixel_height - 1);
-        }
-        // Check for increase pixel Height
-        if (this->checkButtonClicked(this->increasePixelHeight, mouseX, mouseY))
-        {
-            this->pixel_height = std::min(this->max, this->pixel_height + 1);
-        }
-        if (this->checkButtonClicked(this->confirmPixelSize, mouseX, mouseY))
-        {
-            // We Wont Allow Pixel Size To get Changed Again 
-            std::cout << "Pixel Size Confirmed: " << this->pixel_width << "x" << this->pixel_height << std::endl;
-            int tileAtlasWidth, tileAtlasHeight;
-            SDL_QueryTexture(this->fileClickedTexture, NULL, NULL, &tileAtlasWidth, &tileAtlasHeight);
-            Sprite::fillRectVector(this->tiles, tileAtlasWidth, tileAtlasHeight, 16);
-            mapLoader.parseFile(this->mapData);
-            this->confirmed = true;
-        }
-
-        // Handle Tile Map Movement
-        int moveSpeed = 32; // Adjust based on tile size
-
-        // Move camera left
-        if (this->checkButtonClicked(this->moveCameraLeft, mouseX, mouseY)) {
-            this->cameraX -= moveSpeed;
-        }
-
-        // Move camera right
-        if (this->checkButtonClicked(this->moveCameraRight, mouseX, mouseY)) {
-            this->cameraX += moveSpeed;
-        }
-
-        // Move camera up
-        if (this->checkButtonClicked(this->moveCameraUp, mouseX, mouseY)) {
-            this->cameraY -= moveSpeed;
-        }
-
-        // Move camera down
-        if (this->checkButtonClicked(this->moveCameraDown, mouseX, mouseY)) {
-            this->cameraY += moveSpeed;
-        }
-    }
-    if (e.type == SDL_WINDOWEVENT) {
-        if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
-            std::cout << "SDL_WINDOWEVENT_CLOSE event received." << std::endl;
-            this->isRunning = false;
-        }
     }
 }
 
@@ -648,8 +788,6 @@ void SandBox::renderFiles()
         SDL_SetRenderDrawColor(this->renderer, 0, 0, 255, 255);
         SDL_RenderFillRect(this->renderer, &this->fileRects.at(i));
         UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, lowerFileName, startX, startY+2, FONT_WIDTH + 1, FONT_HEIGHT + 1, 1, false, 1);
-
-        
         /*SDL_RenderDrawRect(this->renderer, &this->fileRects.at(i));*/
         
         startY += 30;
@@ -704,7 +842,7 @@ void SandBox::initWindow()
         800, 600,
         SDL_WINDOW_SHOWN
     );
-    //SDL_SetWindowFullscreen(this->window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    SDL_SetWindowFullscreen(this->window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 
     if (!this->window)
     {
@@ -760,5 +898,121 @@ void SandBox::loadFont()
         int w, h;
         SDL_QueryTexture(this->font_texture, NULL, NULL, &w, &h);
         std::cout << "Font texture dimensions: " << w << "x" << h << std::endl;
+    }
+}
+
+void SandBox::handleEvent(SDL_Event e)
+{
+    if (e.type == SDL_MOUSEBUTTONDOWN)
+    {
+        int mouseX = e.button.x;
+        int mouseY = e.button.y;
+        if (confirmed) { this->handleTilePlacement(mouseX, mouseY); }
+
+        // Checks To See if the Open File Buttons is Clicked or not
+        if (this->checkButtonClicked(this->openFileButton, mouseX, mouseY)) {this->handleOpenFileButtonClick();}
+        // Check For Close Window Button
+        if (this->checkButtonClicked(this->closeWindowButton, mouseX, mouseY)){this->isRunning = false;}
+        // Check For Confirm File Button
+        if (this->checkButtonClicked(this->confirmFileButton, mouseX, mouseY))
+        {
+            this->fileConfirmedRect = this->fileClickedRect;
+            this->askUserToConfirmFile = false;
+            this->showConfirmAndCancel = false;
+            this->tileSetloaded = true;
+        }
+        // Check For Cancel File Button
+        if (this->checkButtonClicked(this->cancelFileButton, mouseX, mouseY))
+        {
+            this->askUserToConfirmFile = false;
+            this->showConfirmAndCancel = false;
+        }
+        // Checks to see if the any of the files are clicked
+        if (this->showFiles) 
+        {
+            this->handleFileClicked(mouseX, mouseY);
+        }
+
+        // Check For The Pixel Width and Height Buttons and change the values
+        if (!this->confirmed)
+        {
+            if (this->checkButtonClicked(this->decreasePixelWidth, mouseX, mouseY))
+            {
+                this->pixel_width = std::max(this->min, this->pixel_width - 1);
+            }
+            // Check for increase pixel width
+            if (this->checkButtonClicked(this->increasePixelWidth, mouseX, mouseY))
+            {
+                this->pixel_width = std::min(this->max, this->pixel_width + 1);
+            }
+            // Check For The Pixel Height Buttons and change the values
+            if (this->checkButtonClicked(this->decreasePixelHeight, mouseX, mouseY))
+            {
+                this->pixel_height = std::max(this->min, this->pixel_height - 1);
+            }
+            // Check for increase pixel Height
+            if (this->checkButtonClicked(this->increasePixelHeight, mouseX, mouseY))
+            {
+                this->pixel_height = std::min(this->max, this->pixel_height + 1);
+            }
+            // Check For Confirm Pixel Size Button
+            if (this->checkButtonClicked(this->confirmPixelSize, mouseX, mouseY))
+            {
+                int tileAtlasWidth, tileAtlasHeight;
+                SDL_QueryTexture(this->fileClickedTexture, NULL, NULL, &tileAtlasWidth, &tileAtlasHeight);
+                Sprite::fillRectVector(this->tiles, tileAtlasWidth, tileAtlasHeight, 16);
+                mapLoader.parseFile(this->mapData);
+                this->confirmed = true;
+            }
+        }
+        else
+        {
+            // Handle Tile Map Movement
+            int moveSpeed = 32; // Adjust based on tile size
+            // Move camera left
+            if (this->checkButtonClicked(this->moveCameraLeft, mouseX, mouseY)) {
+                this->cameraX -= moveSpeed;
+            }
+
+            // Move camera right
+            if (this->checkButtonClicked(this->moveCameraRight, mouseX, mouseY)) {
+                this->cameraX += moveSpeed;
+            }
+
+            // Move camera up
+            if (this->checkButtonClicked(this->moveCameraUp, mouseX, mouseY)) {
+                this->cameraY -= moveSpeed;
+            }
+
+            // Move camera down
+            if (this->checkButtonClicked(this->moveCameraDown, mouseX, mouseY)) {
+                this->cameraY += moveSpeed;
+            }
+            if (this->checkButtonClicked(this->changeTextureOrder, mouseX, mouseY))
+            {
+                this->changedTextureOrder = !this->changedTextureOrder;
+            }
+            if (this->checkButtonClicked(this->clear, mouseX, mouseY))
+            {
+                this->selectedTiles.clear();
+            }
+            if (this->checkButtonClicked(this->save, mouseX, mouseY))
+            {
+                mapLoader.saveFile(this->mapData);
+                this->selectedTiles.clear();
+            }
+        }
+
+        if ((tileSetloaded) && 
+        (this->originalImageWidth > 0 && this->originalImageHeight > 0))
+        {
+            this->handleTextureSelected(mouseX, mouseY);
+        }
+    }
+    if (e.type == SDL_WINDOWEVENT) {
+        if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
+            std::cout << "SDL_WINDOWEVENT_CLOSE event received." << std::endl;
+            this->isRunning = false;
+        }
     }
 }

@@ -11,6 +11,43 @@ time_t MapLoader::getFileTimestamp()
     return 0; // Default value if file not found
 }
 
+bool MapLoader::saveFile(const std::vector<std::vector<int>>& mapData)
+{
+    std::ofstream file(this->map_path);
+    if (!file.is_open())
+    {
+        std::cout << "Failed to open file" << std::endl;
+        return false;
+    }
+
+    for (const auto& row : mapData)
+    {
+        for (size_t i = 0; i < row.size(); i++)
+        {
+            if (row[i] == 0)
+            {
+                file << "MM";
+            }
+            else if (row[i] == -1)
+            {
+                file << "HH";
+            } else {
+                // Convert to hex, ensuring 2-digit formatting (01, 02, 0A, 0F, etc.)
+                file << std::hex << std::uppercase << std::setw(2) << std::setfill('0') << row[i];
+            }
+            // Add spacing except at the last element in the row
+            if (i < row.size() - 1)
+            {
+                file << "  ";
+            }
+        }
+        file << "\n"; // New line after each row
+    }
+
+    file.close();
+    return true;
+}
+
 void MapLoader::parseFile(std::vector<std::vector<int>>& mapData)
 {
     std::ifstream file(this->map_path);
