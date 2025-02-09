@@ -61,25 +61,32 @@ BlockFactory::BlockFactory()
     this->addBlock(BlockType::TOP_RIGHT_CORNER_DIRT, "right_corner_dirt");
     this->addBlock(BlockType::BOTTOM_RIGHT_CORNER_DIRT, "bottom_right_corner_dirt");
     this->addBlock(BlockType::BOTTOM_LEFT_CORNER_DIRT, "bottom_left_corner_dirt");
-    this->addBlock(BlockType::HOUSE, "house");
+    this->addBlock(BlockType::GRASS_2, "grass_2");
     // Fence blocks with collision (pass 'true' to CollisionComponent)
     this->addBlock<CollisionComponent>(BlockType::SINGLE_FENCE, "single_fence", true);
     this->addBlock<CollisionComponent>(BlockType::FENCE_ROW, "fence_row", true);
-    this->addBlock<CollisionComponent>(BlockType::RIGHT_END_FENCE, "right_end_fence", true);
-    this->addBlock<CollisionComponent>(BlockType::LEFT_END_FENCE, "left_end_fence", true);
-    this->addBlock<CollisionComponent>(BlockType::TOP_END_FENCE, "top_end_fence", true);
-    this->addBlock<CollisionComponent>(BlockType::BOTTOM_END_FENCE, "bottom_end_fence", true);
     this->addBlock<CollisionComponent>(BlockType::TOP_LEFT_CORNER_FENCE, "top_left_corner_fence", true);
     this->addBlock<CollisionComponent>(BlockType::TOP_RIGHT_CORNER_FENCE, "top_right_corner_fence", true);
-    this->addBlock<CollisionComponent>(BlockType::BOTTOM_RIGHT_CORNER_FENCE, "bottom_right_corner_fence", true);
     this->addBlock<CollisionComponent>(BlockType::BOTTOM_LEFT_CORNER_FENCE, "bottom_left_corner_fence", true);
+    this->addBlock<CollisionComponent>(BlockType::BOTTOM_RIGHT_CORNER_FENCE, "bottom_right_corner_fence", true);
     this->addBlock<CollisionComponent>(BlockType::FENCE_COL, "fence_col", true);
-    // HOUSE_BIG with both components
-    this->addBlock(BlockType::HOUSE_BIG, "house_big");
-    this->addComponentToBlock<CollisionComponent>(BlockType::HOUSE_BIG, true); // Solid
-    this->addComponentToBlock<Enterable>(BlockType::HOUSE_BIG, true);          // Enterable
-    // EMPTY block (enterable)
-    this->addBlock<Enterable>(BlockType::EMPTY, "empty", true); // Enterable
+    this->addBlock<CollisionComponent>(BlockType::LEFT_END_FENCE, "left_end_fence", true);
+    this->addBlock<CollisionComponent>(BlockType::RIGHT_END_FENCE, "right_end_fence", true);
+    // Rock Paths
+    this->addBlock(BlockType::STONE_PATH_1, "stone_path_1");
+    this->addBlock(BlockType::STONE_PATH_2, "stone_path_2");
+    // First House
+    this->addBlock<CollisionComponent>(BlockType::TOP_LEFT_HOUSE_1, "top_left_house_1", true);
+    this->addBlock<CollisionComponent>(BlockType::TOP_RIGHT_HOUSE_1, "top_right_house_1", true);
+    this->addBlock<CollisionComponent>(BlockType::BOTTOM_LEFT_HOUSE_1, "bottom_left_house_1", true);
+    // No Collision on the bottom right house
+    this->addBlock(BlockType::BOTTOM_RIGHT_HOUSE_1, "bottom_right_house_1");
+    // 2nd House
+    this->addBlock<CollisionComponent>(BlockType::TOP_LEFT_HOUSE_2, "top_left_house_2", true);
+    this->addBlock<CollisionComponent>(BlockType::TOP_RIGHT_HOUSE_2, "top_right_house_2", true);
+    this->addBlock<CollisionComponent>(BlockType::BOTTOM_LEFT_HOUSE_2, "bottom_left_house_2", true);
+    this->addBlock(BlockType::BOTTOM_RIGHT_HOUSE_2, "bottom_right_house_2");
+
     // Adding To type_to_block
     for (auto& pair : blocks)
         this->type_to_block[pair.second.type] = &pair.second;
@@ -115,9 +122,6 @@ Block* BlockFactory::getBlockAtPosition(int x, int y, const std::vector<std::vec
     }
 
     int blockIndex = mapData[tileY][tileX] - 1;
-    if (blockIndex == -1) return &blocks.at("empty");
-    if (blockIndex == -2) return &blocks.at("house_big");
-
     BlockType type = static_cast<BlockType>(blockIndex);
     return type_to_block.count(type) ? type_to_block.at(type) : nullptr;
 }
@@ -162,30 +166,6 @@ void BlockFactory::printBlockInfoByPosition(int x, int y, const std::vector<std:
     // Get ID of block
     int blockIndex = mapData[tileY][tileX] - 1;
 
-    /** 
-      * Special Cases
-     **/
-    if (blockIndex == -1) 
-    {
-        if (BlockFactory::oldBlockType != BlockType::EMPTY) 
-        {
-            std::cout << "Player is standing on: empty" << std::endl;
-            BlockFactory::oldBlockType = BlockType::EMPTY;
-        }
-        return;
-    }
-
-    /** House_Big **/
-    if (blockIndex == -2) 
-    {
-        if (BlockFactory::oldBlockType != BlockType::HOUSE_BIG) 
-        {
-            std::cout << "Player is standing on: house_big" << std::endl;
-            BlockFactory::oldBlockType = BlockType::HOUSE_BIG;
-        }
-        return;
-    }
-
     /** Convert BlockIndex to BlockType **/
     BlockType blockType = static_cast<BlockType>(blockIndex);
 
@@ -212,7 +192,11 @@ bool BlockFactory::checkCollision(int x, int y, const std::vector<std::vector<in
     if (!block) return true;
 
     if (auto collision = block->getComponent<CollisionComponent>())
+    {
+        /*std::cout << "Collision: " << block->name << std::endl;*/
         return collision->getIsSolid();
+    }
+
     return false;
 }
 
@@ -222,7 +206,7 @@ bool BlockFactory::checkCollision(int x, int y, const std::vector<std::vector<in
 bool BlockFactory::checkEnterable(int x, int y, const std::vector<std::vector<int>>& mapData)
 {
     Block* block = getBlockAtPosition(x, y, mapData);
-    if (!block) return false;
+    if (!block) return true;
 
     if (auto enterable = block->getComponent<Enterable>())
         return enterable->getIsEnterable();

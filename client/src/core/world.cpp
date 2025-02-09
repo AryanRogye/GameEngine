@@ -61,7 +61,6 @@ void World::updateAndRender()
         // Kinda Like Minecraft Black Box Chat thing
         this->renderCommandInput();
 
-
         SDL_RenderPresent(this->renderer);
         SDL_Delay(16);
     }
@@ -104,10 +103,12 @@ void World::handlePlayerMovement(const Uint8* state, float dt) {
     int feetY = static_cast<int>(newY) + player->getHeight() + 1;
     int centerX = static_cast<int>(newX) + player->getWidth() / 2;
     bool isColliding = this->bf.checkCollision(centerX, feetY, this->mapData);
-
+    
     if (!isColliding) {
         player->setX(newX);
         player->setY(newY);
+    } else {
+        std::cout << "Collision detected at (" << centerX << ", " << feetY << ")" << std::endl;
     }
 }
 
@@ -257,26 +258,6 @@ void World::renderMap()
             if (visited[y][x]) { continue; }
             int tileIndex = mapData[y][x] - 1;
 
-            // Blank Tile
-            if (tileIndex + 1 == 0) {
-                // Draw Empty Space
-                SDL_Rect destRect = {
-                    x * displayTileSize - camX,  // Apply camera offset here
-                    y * displayTileSize - camY,
-                    displayTileSize,
-                    displayTileSize
-                };
-            }
-            // House Tile
-            if (tileIndex + 1 == -1) {
-                // Render The House1 Texture
-                this->renderHouse(x * displayTileSize - camX, y * displayTileSize - camY, displayTileSize, displayTileSize);
-                // We Want to set the x + 1, y + 1, x + 1 y + 1 to visited
-                if (y + 1 < mapHeightInTiles) visited[y + 1][x] = true;
-                if (x + 1 < mapWidthInTiles) visited[y][x + 1] = true;
-                if (y + 1 < mapHeightInTiles && x + 1 < mapWidthInTiles) visited[y + 1][x + 1] = true;
-                continue;
-            }
             if (tileIndex >= 0 && tileIndex < tiles.size())
             {
                 SDL_Rect destRect = {

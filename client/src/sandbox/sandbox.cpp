@@ -23,22 +23,6 @@ SandBox::SandBox()
     this->mapLoader = MapLoader(this->currentPath + "../../Maps/level_1.txt");
 }
 
-SandBox::~SandBox() { this->cleanup(); }
-
-void SandBox::cleanup()
-{
-    if (renderer)
-    {
-        SDL_DestroyRenderer(renderer);
-        renderer = nullptr;
-    }
-    if (window)
-    {
-        SDL_DestroyWindow(window);
-        window = nullptr;
-    }
-}
-
 void SandBox::loadSandBox()
 {
     this->isRunning = true;
@@ -46,7 +30,7 @@ void SandBox::loadSandBox()
     while (this->isRunning)
     {
         while(SDL_PollEvent(&e)){ 
-            handleEvent(e);
+            this->handleEvent(e);
             if (!this->isRunning) break;
         }
         if (!this->isRunning) break;
@@ -211,26 +195,6 @@ void SandBox::renderMapInGrid(int startX, int startY)
         {
             if (visited[y][x]) { continue; }
             int tileIndex = mapData[y][x] - 1;
-
-            if (tileIndex + 1 == 0) {
-                // Draw Empty Space
-                SDL_Rect destRect = {
-                    startX + x * displayTileSize - camX,  
-                    startY + y * displayTileSize - camY,  
-                    displayTileSize,
-                    displayTileSize
-                };
-            }
-            // House Tile
-            if (tileIndex + 1 == -1) {
-                // Render The House1 Texture
-                /*this->renderHouse(x * displayTileSize - camX, y * displayTileSize - camY, displayTileSize, displayTileSize);*/
-                // We Want to set the x + 1, y + 1, x + 1 y + 1 to visited
-                if (y + 1 < mapHeightInTiles) visited[y + 1][x] = true;
-                if (x + 1 < mapWidthInTiles) visited[y][x + 1] = true;
-                if (y + 1 < mapHeightInTiles && x + 1 < mapWidthInTiles) visited[y + 1][x + 1] = true;
-                continue;
-            }
             if (tileIndex >= 0 && tileIndex < tiles.size())
             {
                 SDL_Rect destRect = {
@@ -391,6 +355,130 @@ void SandBox::renderSelectedTileTextures()
     }
 }
 
+void SandBox::renderGridLines()
+{
+    if (!tileSetloaded) return;
+    if (!(this->originalImageWidth > 0 && this->originalImageHeight > 0)) return;
+
+    // Set grid line color to yellow
+    SDL_SetRenderDrawColor(this->renderer, 255, 255, 0, 255);
+
+    // Compute the number of tiles based on the user-selected tile size
+    int num_tiles_x = originalImageWidth / this->pixel_width;
+    int num_tiles_y = originalImageHeight / this->pixel_height;
+
+    // Compute the actual tile size based on the scaled-up image
+    int tile_width = fileConfirmedRect.w / num_tiles_x;
+    int tile_height = fileConfirmedRect.h / num_tiles_y;
+
+    // Draw vertical grid lines (columns)
+    for (int x = fileConfirmedRect.x; x <= fileConfirmedRect.x + fileConfirmedRect.w; x += tile_width)
+    {
+        SDL_RenderDrawLine(
+            this->renderer,
+            x, fileConfirmedRect.y,
+            x, fileConfirmedRect.y + fileConfirmedRect.h
+        );
+    }
+
+    // Draw horizontal grid lines (rows)
+    for (int y = fileConfirmedRect.y; y <= fileConfirmedRect.y + fileConfirmedRect.h; y += tile_height)
+    {
+    SDL_RenderDrawLine(
+            this->renderer,
+            fileConfirmedRect.x, y,
+            fileConfirmedRect.x + fileConfirmedRect.w, y
+        );
+    }
+}
+
+void SandBox::renderFileClicked()
+{
+    if (!this->askUserToConfirmFile) return;
+    int w, h;
+    SDL_QueryTexture(this->fileClickedTexture, NULL, NULL, &w, &h);
+    this->originalImageWidth = w;
+    this->originalImageHeight = h;
+    this->fileClickedRect = { file_clicked_x, file_clicked_y, w * 2, h * 2 };
+    SDL_RenderCopy(this->renderer, this->fileClickedTexture, NULL, &this->fileClickedRect);
+
+    /** Render Confirm Options As Well **/
+    this->confirmFileButton = { this->confirm_file_button_x, (file_clicked_y + h*2) + 10, w*2, this->image_file_button_height };
+    this->cancelFileButton  = { this->cancel_file_button_x , (file_clicked_y + h*2) + 20 + this->image_file_button_height, w*2, this->image_file_button_height };
+
+    if (!this->showConfirmAndCancel) return;
+
+    SDL_SetRenderDrawColor(this->renderer, 0, 0, 255, 255);
+    SDL_RenderFillRect(this->renderer, &this->confirmFileButton);
+    UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, "Confirm", this->confirmFileButton.x + 5, this->confirmFileButton.y + 2, FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1);
+    SDL_SetRenderDrawColor(this->renderer, 255, 0, 0, 255);
+    SDL_RenderFillRect(this->renderer, &this->cancelFileButton);
+    UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, "Cancel", this->cancelFileButton.x + 5, this->cancelFileButton.y + 2, FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1);
+}
+
+void SandBox::renderCloseWindow()
+{
+    // We Just Wanna Show A Very Small Button in the bottom left corner to clsoe out of the window
+    this->closeWindowButton.x = this->c_window_button_x;
+    this->closeWindowButton.y = this->c_window_button_y;
+    this->closeWindowButton.w = this->c_window_button_width;
+    this->closeWindowButton.h = this->c_window_button_height;
+
+    SDL_SetRenderDrawColor(this->renderer, 0, 0, 255, 255);
+    SDL_RenderFillRect(this->renderer, &this->closeWindowButton);
+
+    UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, "X", this->closeWindowButton.x + 5, this->closeWindowButton.y + 2, FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1);
+}
+
+void SandBox::renderOpenFile()
+{
+    this->openFileButton.x = this->o_file_button_x;
+    this->openFileButton.y = this->o_file_button_y;
+    this->openFileButton.w = this->o_file_button_width;
+    this->openFileButton.h = this->o_file_button_height;
+
+    SDL_SetRenderDrawColor(this->renderer, 255, 0, 0, 255);
+    SDL_RenderFillRect(this->renderer, &this->openFileButton);
+    
+    // Make Whie Text
+    /*SDL_SetRenderDrawColor(this->renderer, 255, 255, 255, 255);*/
+    UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, "Open File", this->openFileButton.x + 5, this->openFileButton.y + 10, FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1);
+}
+
+void SandBox::renderFiles()
+{
+    if (!this->showFiles) return;
+    int startY = this->openFileButton.y + this->openFileButton.h + 10;
+    int startX = this->openFileButton.x + 5;
+
+    this->fileRects.resize(this->fileMap.size());
+    
+    // Debug print for Hello text
+    
+    int i = 0;
+    for (const auto& [fileName, _] : fileMap) {
+        if (i >= this->fileRects.size()) break;
+
+        // Convert filename to lowercase for rendering
+        std::string lowerFileName = fileName;
+        std::transform(lowerFileName.begin(), lowerFileName.end(), lowerFileName.begin(), ::tolower);
+        
+        this->fileRects.at(i).x = startX;
+        this->fileRects.at(i).y = startY;
+        this->fileRects.at(i).w = this->openFileButton.w - 10;
+        this->fileRects.at(i).h = 20;
+
+        SDL_SetRenderDrawColor(this->renderer, 0, 0, 255, 255);
+        SDL_RenderFillRect(this->renderer, &this->fileRects.at(i));
+        UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, lowerFileName, startX, startY+2, FONT_WIDTH + 1, FONT_HEIGHT + 1, 1, false, 1);
+        /*SDL_RenderDrawRect(this->renderer, &this->fileRects.at(i));*/
+        
+        startY += 30;
+        i++;
+    }
+}
+
+
 void SandBox::handleTextureSelected(int mouseX, int mouseY)
 {
     // Check if the click is inside the tileset area
@@ -429,44 +517,11 @@ void SandBox::handleTextureSelected(int mouseX, int mouseY)
     }
 }
 
-void SandBox::renderGridLines()
-{
-    if (!tileSetloaded) return;
-    if (!(this->originalImageWidth > 0 && this->originalImageHeight > 0)) return;
 
-    // Set grid line color to yellow
-    SDL_SetRenderDrawColor(this->renderer, 255, 255, 0, 255);
-
-    // Compute the number of tiles based on the user-selected tile size
-    int num_tiles_x = originalImageWidth / this->pixel_width;
-    int num_tiles_y = originalImageHeight / this->pixel_height;
-
-    // Compute the actual tile size based on the scaled-up image
-    int tile_width = fileConfirmedRect.w / num_tiles_x;
-    int tile_height = fileConfirmedRect.h / num_tiles_y;
-
-    // Draw vertical grid lines (columns)
-    for (int x = fileConfirmedRect.x; x <= fileConfirmedRect.x + fileConfirmedRect.w; x += tile_width)
-    {
-        SDL_RenderDrawLine(
-            this->renderer,
-            x, fileConfirmedRect.y,
-            x, fileConfirmedRect.y + fileConfirmedRect.h
-        );
-    }
-
-    // Draw horizontal grid lines (rows)
-    for (int y = fileConfirmedRect.y; y <= fileConfirmedRect.y + fileConfirmedRect.h; y += tile_height)
-    {
-    SDL_RenderDrawLine(
-            this->renderer,
-            fileConfirmedRect.x, y,
-            fileConfirmedRect.x + fileConfirmedRect.w, y
-        );
-    }
-}
-
-
+/** 
+    Once The User Confirms The File We Need to load the texture
+    and ask the user a bunch of questions like pixel width and height
+**/
 void SandBox::loadTileSet()
 {
     // Basically We Will Close The File System Window
@@ -603,58 +658,11 @@ void SandBox::loadTileSet()
 }
 
 
-void SandBox::renderFileClicked()
-{
-    if (!this->askUserToConfirmFile) return;
-    int w, h;
-    SDL_QueryTexture(this->fileClickedTexture, NULL, NULL, &w, &h);
-    this->originalImageWidth = w;
-    this->originalImageHeight = h;
-    this->fileClickedRect = { file_clicked_x, file_clicked_y, w * 2, h * 2 };
-    SDL_RenderCopy(this->renderer, this->fileClickedTexture, NULL, &this->fileClickedRect);
-
-    /** Render Confirm Options As Well **/
-    this->confirmFileButton = { this->confirm_file_button_x, (file_clicked_y + h*2) + 10, w*2, this->image_file_button_height };
-    this->cancelFileButton  = { this->cancel_file_button_x , (file_clicked_y + h*2) + 20 + this->image_file_button_height, w*2, this->image_file_button_height };
-
-    if (!this->showConfirmAndCancel) return;
-
-    SDL_SetRenderDrawColor(this->renderer, 0, 0, 255, 255);
-    SDL_RenderFillRect(this->renderer, &this->confirmFileButton);
-    UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, "Confirm", this->confirmFileButton.x + 5, this->confirmFileButton.y + 2, FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1);
-    SDL_SetRenderDrawColor(this->renderer, 255, 0, 0, 255);
-    SDL_RenderFillRect(this->renderer, &this->cancelFileButton);
-    UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, "Cancel", this->cancelFileButton.x + 5, this->cancelFileButton.y + 2, FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1);
-}
-
-void SandBox::renderCloseWindow()
-{
-    // We Just Wanna Show A Very Small Button in the bottom left corner to clsoe out of the window
-    this->closeWindowButton.x = this->c_window_button_x;
-    this->closeWindowButton.y = this->c_window_button_y;
-    this->closeWindowButton.w = this->c_window_button_width;
-    this->closeWindowButton.h = this->c_window_button_height;
-
-    SDL_SetRenderDrawColor(this->renderer, 0, 0, 255, 255);
-    SDL_RenderFillRect(this->renderer, &this->closeWindowButton);
-
-    UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, "X", this->closeWindowButton.x + 5, this->closeWindowButton.y + 2, FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1);
-}
-
-void SandBox::renderOpenFile()
-{
-    this->openFileButton.x = this->o_file_button_x;
-    this->openFileButton.y = this->o_file_button_y;
-    this->openFileButton.w = this->o_file_button_width;
-    this->openFileButton.h = this->o_file_button_height;
-
-    SDL_SetRenderDrawColor(this->renderer, 255, 0, 0, 255);
-    SDL_RenderFillRect(this->renderer, &this->openFileButton);
-    
-    // Make Whie Text
-    /*SDL_SetRenderDrawColor(this->renderer, 255, 255, 255, 255);*/
-    UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, "Open File", this->openFileButton.x + 5, this->openFileButton.y + 10, FONT_WIDTH+3, FONT_HEIGHT+2, 2, false, 1);
-}
+/** 
+    This Function will place the tile that the user selected 
+    onto the screen/map and it will make the edit but it wont
+    save it till the user decides "oh I like it like this"
+**/
 void SandBox::handleTilePlacement(int mouseX, int mouseY)
 {
     int startX = this->fileConfirmedRect.x + this->fileConfirmedRect.w + 10;  // Grid offset X
@@ -754,6 +762,12 @@ void SandBox::handleTilePlacement(int mouseX, int mouseY)
     SDL_RenderPresent(this->renderer);
 }
 
+/** 
+    When The User decides to open up the list of files this is what 
+    the user is greeted with it shows off all the files that are
+    inside the directory it may take some time to load if there are
+    a lot of files
+**/
 void SandBox::handleFileClicked(int mouseX, int mouseY)
 {
     int cameraY = 0;
@@ -776,10 +790,13 @@ void SandBox::handleFileClicked(int mouseX, int mouseY)
 
 /** 
 This Function Handles THe Rendering Of The Image of the file Clicked
+There are kinda 2 of these this is kinda the first occurance that
+the user sees, this only appears when the user is scrolling through
+the images and choosing one to confirm later on I think someone takes
+ownership of the texture or rect and then it gets rendered again
 **/
 void SandBox::renderFileClicked(std::string fileName)
 {
-    std::cout << "File Clicked: " << fileName << std::endl;
     /** 
         Basically This is alot but we have to load in the surface and then load in the texture
         for every file that the user clicks on
@@ -806,40 +823,11 @@ void SandBox::renderFileClicked(std::string fileName)
     this->askUserToConfirmFile = true;
 }
 
-void SandBox::renderFiles()
-{
-    if (!this->showFiles) return;
-    int startY = this->openFileButton.y + this->openFileButton.h + 10;
-    int startX = this->openFileButton.x + 5;
 
-    this->fileRects.resize(this->fileMap.size());
-    
-    // Debug print for Hello text
-    
-    int i = 0;
-    for (const auto& [fileName, _] : fileMap) {
-        if (i >= this->fileRects.size()) break;
-
-        // Convert filename to lowercase for rendering
-        std::string lowerFileName = fileName;
-        std::transform(lowerFileName.begin(), lowerFileName.end(), lowerFileName.begin(), ::tolower);
-        
-        this->fileRects.at(i).x = startX;
-        this->fileRects.at(i).y = startY;
-        this->fileRects.at(i).w = this->openFileButton.w - 10;
-        this->fileRects.at(i).h = 20;
-
-        SDL_SetRenderDrawColor(this->renderer, 0, 0, 255, 255);
-        SDL_RenderFillRect(this->renderer, &this->fileRects.at(i));
-        UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, lowerFileName, startX, startY+2, FONT_WIDTH + 1, FONT_HEIGHT + 1, 1, false, 1);
-        /*SDL_RenderDrawRect(this->renderer, &this->fileRects.at(i));*/
-        
-        startY += 30;
-        i++;
-    }
-}
-
-/** Need To Open All The Files **/
+/** 
+This Function parses all the files inside the directory and
+loads it inside a map
+**/
 void SandBox::handleOpenFileButtonClick()
 {
     if (this->showFiles || this->askUserToConfirmFile) {
@@ -869,13 +857,64 @@ void SandBox::handleOpenFileButtonClick()
     }
 
 }
+extern "C" SandBox* createSandBox()
+{
+    return new SandBox();
+}
 
+extern "C" void runSandBox(void* instance)
+{
+    SandBox* sandbox = static_cast<SandBox*>(instance);
+    sandbox->loadSandBox();
+    delete sandbox;  // Add this line to properly clean up
+}
+
+/** 
+This Function loads the font the thing is that this is very redundant
+but I cant pass textures through different classses cuz different renderers
+idk why
+**/
+void SandBox::loadFont()
+{
+    /** Font Is Just a Sprite Sheet so we can just use the sprite class **/
+    Sprite::fillRectVector(this->fonts,128,128, 8,7);
+    std::cout << "Number of font rectangles: " << this->fonts.size() << std::endl;
+    
+    /** Load Into the texture **/
+    std::cout << "FontPath : " << this->currentPath + "../../Assets/font.png" << std::endl;
+    Texture::loadTexture(this->currentPath + "../../Assets/font.png", &this->font_texture, this->renderer);
+    if (!this->font_texture) {
+        std::cerr << "Failed to load font texture: " << SDL_GetError() << std::endl;
+    } else {
+        std::cout << "Font texture loaded successfully!" << std::endl;
+        int w, h;
+        SDL_QueryTexture(this->font_texture, NULL, NULL, &w, &h);
+        std::cout << "Font texture dimensions: " << w << "x" << h << std::endl;
+    }
+}
+
+SandBox::~SandBox() { this->cleanup(); }
+void SandBox::cleanup()
+{
+    if (renderer)
+    {
+        SDL_DestroyRenderer(renderer);
+        renderer = nullptr;
+    }
+    if (window)
+    {
+        SDL_DestroyWindow(window);
+        window = nullptr;
+    }
+}
+/** 
+    This is a utility function that is basically used by every ui thing on the screen
+**/
 bool SandBox::checkButtonClicked(SDL_Rect buttonRect, int mouseX, int mouseY)
 {
     return mouseX >= buttonRect.x && mouseX <= (buttonRect.x + buttonRect.w) &&
     mouseY >= buttonRect.y && mouseY <= (buttonRect.y + buttonRect.h);
 }
-
 void SandBox::initWindow()
 {
 
@@ -896,7 +935,6 @@ void SandBox::initWindow()
         exit(1);
     }
 }
-
 void SandBox::initRenderer()
 {
     this->renderer = SDL_CreateRenderer(
@@ -911,37 +949,6 @@ void SandBox::initRenderer()
         SDL_DestroyWindow(window);
         SDL_Quit();
         return;
-    }
-}
-
-extern "C" SandBox* createSandBox()
-{
-    return new SandBox();
-}
-
-extern "C" void runSandBox(void* instance)
-{
-    SandBox* sandbox = static_cast<SandBox*>(instance);
-    sandbox->loadSandBox();
-    delete sandbox;  // Add this line to properly clean up
-}
-
-void SandBox::loadFont()
-{
-    /** Font Is Just a Sprite Sheet so we can just use the sprite class **/
-    Sprite::fillRectVector(this->fonts,128,128, 8,7);
-    std::cout << "Number of font rectangles: " << this->fonts.size() << std::endl;
-    
-    /** Load Into the texture **/
-    std::cout << "FontPath : " << this->currentPath + "../../Assets/font.png" << std::endl;
-    Texture::loadTexture(this->currentPath + "../../Assets/font.png", &this->font_texture, this->renderer);
-    if (!this->font_texture) {
-        std::cerr << "Failed to load font texture: " << SDL_GetError() << std::endl;
-    } else {
-        std::cout << "Font texture loaded successfully!" << std::endl;
-        int w, h;
-        SDL_QueryTexture(this->font_texture, NULL, NULL, &w, &h);
-        std::cout << "Font texture dimensions: " << w << "x" << h << std::endl;
     }
 }
 

@@ -24,17 +24,8 @@ bool MapLoader::saveFile(const std::vector<std::vector<int>>& mapData)
     {
         for (size_t i = 0; i < row.size(); i++)
         {
-            if (row[i] == 0)
-            {
-                file << "MM";
-            }
-            else if (row[i] == -1)
-            {
-                file << "HH";
-            } else {
-                // Convert to hex, ensuring 2-digit formatting (01, 02, 0A, 0F, etc.)
-                file << std::hex << std::uppercase << std::setw(2) << std::setfill('0') << row[i];
-            }
+            // Convert to hex, ensuring 2-digit formatting (01, 02, 0A, 0F, etc.)
+            file << std::hex << std::uppercase << std::setw(2) << std::setfill('0') << row[i];
             // Add spacing except at the last element in the row
             if (i < row.size() - 1)
             {
@@ -77,16 +68,6 @@ void MapLoader::parseFile(std::vector<std::vector<int>>& mapData)
             }
             catch(const std::exception &e) 
             {
-                if (cell == "MM" || cell == "mm") 
-                {
-                    row.push_back(0);
-                    continue;
-                }
-                if (cell == "HH" || cell == "hh") 
-                {
-                    row.push_back(-1);
-                    continue;
-                }
                 std::cerr << "Error converting '" << cell << "': " << e.what() << std::endl;
             }
         }
