@@ -9,3 +9,18 @@
 #define FONT_WIDTH 8
 #define FONT_HEIGHT 7
 #define FONT_SCALE 3
+
+#include <string>
+#include <filesystem>  // C++17 feature
+#include <vector>
+
+// Global asset path
+extern std::string ASSET_PATH;
+
+// Global vectors for character animations
+class Sprite;
+extern std::vector<Sprite> PlayerIdlePaths;
+extern std::vector<Sprite> PlayerRunningPaths;
+
+// Function to initialize asset paths
+void initializePaths();

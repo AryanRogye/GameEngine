@@ -194,12 +194,6 @@ void World::setupWorld()
     // Load The Map
     this->mapLoader.parseFile(this->mapData);
 
-    // Load House Texture
-    if(!Texture::loadTexture(
-        currentPath + "../../Assets/Houses/house_1.png",
-        &this->house_one_texture,
-        this->renderer
-    )) std::cout << "Failed to load houseTexture" << std::endl;
 
     /** 
      * Load Textures Of Player
@@ -273,18 +267,6 @@ void World::renderMap()
     }
 }
 
-void World::renderHouse(int x, int y, int width, int height)
-{
-    // Size is 30x30 we can scale it to what the width and height is
-    SDL_Rect destRect = {
-        x,
-        y,
-        width * 2,
-        height * 2
-    };
-    SDL_RenderCopy(this->renderer, this->house_one_texture, NULL, &destRect);
-
-}
 
 void World::updateServer(float *oldX, float *oldY)
 {

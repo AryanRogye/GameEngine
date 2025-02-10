@@ -9,8 +9,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_BUILD_TYPE Debug)  # Forces debug mode
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 
+include_directories(/opt/homebrew/include)
+link_directories(/opt/homebrew/lib)
+
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
+    ${ENET_INCLUDE_DIRS}  # Add ENet's include directories
 )
 
 set(SOURCES
@@ -23,4 +27,5 @@ set(SOURCES
 add_executable(server
     ${SOURCES}
 )
-
+# Link ENet
+target_link_libraries(server enet)

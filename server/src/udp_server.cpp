@@ -1,133 +1,98 @@
 #include "udp_server.h"
-#include "packet.h"
-#include <cstdint>
 
+UDPServer::~UDPServer()
+{
+    enet_host_destroy(server);
+    enet_deinitialize();
+}
 /** Constructor **/
 UDPServer::UDPServer()
 {
-    // Initialize The Server Variables
-    this->nextPlayerId = 0;
-    this->players = std::vector<Player>();
-    this ->client_addr_len = sizeof(this->client_addr);
-    // Start Server Functions
-    createUDPSocket();
-    setupServerAdress();
-    bindSocket();
-    std::thread t(&UDPServer::listenForClients, this);
-    // This is to make sure that the main thread waits for the listenForClients thread to finish
-    t.join();
+        
+    if (enet_initialize() != 0)
+    {
+        std::cerr << "An error occurred while initializing ENet." << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    ENetAddress address;
+    address.host = ENET_HOST_ANY;
+    address.port = PORT;
+    
+    /** This is  **/
+    this->server = enet_host_create(
+        &address,       // The address to bind the server host to
+        MAX_CLIENTS,    // Allow up to 10 clients and/or outgoing connections
+        2,              // Allow up to 2 channels to be used, 0 and 1
+        0,              // Assume any amount of incoming bandwidth
+        0               // Assume any amount of outgoing bandwidth
+    );
+    if (!this->server)
+    {
+        std::cerr << "An error occurred while trying to create an ENet server host." << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    std::cout << "Server listening on port " << PORT << std::endl;
+
+    /*this->nextPlayerId = 0;*/
+    /*this->players = std::vector<Player>();*/
+
+    this->listenForClients();
 }
 
 // Getters For the UDP Server Class
-int                 UDPServer::getSockfd() const { return this->sockfd; }
-struct sockaddr_in  UDPServer::getServerAddr() const { return server_addr; }
-struct sockaddr_in  UDPServer::getClientAddr() const { return client_addr; }
-socklen_t           UDPServer::getClientAddrLen() const { return client_addr_len; }
 std::vector<Player> UDPServer::getPlayers() const { return players; }
 int                 UDPServer::getNextPlayerId() const { return nextPlayerId; }
 
 // Setters For the UDP Server Class
-void UDPServer::setSockfd(int sockfd) { this->sockfd = sockfd; }
-void UDPServer::setServerAddr(struct sockaddr_in server_addr) { this->server_addr = server_addr; }
-void UDPServer::setClientAddr(struct sockaddr_in client_addr) { this->client_addr = client_addr;}
 void UDPServer::setPlayers(std::vector<Player> players) { this->players = players; }
 void UDPServer::setNextPlayerId(int nextPlayerId) { this->nextPlayerId = nextPlayerId; }
 // #########################################
 // Class Level Function Implementations
 // #########################################
 
-/** Create The UDP Socket **/
-void UDPServer::createUDPSocket()
-{
-    // Create a UDP socket
-    if ((this->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) 
-    {
-        perror("socket creation failed");
-        exit(EXIT_FAILURE);
-    }
-    // Allow Reuse of the port
-    int opt = 1;
-    setsockopt(this->sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-
-    // Set the socket to non-blocking mode
-    int flags = fcntl(this->sockfd, F_GETFL, 0);
-    fcntl(this->sockfd, F_SETFL, flags | O_NONBLOCK);
-    
-    // Clear the server address structure
-    memset(&this->server_addr, 0, sizeof(this->server_addr));
-}
-
-/** Setup The Server Address **/
-void UDPServer::setupServerAdress()
-{
-    // Set up the server address structure
-    this->server_addr.sin_family = AF_INET;
-    this->server_addr.sin_addr.s_addr = INADDR_ANY; 
-    this->server_addr.sin_port = htons(PORT);
-}
-
-/** Bind The Socket **/
-void UDPServer::bindSocket()
-{
-    // Bind the socket to the specified address and port
-    if (bind(this->sockfd, (const struct sockaddr *)&this->server_addr, sizeof(this->server_addr)) < 0) 
-    {
-        perror("bind failed");
-        exit(EXIT_FAILURE);
-    }
-}
 
 /** Listen For Clients **/
 void UDPServer::listenForClients()
 {
-    std::cout << "Server listening on port " << PORT << std::endl;
-    while (true) 
+    ENetEvent event;
+    
+    while (true)
     {
-        // Receive data from a client
-        int n = recvfrom(
-            this->sockfd, 
-            this->buffer, 
-            sizeof(this->buffer), 
-            0, 
-            (struct sockaddr *)&client_addr, 
-            &client_addr_len
-        );
-
-        if (n < 0) 
+        while (enet_host_service(server, &event, 1000) > 0) 
         {
-            if (errno == EAGAIN || errno == EWOULDBLOCK) 
-            {
-                // No data yet this is ok
-                continue;
-            } 
-            else 
-            {
-                perror("recvfrom failed");
-                exit(EXIT_FAILURE);
+            switch (event.type) {
+                case ENET_EVENT_TYPE_CONNECT:
+                    std::cout << "A new client connected!\n";
+                    break;
+                case ENET_EVENT_TYPE_RECEIVE:
+                    std::cout << "Received packet of size: " << event.packet->dataLength << std::endl;
+                    handlePacket(event.packet, event.peer);
+                    enet_packet_destroy(event.packet);
+                    break;
+                case ENET_EVENT_TYPE_DISCONNECT:
+                    std::cout << "Client disconnected.\n";
+                    break;
+                case ENET_EVENT_TYPE_NONE:
+                    break;
             }
         }
-        // Create a copy of the client address
-        sockaddr_in clientCopy = client_addr;
-        // Handle the packet in a new thread
-        std::thread(&UDPServer::handlePacket, this, std::vector<uint8_t>(buffer, buffer + n), clientCopy).detach();
     }
 }
 
 /** Handle Packet **/
-void UDPServer::handlePacket(std::vector<uint8_t>packetData, sockaddr_in clientAddr)
+void UDPServer::handlePacket(ENetPacket *packet, ENetPeer *peer)
 {
-    // Get The Packet Type And Handle it based on what it is
     size_t offset = 0;
-    PacketType packetType = Serializable::get_packet_type(packetData.data(), &offset);
-
+    PacketType packetType = Serializable::get_packet_type(packet->data, &offset);
 
     switch (packetType) 
     {
         case PacketType::PLAYER_JOINED:
-            handlePlayerJoined(packetData.data(), &offset, clientAddr);
+            handlePlayerJoined(packet,peer,&offset);
             break;
         case PacketType::PLAYER_MOVED:
-            handlePlayerMoved(packetData.data(), &offset);
+            handlePlayerMoved(packet, peer, &offset);
             break;
         default:
             std::cout << "Unknown Packet Type" << std::endl;
@@ -140,12 +105,13 @@ void UDPServer::handlePacket(std::vector<uint8_t>packetData, sockaddr_in clientA
  * will send to the other clients the position of the player
  * so that they can update the position of the player on their screen
  **/
-void UDPServer::handlePlayerMoved(uint8_t* buffer, size_t *offset) 
+/** TODO FIX  **/
+void UDPServer::handlePlayerMoved(ENetPacket* packet, ENetPeer* peer, size_t* offset)
 {
     // Create A Player Moved Object
     PlayerMoved movedPlayer = PlayerMoved();
     // Deserialize the buffer and offset into the player object
-    movedPlayer.deserialize(buffer, offset);
+    movedPlayer.deserialize(packet->data, offset);
     // Need to read the buffer and offset to get the values of the player
     // Find the player in the players vector
     // Update the player's position
@@ -156,7 +122,7 @@ void UDPServer::handlePlayerMoved(uint8_t* buffer, size_t *offset)
 /** Send All Clients Position **/
 void UDPServer::sendAllClientsPosition(PlayerMoved movedPlayer)
 {
-    for (auto const& player : this->clientAddresses)
+    for (auto const& player : this->clientPeers)
     {
         if (player.first != movedPlayer.getID())
         {
@@ -170,13 +136,13 @@ void UDPServer::sendAllClientsPosition(PlayerMoved movedPlayer)
     }
 }
 
-bool UDPServer::sendPlayerPosition(PlayerMoved movedPlayer,const sockaddr_in& clientAddr)
+bool UDPServer::sendPlayerPosition(PlayerMoved movedPlayer,ENetPeer* peer)
 {
     // Serialize The Player Moved Enum
     uint8_t buffer[1024];
     size_t offset = movedPlayer.serialize(buffer);
     
-    if (!sendMessageToClient(offset, buffer, clientAddr))
+    if (!sendMessageToClient(offset,buffer, peer))
     {
         std::cout << "Failed to send player position to client" << std::endl;
         return false;
@@ -185,32 +151,32 @@ bool UDPServer::sendPlayerPosition(PlayerMoved movedPlayer,const sockaddr_in& cl
 }
 
 /** Handle Player Joined **/
-void UDPServer::handlePlayerJoined(uint8_t* buffer, size_t *offset, sockaddr_in clientAddr) 
+void UDPServer::handlePlayerJoined(ENetPacket* packet, ENetPeer* peer, size_t *offset) 
 {
     // Create A Player Joined Object
     PlayerJoined joinedPlayer = PlayerJoined("");
     // Deserialize the buffer and offset into the player object
-    joinedPlayer.deserialize(buffer, offset);
+    joinedPlayer.deserialize(packet->data, offset);
     // Need to read the buffer and offset to get the values of the player
     // Generate A Unique ID for the player
     generateUnqiuePlayerId(&joinedPlayer);
     // Add the player addresses to the map
-    this->clientAddresses[joinedPlayer.getID()] = clientAddr;
+    this->clientPeers[joinedPlayer.getID()] = peer;
     // Add the plaeyr to the players vector
     // Print the player's name and ID
     std::cout << "Player Joined: " << joinedPlayer.getName() << " ID: " << joinedPlayer.getID() << std::endl;
     // We Want to Send the player their assigned ID
-    sendPlayerID(joinedPlayer.getID(), clientAddr);
+    sendPlayerID(joinedPlayer.getID(), peer);       /** TODO Need to Fix This **/
     Player player_to_add = Player(joinedPlayer.getID(), joinedPlayer.getName().c_str());
     this->players.push_back(player_to_add);
 
     // If Other Players Exist
-    if (this->clientAddresses.size() > 1)
+    if (this->clientPeers.size() > 1)
     {
         // First Step is To Tell All The Current Users That a New Player Has Joined
         sendAllClientsNewPlayerJoined(joinedPlayer);
         // Second Step is to send the new player the information about the other players
-        sendNewPlayerExistingClientInformation(joinedPlayer, clientAddr);
+        sendNewPlayerExistingClientInformation(joinedPlayer, peer);
     } 
     else 
     {
@@ -222,7 +188,7 @@ void UDPServer::handlePlayerJoined(uint8_t* buffer, size_t *offset, sockaddr_in 
 /** 
  * This Function Sends The New Client Information about the existing clients
  **/
-bool UDPServer::sendNewPlayerExistingClientInformation(PlayerJoined joinedPlayer, sockaddr_in clientAddr)
+bool UDPServer::sendNewPlayerExistingClientInformation(PlayerJoined joinedPlayer, ENetPeer* peer)
 {
     std::vector<Player> playersInGame;
     for (Player& player : this->players)
@@ -236,7 +202,7 @@ bool UDPServer::sendNewPlayerExistingClientInformation(PlayerJoined joinedPlayer
 
     size_t offset = sendExistingClients.serialize(buffer);
 
-    if(!sendMessageToClient(offset, buffer, clientAddr))
+    if(!sendMessageToClient(offset, buffer, peer))
     {
         std::cout << "Failed to send existing clients to new player" << std::endl;
         return false;
@@ -254,7 +220,7 @@ bool UDPServer::sendAllClientsNewPlayerJoined(PlayerJoined joinedPlayer) // TODO
     uint8_t buffer[1024];
     size_t offset = sendExistingClients.serialize(buffer);
     // Now we need to send the information to all the clients
-    for (auto const& player : this->clientAddresses)
+    for (auto const& player : this->clientPeers)
     {
         if (player.first != joinedPlayer.getID())
         {
@@ -270,16 +236,16 @@ bool UDPServer::sendAllClientsNewPlayerJoined(PlayerJoined joinedPlayer) // TODO
 
 
 /** Send Player ID **/
-bool UDPServer::sendPlayerID(int playerID, sockaddr_in clientAddr)
+bool UDPServer::sendPlayerID(int playerID, ENetPeer* peer)
 {
     AssignPlayerID assignedID = AssignPlayerID(playerID);
 
     // Serialize the assignedID object
     uint8_t buffer[1024];
-    uint8_t offset = assignedID.serialize(buffer);
+    size_t offset = assignedID.serialize(buffer);
 
     // Send the assignedID object to the client
-    if (!sendMessageToClient(offset, buffer, clientAddr))
+    if (!sendMessageToClient(offset, buffer, peer))
     {
         std::cout << "Failed to send player ID to client" << std::endl;
         return false;
@@ -287,35 +253,24 @@ bool UDPServer::sendPlayerID(int playerID, sockaddr_in clientAddr)
     return true;
 }
 
-/** Send Message To Client **/
-bool UDPServer::sendMessageToClient(size_t offset, uint8_t* buffer, sockaddr_in clientAddr)
+bool UDPServer::sendMessageToClient(size_t offset, uint8_t* buffer, ENetPeer* peer)
 {
-    if (!offset || !buffer)
+    if (!offset || !buffer || !peer) 
     {
         return false;
     }
-    // Send the buffer to the client
-    ssize_t bytesSent = sendto(
-        this->sockfd,          // Socket file descriptor
-        buffer,                // Data to send
-        offset,                // Length of data
-        0,                     // Flags (0 for default)
-        (struct sockaddr*)&clientAddr, // Client address
-        sizeof(clientAddr)     // Size of client address
-    );
-
-    // Check if the data was sent successfully
-    if (bytesSent < 0) 
+    // Create an ENet packet
+    ENetPacket* packet = enet_packet_create(buffer, offset, ENET_PACKET_FLAG_RELIABLE);
+    if (!packet) 
     {
-        std::cerr << "Error sending data to client: " << strerror(errno) << std::endl;
+        std::cerr << "Failed to create ENet packet.\n";
         return false;
     }
-
-    // Check For Partial Data being sent
-    if (bytesSent != offset)
-    {
-        std::cerr << "Partial Data send to client: " << bytesSent << " out of " << offset << std::endl;
-    }
+    // Send packet to client via ENet peer
+    enet_peer_send(peer, 0, packet);
+    
+    // Ensure the data is sent immediately
+    enet_host_flush(peer->host);
 
     return true;
 }

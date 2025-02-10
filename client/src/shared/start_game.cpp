@@ -58,13 +58,14 @@ void StartGame::renderCharacterSelection()
     Uint32 now = SDL_GetTicks();
     if (now - this->lastFrameTime > this->frameDelay)
     {
-        this->sprites[this->selected_character].setCurrentFrame(
-        (this->sprites[this->selected_character].getCurrentFrame() + 1) % this->sprites[this->selected_character].getFrameCount());
+        PlayerIdlePaths[this->selected_character].setCurrentFrame((
+            PlayerIdlePaths[this->selected_character].getCurrentFrame() + 1
+        ) % PlayerIdlePaths[this->selected_character].getFrameCount());
         this->lastFrameTime = now;
     }
     // Define the source rectangle if using a sprite sheet (assuming each sprite is 30x30)
     Sprite::renderSprite(
-        this->sprites[this->selected_character],
+        PlayerIdlePaths[this->selected_character],
         this->renderer, 
         this->character_textures[this->selected_character], 
         this->character_rect, 
@@ -127,9 +128,10 @@ void StartGame::renderStartButton()
 
 void StartGame::loadCharacterTextures()
 {
-    for (auto& character : this->sprites)
+    for (auto& character : PlayerIdlePaths)
     {
         SDL_Surface* character_surface = IMG_Load(character.getPath().c_str());
+        std::cout << "File Path: " << character.getPath() << std::endl;
         if(!character_surface)
         {
             std::cout << "Failed to load character image" << std::endl;
@@ -228,7 +230,7 @@ void StartGame::handleEvent(SDL_Event e)
         {
             std::cout << "Start Button Clicked" << std::endl;
             // We Will Pass The Selected Character To The Game
-            this->sprites[this->selected_character].setCurrentFrame(0);
+            PlayerIdlePaths[this->selected_character].setCurrentFrame(0);
             
             this->keep_window_open = false;
             // Close This Window And Everything Related To It
@@ -242,20 +244,20 @@ void StartGame::handleEvent(SDL_Event e)
         if(this->checkButtonClicked(this->forward_arrow_rect, mouseX, mouseY))
         {
             std::cout << "Forward Arrow Clicked" << std::endl;
-            this->selected_character = (this->selected_character + 1) % this->sprites.size();
+            this->selected_character = (this->selected_character + 1) % PlayerIdlePaths.size();
         }
         if(this->checkButtonClicked(this->backward_arrow_rect, mouseX, mouseY))
         {
             std::cout << "Backward Arrow Clicked" << std::endl;
-            this->selected_character = (this->selected_character - 1) % this->sprites.size();
+            this->selected_character = (this->selected_character - 1) % PlayerIdlePaths.size();
         }
     }
 }
 
 void StartGame::start() 
 {
-    Game game(this->sprites[this->selected_character], 
-              this->runSprites[this->selected_character]
+    Game game(PlayerIdlePaths[this->selected_character], 
+              PlayerRunningPaths[this->selected_character]
     );
     // Start The Game
     game.start_game();
@@ -274,15 +276,6 @@ StartGame::StartGame() {
     this->currentPath = this->currentPath.substr(0, this->currentPath.find_last_of("/\\") + 1);
     
     this->character_textures = std::vector<SDL_Texture*>();
-    this->sprites = {
-        {"Girl", this->currentPath + "../../Assets/char_idle2.png", 0, 7},
-        {"Boy" , this->currentPath + "../../Assets/char_idle1.png", 0, 5}
-    };
-    this->runSprites = {
-        {"Girl", this->currentPath + "../../Assets/char_idle2.png", 0, 7},
-        {"Boy", this->currentPath + "../../Assets/char_idle1.png", 0, 5},
-    };
-
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {

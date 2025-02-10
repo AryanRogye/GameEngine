@@ -3,15 +3,11 @@
 /** Deconstructor For The Client Class **/
 Client::~Client() 
 {
-    close(this->sockfd);
-
-    // Lock to safely delete player objects
-    std::lock_guard<std::mutex> lock(this->playersMutex);
-
-    for (Player* player : this->players) {
-        delete player;  // Free memory for each Player
-    }
-    this->players.clear();
+    enet_peer_disconnect(this->peer, 0);
+    enet_host_flush(this->client);
+    enet_peer_reset(this->peer);
+    enet_host_destroy(this->client);
+    enet_deinitialize();
 }
 
 /** Get The Player Object **/
@@ -22,24 +18,54 @@ Client::Client()
 {
     // Initialize The Player Object
     this->player = new Player(0, "Player 1");
-
     this->players = std::vector<Player*>();
     // Create Socket File Descriptor
-    if ( (this->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) 
+    
+    if (enet_initialize() != 0)
     {
-        perror("Socket Creating Failed");
+        fprintf(stderr, "An error occurred while initializing ENet.\n");
         exit(EXIT_FAILURE);
     }
-    memset(&this->serverAddress, 0, sizeof(this->serverAddress));
-    
-    // Fill the server information 
-    this->serverAddress.sin_family = AF_INET;
-    this->serverAddress.sin_port = htons(PORT);
-    this->serverAddress.sin_addr.s_addr = INADDR_ANY;
+    this->client = enet_host_create(
+        NULL,       // create a client host
+        1,          // only allow 1 outgoing connection
+        2,          // allow up 2 channels to be used, 0 and 1
+        0,          // assume any amount of incoming bandwidth
+        0           // assume any amount of outgoing bandwidth
+    );
+    if (!this->client)
+    {
+        fprintf(stderr, "An error occurred while trying to create an ENet client host.\n");
+        exit(EXIT_FAILURE);
+    }
+    // Connect to the server
+    ENetAddress address;
+    enet_address_set_host(&address, "localhost");
+    address.port = PORT;
 
-    int n;
-    socklen_t len;
+    this->peer = enet_host_connect(
+        this->client,       // client host
+        &address,           // address of the server
+        2,                  // number of channels
+        0                   // data to associate with the peer
+    );
+    if (!this->peer)
+    {
+        fprintf(stderr, "No available peers for initiating an ENet connection.\n");
+        exit(EXIT_FAILURE);
+    }
 
+    ENetEvent event;
+    if (enet_host_service(this->client, &event, 5000) > 0 && event.type == ENET_EVENT_TYPE_CONNECT) 
+    {
+        std::cout << "Connected to server!" << std::endl;
+    }
+    else 
+    {
+        std::cerr << "Failed to connect to server." << std::endl;
+        enet_peer_reset(this->peer);
+        exit(EXIT_FAILURE);
+    }
     // Listen for incoming Messages From The Server in a new thread
     std::thread t(&Client::listenToServer, this);
     t.detach();
@@ -53,25 +79,26 @@ Client::Client()
  **/
 void Client::listenToServer()
 {
-    while(true)
+    
+    ENetEvent event;
+    while (true)
     {
-        uint8_t buffer[1024];
-        socklen_t serverAddressLength = sizeof(this->serverAddress);
-        ssize_t bytesReceived = recvfrom(
-            this->sockfd,
-            buffer,
-            1024,
-            0,
-            (struct sockaddr *) &this->serverAddress,
-            &serverAddressLength
-        );
-
-        if (bytesReceived < 0)
+        while(enet_host_service(this->client, &event, 1000) > 0)
         {
-            std::cerr << "Error Receiving Data From The Server" << std::endl;
-            continue;
+            switch (event.type)
+            {
+                case ENET_EVENT_TYPE_RECEIVE:
+                    std::cout << "Received packet of size: " << event.packet->dataLength << std::endl;
+                    this->handleRecievedPacket(event.packet->data, event.packet->dataLength);
+                    enet_packet_destroy(event.packet);
+                    break;
+                case ENET_EVENT_TYPE_DISCONNECT:
+                    std::cout << "Disconnected from server.\n";
+                    return;
+                default:
+                    break;
+            }
         }
-        this->handleRecievedPacket(buffer, bytesReceived);
     }
 }
 
@@ -259,26 +286,15 @@ bool Client::sendMessageToServer(size_t offset, uint8_t *buffer)
     {
         return false;
     }
-    ssize_t bytesSent = sendto(
-        this->sockfd,
-        buffer,
-        offset,
-        0,
-        (const struct sockaddr *) &this->serverAddress, sizeof(this->serverAddress)
-    );
 
-    // Check if the data was sent successfully
-    if (bytesSent < 0) 
+    ENetPacket* packet = enet_packet_create(buffer, offset, ENET_PACKET_FLAG_RELIABLE);
+    if (!packet)
     {
-        std::cerr << "Error sending data to client: " << strerror(errno) << std::endl;
         return false;
     }
 
-    // Check For Partial Data being sent
-    if (bytesSent != offset)
-    {
-        std::cerr << "Partial Data send to client: " << bytesSent << " out of " << offset << std::endl;
-    }
+    enet_peer_send(this->peer, 0, packet);
+    enet_host_flush(this->client);
 
     return true;
 }

@@ -9,6 +9,8 @@
 #include <mutex>
 #include "player.h"
 
+#include <enet/enet.h>
+
 #define MAX_PLAYERS 10
 
 // Create a UDP Socket
@@ -19,9 +21,10 @@
 class Client
 {
 private:
-    int sockfd;
+    ENetHost* client;
+    ENetPeer* peer;
+
     char buffer[1024];
-    struct sockaddr_in serverAddress;
     std::string helloMessage = "Hello from client";
     Player* player;
     std::vector<Player*> players;

@@ -11,22 +11,23 @@
 #include "player.h"
 #include "vector"
 
+#include <enet/enet.h>
+#include <unordered_map>
+#include "config.h"
+
 #define PORT 8080
 
 class UDPServer 
 {
 private:
-    int sockfd;
-    struct sockaddr_in server_addr;
-    struct sockaddr_in client_addr;
-    char buffer[1024];
-    socklen_t client_addr_len;
-    // Map player IDs to client addresses
-    std::unordered_map<int, sockaddr_in> clientAddresses;
-    std::vector<Player> players;
+    // New Enet Stuff Im Adding
+    ENetHost* server;
+    std::unordered_map<int, ENetPeer*> clientPeers;
+    std::vector<Player> players;                        /** This is Old But I added it anyways **/
     int nextPlayerId;
 public:
     UDPServer();
+    ~UDPServer();
     // #########################################
     // Getters
     // #########################################
@@ -51,20 +52,17 @@ public:
     // #########################################
     // Methods
     // #########################################
-    void createUDPSocket();
-    void setupServerAdress();
-    void bindSocket();
     void listenForClients();
-    void handlePlayerJoined(uint8_t* buffer, size_t *offset, sockaddr_in clientAddr);
+    void handlePlayerJoined(ENetPacket* packet, ENetPeer* peer, size_t *offset);
     void addPlayer(Player player);
     void generateUnqiuePlayerId(PlayerJoined* joinedPlayer);
-    void handlePacket(std::vector<uint8_t>buffer, sockaddr_in client_addr);
-    void handlePlayerMoved(uint8_t* buffer, size_t *offset);
+    void handlePacket(ENetPacket *packet, ENetPeer *peer);
+    void handlePlayerMoved(ENetPacket* packet, ENetPeer* peer, size_t *offset);
     void sendAllClientsPosition(PlayerMoved movedPlayer);
-    bool sendPlayerID(int playerID, sockaddr_in clientAddr);
-    bool sendMessageToClient(size_t offset, uint8_t* buffer, sockaddr_in clientAddr);
-    bool sendPlayerPosition(PlayerMoved movedPlayer,const sockaddr_in& clientAddr);
+    bool sendPlayerID(int playerID, ENetPeer* peer);
+    bool sendMessageToClient(size_t offset, uint8_t* buffer, ENetPeer* peer);
+    bool sendPlayerPosition(PlayerMoved movedPlayer,ENetPeer* peer);
     bool sendAllClientsNewPlayerJoined(PlayerJoined joinedPlayer);
-    bool sendNewPlayerExistingClientInformation(PlayerJoined joinedPlayer, sockaddr_in clientAddr);
+    bool sendNewPlayerExistingClientInformation(PlayerJoined joinedPlayer, ENetPeer* peer);
 };
 

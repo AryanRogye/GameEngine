@@ -8,6 +8,9 @@ set(SDL2_DIR "/opt/homebrew/opt/sdl2/lib/cmake/SDL2")
 find_package(SDL2 REQUIRED)
 set(SDL2_IMAGE_DIR "/opt/homebrew/opt/sdl2_image/lib/cmake/SDL2_image")
 find_package(SDL2_image REQUIRED)
+# Include ENet
+include_directories(/opt/homebrew/include)
+link_directories(/opt/homebrew/lib)
 
 
 add_executable(client
@@ -27,6 +30,7 @@ add_executable(client
     src/rendering/sprite.cpp
     src/rendering/ui.cpp
 
+    src/configs.cpp
     src/main.cpp
 )
 
@@ -44,6 +48,7 @@ target_include_directories(client PRIVATE
 target_link_libraries(client PRIVATE
     SDL2::SDL2
     SDL2_image::SDL2_image
+    enet
 )
 
 # This Is The SandBox Shared Library
