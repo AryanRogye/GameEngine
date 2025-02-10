@@ -16,7 +16,7 @@ private:
     void initWindow();
     void initRenderer();
 public:
-    Game(Sprite playerIdle, Sprite playerRun);
+    Game();
     void start_game();
 
 };

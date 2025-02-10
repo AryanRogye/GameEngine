@@ -21,6 +21,7 @@ extern std::string ASSET_PATH;
 class Sprite;
 extern std::vector<Sprite> PlayerIdlePaths;
 extern std::vector<Sprite> PlayerRunningPaths;
+extern int spriteIndex;
 
 // Function to initialize asset paths
 void initializePaths();

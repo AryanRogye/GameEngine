@@ -58,16 +58,16 @@ void StartGame::renderCharacterSelection()
     Uint32 now = SDL_GetTicks();
     if (now - this->lastFrameTime > this->frameDelay)
     {
-        PlayerIdlePaths[this->selected_character].setCurrentFrame((
-            PlayerIdlePaths[this->selected_character].getCurrentFrame() + 1
-        ) % PlayerIdlePaths[this->selected_character].getFrameCount());
+        PlayerIdlePaths[spriteIndex].setCurrentFrame((
+            PlayerIdlePaths[spriteIndex].getCurrentFrame() + 1
+        ) % PlayerIdlePaths[spriteIndex].getFrameCount());
         this->lastFrameTime = now;
     }
     // Define the source rectangle if using a sprite sheet (assuming each sprite is 30x30)
     Sprite::renderSprite(
-        PlayerIdlePaths[this->selected_character],
+        PlayerIdlePaths[spriteIndex],
         this->renderer, 
-        this->character_textures[this->selected_character], 
+        this->character_textures[spriteIndex], 
         this->character_rect, 
         30, 
         45
@@ -230,7 +230,7 @@ void StartGame::handleEvent(SDL_Event e)
         {
             std::cout << "Start Button Clicked" << std::endl;
             // We Will Pass The Selected Character To The Game
-            PlayerIdlePaths[this->selected_character].setCurrentFrame(0);
+            PlayerIdlePaths[spriteIndex].setCurrentFrame(0);
             
             this->keep_window_open = false;
             // Close This Window And Everything Related To It
@@ -244,21 +244,19 @@ void StartGame::handleEvent(SDL_Event e)
         if(this->checkButtonClicked(this->forward_arrow_rect, mouseX, mouseY))
         {
             std::cout << "Forward Arrow Clicked" << std::endl;
-            this->selected_character = (this->selected_character + 1) % PlayerIdlePaths.size();
+            spriteIndex = (spriteIndex + 1) % PlayerIdlePaths.size();
         }
         if(this->checkButtonClicked(this->backward_arrow_rect, mouseX, mouseY))
         {
             std::cout << "Backward Arrow Clicked" << std::endl;
-            this->selected_character = (this->selected_character - 1) % PlayerIdlePaths.size();
+            spriteIndex = (spriteIndex - 1) % PlayerIdlePaths.size();
         }
     }
 }
 
 void StartGame::start() 
 {
-    Game game(PlayerIdlePaths[this->selected_character], 
-              PlayerRunningPaths[this->selected_character]
-    );
+    Game game = Game();
     // Start The Game
     game.start_game();
 }

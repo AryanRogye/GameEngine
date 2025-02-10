@@ -253,3 +253,36 @@ void SendToExisitingClientsNewPlayer::deserialize(const uint8_t *buffer, size_t 
     std::memcpy(&this->id, buffer + *offset, sizeof(this->id));
     *offset += sizeof(this->id);
 }
+
+SendPlayerSpriteIndex::SendPlayerSpriteIndex(int id, int spriteIndex)
+{
+    this->id = id;
+    this->spriteIndex = spriteIndex;
+}
+size_t SendPlayerSpriteIndex::serialize(uint8_t *buffer)
+{
+    PacketType type = PacketType::SEND_PLAYER_SPRITE_INDEX;
+    std::memcpy(buffer, &type, sizeof(type));
+    size_t offset = sizeof(type);
+
+    // Serialize id
+    std::memcpy(buffer + offset, &this->id, sizeof(this->id));
+    offset += sizeof(this->id);
+
+    // Serialize spriteIndex
+    std::memcpy(buffer + offset, &this->spriteIndex, sizeof(this->spriteIndex));
+    offset += sizeof(this->spriteIndex);
+
+    return offset;
+}
+
+void SendPlayerSpriteIndex::deserialize(const uint8_t *buffer, size_t *offset)
+{
+    // Deserialize id
+    std::memcpy(&this->id, buffer + *offset, sizeof(this->id));
+    *offset += sizeof(this->id);
+
+    // Deserialize spriteIndex
+    std::memcpy(&this->spriteIndex, buffer + *offset, sizeof(this->spriteIndex));
+    *offset += sizeof(this->spriteIndex);
+}

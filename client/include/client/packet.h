@@ -18,6 +18,7 @@ enum PacketType
     PLAYER_MOVED,
     SEND_NEW_PLAYER_EXISTING_CLIENTS,
     SEND_EXISTING_CLIENTS_NEW_PLAYER,
+    SEND_PLAYER_SPRITE_INDEX,
 };
 
 class Serializable
@@ -108,6 +109,17 @@ private:
     int id;
 public:
     SendToExisitingClientsNewPlayer(int id = 0);
+    size_t serialize(uint8_t *buffer) override;
+    void deserialize(const uint8_t *buffer, size_t *offset) override;
+};
+
+class SendPlayerSpriteIndex : Serializable
+{
+    private:
+    int id;
+    int spriteIndex;
+    public:
+    SendPlayerSpriteIndex(int id = 0, int spriteIndex = 0);
     size_t serialize(uint8_t *buffer) override;
     void deserialize(const uint8_t *buffer, size_t *offset) override;
 };

@@ -66,7 +66,7 @@ void UDPServer::listenForClients()
                     std::cout << "A new client connected!\n";
                     break;
                 case ENET_EVENT_TYPE_RECEIVE:
-                    std::cout << "Received packet of size: " << event.packet->dataLength << std::endl;
+                    /*std::cout << "Received packet of size: " << event.packet->dataLength << std::endl;*/
                     handlePacket(event.packet, event.peer);
                     enet_packet_destroy(event.packet);
                     break;

@@ -1,6 +1,6 @@
 #include "shared/game.h"
 
-Game::Game(Sprite playerIdle, Sprite playerRun)
+Game::Game()
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -9,7 +9,7 @@ Game::Game(Sprite playerIdle, Sprite playerRun)
     }
     this->initWindow();
     this->initRenderer();
-    this->world = std::make_unique<World>(playerIdle, playerRun, this->renderer, this->window);
+    this->world = std::make_unique<World>(this->renderer, this->window);
 }
 
 void Game::start_game()

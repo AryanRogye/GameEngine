@@ -5,13 +5,13 @@
 #include <SDL_render.h>
 
 World::World(
-    Sprite playerIdleSprite, 
-    Sprite playerRunSprite, 
     SDL_Renderer* renderer, 
     SDL_Window* window
 )
-: playerIdleSprite(playerIdleSprite), playerRunSprite(playerRunSprite)
+// Setting the player Run Sprites Through Here
+: playerRunSprite(PlayerRunningPaths[spriteIndex]), playerIdleSprite(PlayerIdlePaths[spriteIndex])
 {
+
     this->window = window;      /** Set Window **/
     this->renderer = renderer;  /** Set Renderer **/
     this->enterHouse = false;   /** Make Sure House is not enterable at start **/
@@ -227,40 +227,39 @@ void World::loadFont()
 void World::renderMap()
 {
     int srcTileSize = 16;
-
     const int displayTileSize = TILE_SIZE;
 
     int mapWidthInTiles = (mapData.size() > 0 ? mapData[0].size() : 0);
     int mapHeightInTiles = mapData.size();
 
-    int mapPixelWidth = mapWidthInTiles * displayTileSize;
-    int mapPixelHeight = mapHeightInTiles * displayTileSize;
-
-    // Here, instead of centering the map statically,
-    // we use the camera offset calculated from the player's position.
     Player* player = this->client->getPlayer();
-    int windowWidth = WIDTH;
-    int windowHeight = HEIGHT;
-    int camX = player->getX() + static_cast<int>(player->getWidth() / 2 - windowWidth / 2);
-    int camY = player->getY() + static_cast<int>(player->getHeight() / 2 - windowHeight / 2);
+    
+    // Camera follows player, centered
+    int camX = player->getX() + static_cast<int>(player->getWidth() / 2 - WIDTH / 2);
+    int camY = player->getY() + static_cast<int>(player->getHeight() / 2 - HEIGHT / 2);
 
-    std::vector<std::vector<bool>> visited(mapHeightInTiles, std::vector<bool>(mapWidthInTiles, false));
-    for (int y = 0; y < mapData.size(); y++)
+    // **Calculate which tiles are visible on the screen**
+    int startX = std::max(0, camX / displayTileSize);
+    int startY = std::max(0, camY / displayTileSize);
+    int endX = std::min(mapWidthInTiles, (camX + WIDTH) / displayTileSize + 1);
+    int endY = std::min(mapHeightInTiles, (camY + HEIGHT) / displayTileSize + 1);
+
+    // **Loop only through visible tiles**
+    for (int y = startY; y < endY; y++)
     {
-        for (int x = 0; x < mapData[y].size(); x++)
+        for (int x = startX; x < endX; x++)
         {
-            if (visited[y][x]) { continue; }
             int tileIndex = mapData[y][x] - 1;
 
             if (tileIndex >= 0 && tileIndex < tiles.size())
             {
                 SDL_Rect destRect = {
-                    x * displayTileSize - camX,  // Apply camera offset here
+                    x * displayTileSize - camX,  // Apply camera offset
                     y * displayTileSize - camY,
                     displayTileSize,
                     displayTileSize
                 };
-                visited[y][x] = true;
+                
                 SDL_RenderCopy(this->renderer, this->tileAtlasTexture, &this->tiles[tileIndex], &destRect);
             }
         }
@@ -276,6 +275,11 @@ void World::updateServer(float *oldX, float *oldY)
         this->client->handlePlayerMoved(player->getID(), player->getX(), player->getY());
         *oldX = player->getX();
         *oldY = player->getY();
+    }
+
+    if (this->playerIdleTexture != nullptr)
+    {
+        // Send The Player Texture to the server
     }
 
     if (this->mapData.size() > 0)

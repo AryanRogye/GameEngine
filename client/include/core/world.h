@@ -78,8 +78,6 @@ private:
     std::string currentPath;
 public:
     World(
-        Sprite playerIdleSprite, 
-        Sprite playerRunSprite, 
         SDL_Renderer* renderer, 
         SDL_Window* window
     );
