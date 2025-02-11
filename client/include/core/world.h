@@ -34,6 +34,7 @@ private:
      **/
     Uint32 lastFrameTime = 0;
     const Uint32 frameDelay = 180;  // How Long Each Frame of a Sprite Lasts
+    SDL_Rect hitbox;
     Sprite playerIdleSprite;        // Sprite for Player Idle
     Sprite playerRunSprite;         // Sprite for Player Running
     /** 

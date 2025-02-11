@@ -1,4 +1,5 @@
 #include "block.h"
+#include "configs.h"
 
 CollisionComponent::CollisionComponent(bool isSolid)
 {
@@ -80,12 +81,13 @@ BlockFactory::BlockFactory()
     this->addBlock<CollisionComponent>(BlockType::TOP_RIGHT_HOUSE_1, "top_right_house_1", true);
     this->addBlock<CollisionComponent>(BlockType::BOTTOM_LEFT_HOUSE_1, "bottom_left_house_1", true);
     // No Collision on the bottom right house
-    this->addBlock(BlockType::BOTTOM_RIGHT_HOUSE_1, "bottom_right_house_1");
+    this->addBlock<Enterable>(BlockType::BOTTOM_RIGHT_HOUSE_1, "bottom_right_house_1", true);
     // 2nd House
     this->addBlock<CollisionComponent>(BlockType::TOP_LEFT_HOUSE_2, "top_left_house_2", true);
     this->addBlock<CollisionComponent>(BlockType::TOP_RIGHT_HOUSE_2, "top_right_house_2", true);
     this->addBlock<CollisionComponent>(BlockType::BOTTOM_LEFT_HOUSE_2, "bottom_left_house_2", true);
-    this->addBlock(BlockType::BOTTOM_RIGHT_HOUSE_2, "bottom_right_house_2");
+
+    this->addBlock<Enterable>(BlockType::BOTTOM_RIGHT_HOUSE_2, "bottom_right_house_2", true);
 
     // Adding To type_to_block
     for (auto& pair : blocks)
@@ -185,18 +187,35 @@ void BlockFactory::printBlockInfoByPosition(int x, int y, const std::vector<std:
 }
 
 
-bool BlockFactory::checkCollision(int x, int y, const std::vector<std::vector<int>>& mapData)
+bool BlockFactory::checkCollision(SDL_Rect rect, const std::vector<std::vector<int>>& mapData)
 {
-    Block* block = getBlockAtPosition(x, y, mapData);
-    // Treat out of bounds as collision for now
-    if (!block) return true;
-
-    if (auto collision = block->getComponent<CollisionComponent>())
-    {
-        /*std::cout << "Collision: " << block->name << std::endl;*/
-        return collision->getIsSolid();
+   // Convert pixel coordinates to block coordinates
+    int startBlockX = rect.x / TILE_SIZE;
+    int endBlockX = (rect.x + rect.w) / TILE_SIZE;
+    int startBlockY = rect.y / TILE_SIZE;
+    int endBlockY = (rect.y + rect.h) / TILE_SIZE;
+    
+    // Check all blocks that the hitbox might intersect with
+    for (int blockY = startBlockY; blockY <= endBlockY; blockY++) {
+        for (int blockX = startBlockX; blockX <= endBlockX; blockX++) {
+            Block* block = getBlockAtPosition(blockX * TILE_SIZE, blockY * TILE_SIZE, mapData);
+            if (block && block->getComponent<CollisionComponent>() && 
+                block->getComponent<CollisionComponent>()->getIsSolid()) {
+                // Create block's rectangle
+                SDL_Rect blockRect = {
+                    blockX * TILE_SIZE,
+                    blockY * TILE_SIZE,
+                    TILE_SIZE,
+                    TILE_SIZE
+                };
+                
+                // Check for actual rectangle intersection
+                if (SDL_HasIntersection(&rect, &blockRect)) {
+                    return true;
+                }
+            }
+        }
     }
-
     return false;
 }
 

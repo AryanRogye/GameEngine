@@ -19,12 +19,12 @@ private:
 public:
     Sprite(std::string name, std::string path, int currentFrame, int frameCount);
 
-    static void renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture, int width, int height, Player* player);
+    static void renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture, int width, int height, Player* player, SDL_Rect& hitbox);
     static void renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture,SDL_Rect rect, int width, int height);
     static void renderSprite(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect srcRect, SDL_Rect destRect);
     static void renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture, const SDL_Rect &destRect, Player* player);
     static void renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture, int width, int height, Player* player, int camX, int camY);
-    
+    static void renderDebugHitbox(SDL_Renderer* renderer, const SDL_Rect& hitbox);
     /*int tileSize = 16;*/
     /*int atlasWidth = 208;*/
     /*int atlasHeight = 208;*/

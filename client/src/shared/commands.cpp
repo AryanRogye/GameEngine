@@ -1,4 +1,5 @@
 #include "commands.h"
+#include "configs.h"
 #include "core/world.h" // NEED THIS HERE
 
 
@@ -166,11 +167,51 @@ void CommandSystem::setupCommands()
     cmdSys.registerCommand("/sandbox", [](const std::vector<std::string_view>& args){
         loadMapBuilder();
     });
+    cmdSys.registerCommand("/debug", [](const std::vector<std::string_view>& args){
+        DEBUG = !DEBUG;
+    });
+
+    cmdSys.registerCommand("/set-hitbox-width", [this](const std::vector<std::string_view>& args){
+        if (args.size() > 2)
+        {
+            this->displayUsageOneValue("/set-hitbox-width");
+            return;
+        }
+        int newWidth = std::stoi(std::string(args[1]));
+        setHitBoxWidth(newWidth);
+    });
+    cmdSys.registerCommand("/set-hitbox-height", [this](const std::vector<std::string_view>& args){
+        if (args.size() > 2)
+        {
+            this->displayUsageOneValue("/set-hitbox-height");
+            return;
+        }
+        int newHeight = std::stoi(std::string(args[1]));
+        setHitBoxHeight(newHeight);
+    });
+    cmdSys.registerCommand("/set-hitbox-x", [this](const std::vector<std::string_view>& args){
+        if (args.size() > 2)
+        {
+            this->displayUsageOneValue("/set-hitbox-x");
+            return;
+        }
+        int newX = std::stoi(std::string(args[1]));
+        setOffsetX(newX);
+    });
+    cmdSys.registerCommand("/set-hitbox-y", [this](const std::vector<std::string_view>& args){
+        if (args.size() > 2)
+        {
+            this->displayUsageOneValue("/set-hitbox-y");
+            return;
+        }
+        int newY = std::stoi(std::string(args[1]));
+        setOffsetY(newY);
+    });
 
     /** Needs World
      *      - SetSpeed
      **/
-    cmdSys.registerCommand("/set-speed", [](const std::vector<std::string_view>& args, World* world){
+    cmdSys.registerCommand("/set-speed", [this](const std::vector<std::string_view>& args, World* world){
         if (!world)
         {
             std::cout << "Error: This command requires a game world!" << std::endl;
@@ -178,7 +219,7 @@ void CommandSystem::setupCommands()
         }
         if (args.size() < 2)
         {
-            std::cout << "Usage: /set speed <value>" << std::endl;
+            this->displayUsageOneValue("/set-speed");
             return;
         }
 
@@ -203,3 +244,8 @@ void CommandSystem::setupCommands()
     });
 }
 
+
+void CommandSystem::displayUsageOneValue(std::string functionName)
+{
+    std::cout << "Usage: " << functionName << " <value>" << std::endl;
+}

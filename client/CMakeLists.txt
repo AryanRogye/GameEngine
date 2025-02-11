@@ -59,6 +59,7 @@ add_library(sandbox SHARED
     src/rendering/texture.cpp
     src/rendering/sprite.cpp
     src/rendering/ui.cpp
+    src/configs.cpp
 )
 
 target_include_directories(sandbox PRIVATE
@@ -66,6 +67,7 @@ target_include_directories(sandbox PRIVATE
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/include/core
         ${CMAKE_SOURCE_DIR}/include/shared
+        ${CMAKE_SOURCE_DIR}/include/rendering
         ${CMAKE_SOURCE_DIR}/include/sandbox
 )
 

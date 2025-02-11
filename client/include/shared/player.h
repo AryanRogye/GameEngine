@@ -4,6 +4,7 @@
 #define PLAYER_H
 #include <iostream>
 #include "configs.h"
+#include "SDL2/SDL.h"
 struct Position {
     float x;
     float y;
@@ -20,6 +21,7 @@ private:
     bool facingRight;
     bool isWalking;
     int spriteIndex;
+    SDL_Rect worldHitbox;
 public:
     // Constructor
     Player() = default;
@@ -52,6 +54,7 @@ public:
     bool        getFacingRight();
     bool        getIsWalking();
     int         getSpriteIndex();
+    SDL_Rect    getWorldHitbox();
 
     // Debug
     void print();
@@ -64,6 +67,7 @@ public:
     // Functions
     size_t serialize(uint8_t *buffer);
     void deserialize(const uint8_t *buffer, size_t *offset);
+    void updateWorldHitbox( int offsetX, int offsetY );
 };
 
 #endif // !PLAYER_H

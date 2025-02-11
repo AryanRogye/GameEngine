@@ -1,4 +1,5 @@
 #include "player.h"
+#include "configs.h"
 
 Player::Player(int id, const char* name) 
 {
@@ -53,6 +54,17 @@ bool        Player::getFacingRight() { return this->facingRight; }
 bool        Player::getIsWalking() { return this->isWalking; }
 int         Player::getSpriteIndex() { return this->spriteIndex; }
 
+SDL_Rect Player::getWorldHitbox() {
+    return worldHitbox;
+}
+void Player::updateWorldHitbox( int offsetX, int offsetY ) {
+    worldHitbox = {
+        static_cast<int>(this->getX()) + offsetX + hitboxOffsetX,  // No more centering with sprite
+        static_cast<int>(this->getY()) + offsetY + hitboxOffsetY,
+        hitboxWidth,  // Fixed size for now, could be made configurable
+        hitboxHeight
+    };
+}
 
 size_t  Player::serialize(uint8_t *buffer)
 {

@@ -21,7 +21,18 @@ extern std::string ASSET_PATH;
 class Sprite;
 extern std::vector<Sprite> PlayerIdlePaths;
 extern std::vector<Sprite> PlayerRunningPaths;
+extern bool DEBUG;
 extern int spriteIndex;
+
+extern int hitboxWidth;
+extern int hitboxHeight;
+extern int hitboxOffsetX;
+extern int hitboxOffsetY;
+
+extern void setHitBoxWidth(int width);
+extern void setHitBoxHeight(int height);
+extern void setOffsetX(int x);
+extern void setOffsetY(int y);
 
 // Function to initialize asset paths
 void initializePaths();

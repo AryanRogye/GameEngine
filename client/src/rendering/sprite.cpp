@@ -71,7 +71,7 @@ void Sprite::renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* te
         std::cout << "(Sprite) Error: " << SDL_GetError() << std::endl;
     }
 }
-void Sprite::renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture, int width, int height, Player* player)
+void Sprite::renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture, int width, int height, Player* player, SDL_Rect& hitbox)
 {
     int windowWidth = WIDTH; 
     int windowHeight = HEIGHT;
@@ -80,6 +80,15 @@ void Sprite::renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* te
     // Define A Source Rectangle
     SDL_Rect srcRect = {sprite.getCurrentFrame() * width, 0, width, height};
     SDL_Rect destRect = { (int)player->getX() - camX, (int)player->getY() - camY, PLAYER_WIDTH, PLAYER_HEIGHT};
+
+    SDL_Rect worldBox = player->getWorldHitbox();
+    hitbox = {
+        worldBox.x - camX,  // Convert world coordinates to screen space
+        worldBox.y - camY,
+        worldBox.w,
+        worldBox.h
+    };
+
     // Determine if the sprite should be flipped horizontally
     SDL_RendererFlip flip = player->getFacingRight() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
     // Render the sprite with the flip
@@ -87,6 +96,15 @@ void Sprite::renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* te
     {
         std::cout << "(Sprite) Error: " << SDL_GetError() << std::endl;
     }
+}
+
+void Sprite::renderDebugHitbox(SDL_Renderer* renderer, const SDL_Rect& hitbox) {
+    // Set color to red for hitbox
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_RenderDrawRect(renderer, &hitbox);
+
+    // Reset render color back to default
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 }
 
 // Getters

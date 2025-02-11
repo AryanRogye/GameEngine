@@ -37,6 +37,7 @@ private:
     CommandSystem() = default;
     std::unordered_map<std::string, CommandFunctionWithWorld> worldCommands;
     std::unordered_map<std::string, CommandFunctionNoWorld> noWorldCommands;
+    void displayUsageOneValue(std::string functionName);
 };
 
 #endif

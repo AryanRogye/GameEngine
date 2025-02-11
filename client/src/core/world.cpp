@@ -69,47 +69,42 @@ void World::updateAndRender()
 
 
 void World::handlePlayerMovement(const Uint8* state, float dt) {
-    if (this->commandMode) {
-        return;  // Don't move the player if in command mode
-    }
+    if (this->commandMode) return;  // Don't move if in command mode
+
     Player *player = this->client->getPlayer();
     float newX = player->getX();
     float newY = player->getY();
-    float speed = player->getSpeed();  // assume pixels per second
+    float speed = player->getSpeed();  // pixels per second
 
     bool moving = false;
 
-    if (state[SDL_SCANCODE_W]) {
-        newY -= speed * dt;
-        moving = true;
-    }
-    if (state[SDL_SCANCODE_A]) {
-        newX -= speed * dt;
-        player->setFacingRight(false);
-        moving = true;
-    }
-    if (state[SDL_SCANCODE_S]) {
-        newY += speed * dt;
-        moving = true;
-    }
-    if (state[SDL_SCANCODE_D]) {
-        newX += speed * dt;
-        player->setFacingRight(true);
-        moving = true;
-    }
+    // Store original position
+    float originalX = newX;
+    float originalY = newY;
+
+    if (state[SDL_SCANCODE_W]) { newY -= speed * dt; moving = true; }
+    if (state[SDL_SCANCODE_A]) { newX -= speed * dt; player->setFacingRight(false); moving = true; }
+    if (state[SDL_SCANCODE_S]) { newY += speed * dt; moving = true; }
+    if (state[SDL_SCANCODE_D]) { newX += speed * dt; player->setFacingRight(true); moving = true; }
 
     player->setIsWalking(moving);
 
-    // Perform collision detection with the new coordinates.
-    int feetY = static_cast<int>(newY) + player->getHeight() + 1;
-    int centerX = static_cast<int>(newX) + player->getWidth() / 2;
-    bool isColliding = this->bf.checkCollision(centerX, feetY, this->mapData);
-    
-    if (!isColliding) {
-        player->setX(newX);
-        player->setY(newY);
-    } else {
-        std::cout << "Collision detected at (" << centerX << ", " << feetY << ")" << std::endl;
+    // Update position and hitbox - note we can offset the hitbox however we want
+    int hitboxOffsetX = 0;  // Adjust these offsets to position the hitbox
+    int hitboxOffsetY = 0;  // wherever you want relative to player position
+
+    // Try horizontal movement
+    player->setX(newX);
+    player->updateWorldHitbox(hitboxOffsetX, hitboxOffsetY);
+    if (this->bf.checkCollision(player->getWorldHitbox(), this->mapData)) {
+        player->setX(originalX);
+    }
+
+    // Try vertical movement
+    player->setY(newY);
+    player->updateWorldHitbox(hitboxOffsetX, hitboxOffsetY);
+    if (this->bf.checkCollision(player->getWorldHitbox(), this->mapData)) {
+        player->setY(originalY);
     }
 }
 
@@ -137,8 +132,8 @@ void World::handleCommandInput(SDL_Event& e) {
     }
 }
 
-void World::handleEvent(SDL_Event e) {
-
+void World::handleEvent(SDL_Event e) 
+{
     if (e.type == SDL_QUIT) {
         this->keep_window_open = false;
         SDL_DestroyRenderer(this->renderer);
@@ -149,6 +144,14 @@ void World::handleEvent(SDL_Event e) {
 
     if (e.type == SDL_KEYDOWN) {
         keyStates[e.key.keysym.sym] = true;  // ✅ Mark key as pressed
+        if (this->enterHouse)
+        {
+            if (e.key.keysym.sym == SDLK_e)
+            {
+                // Right now we have this but later we need to allow camera change
+                std::cout << "Press E To Enter" << std::endl;
+            }
+        }
         if (this->commandMode)
         {
             // ✅ Moved command input here!
@@ -312,6 +315,10 @@ void World::renderPlayer()
     int feetY = player->getY() + player->getHeight();
     int centerX = player->getX() + static_cast<int>(player->getWidth() / 2);
 
+    int camX = player->getX() + static_cast<int>(player->getWidth() / 2 - WIDTH / 2);
+    int camY = player->getY() + static_cast<int>(player->getHeight() / 2 - HEIGHT / 2);
+    // Allow A Hit box to always be drawn even (this will be invisible)
+
     if (!player->getIsWalking())
     {
         // First Thing Reset the Running Frame
@@ -321,7 +328,7 @@ void World::renderPlayer()
             this->playerIdleSprite.setCurrentFrame((this->playerIdleSprite.getCurrentFrame() + 1) % this->playerIdleSprite.getFrameCount());
             this->lastFrameTime = now;
         }
-        Sprite::renderSprite(this->playerIdleSprite, this->renderer, playerIdleTexture, 30, 45, player);
+        Sprite::renderSprite(this->playerIdleSprite, this->renderer, playerIdleTexture, 30, 45, player, this->hitbox);
         this->bf.printBlockInfoByPosition(centerX, feetY, this->mapData);
     }
     else
@@ -333,9 +340,11 @@ void World::renderPlayer()
             this->playerRunSprite.setCurrentFrame ( (this->playerRunSprite.getCurrentFrame() + 1) % this->playerRunSprite.getFrameCount());
             this->lastFrameTime = now;
         }
-        Sprite::renderSprite(this->playerRunSprite, this->renderer, this->playerRunTexture, 30, 45, player);
+        Sprite::renderSprite(this->playerRunSprite, this->renderer, this->playerRunTexture, 30, 45, player, this->hitbox);
         this->bf.printBlockInfoByPosition(centerX, feetY, this->mapData);
     }
+    if (DEBUG) 
+        Sprite::renderDebugHitbox(this->renderer, hitbox);
 }
 
 void World::drawGreen() { SDL_SetRenderDrawColor(this->renderer, 0, 255, 0, 255); }
@@ -415,6 +424,7 @@ void World::renderCommandInput()
     }
 }
 Client* World::getClient() { return client.get(); }
+
 void World::checkIfPosIsEnterable()
 {
     if(this->bf.checkEnterable(this->client->getPlayer()->getX(), this->client->getPlayer()->getY(), this->mapData))
