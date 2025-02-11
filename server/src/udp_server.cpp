@@ -1,10 +1,31 @@
 #include "udp_server.h"
+#include "packet.h"
+#include <cstdint>
 
 UDPServer::~UDPServer()
 {
     enet_host_destroy(server);
     enet_deinitialize();
 }
+void UDPServer::handleCommands() {
+    std::string input;
+    bool running = true;
+    while (running) {
+        std::getline(std::cin, input);  // This call blocks until the user enters a line.
+        if (input == "list") {
+            printPlayers();
+        }
+        else if (input == "quit" || input == "exit") {
+            std::cout << "Shutting down the server." << std::endl;
+            running = false;
+            // You might also want to notify the main thread to clean up immediately.
+        }
+        else {
+            std::cout << "Unknown command: " << input << std::endl;
+        }
+    }
+}
+
 /** Constructor **/
 UDPServer::UDPServer()
 {
@@ -33,6 +54,10 @@ UDPServer::UDPServer()
         exit(EXIT_FAILURE);
     }
     std::cout << "Server listening on port " << PORT << std::endl;
+
+    // Start the command handler in a separate thread.
+    std::thread commandThread(&UDPServer::handleCommands, this);
+    commandThread.detach();
 
     /*this->nextPlayerId = 0;*/
     /*this->players = std::vector<Player>();*/
@@ -72,6 +97,7 @@ void UDPServer::listenForClients()
                     break;
                 case ENET_EVENT_TYPE_DISCONNECT:
                     std::cout << "Client disconnected.\n";
+                    // We Want to send the other players that the person disconnected but im gonna do sprites first
                     break;
                 case ENET_EVENT_TYPE_NONE:
                     break;
@@ -94,9 +120,42 @@ void UDPServer::handlePacket(ENetPacket *packet, ENetPeer *peer)
         case PacketType::PLAYER_MOVED:
             handlePlayerMoved(packet, peer, &offset);
             break;
+        case PacketType::SEND_PLAYER_SPRITE_INDEX:
+            handlePlayerSpriteIndex(packet, peer, &offset);
+            break;
         default:
             std::cout << "Unknown Packet Type" << std::endl;
             break;
+    }
+}
+
+void UDPServer::handlePlayerSpriteIndex(ENetPacket* packet,ENetPeer* peer, size_t* offset)
+{
+    SendPlayerSpriteIndex idx = SendPlayerSpriteIndex();
+    idx.deserialize(packet->data, offset);
+
+    uint8_t buffer[1028];
+    *offset = idx.serialize(buffer);
+
+    // Sending to all the other clients
+    for (auto client: clientPeers)
+    {
+        // Make Sure Not To Send to the same client
+        if (client.second == peer) continue;
+        if (!this->sendMessageToClient(*offset, buffer, client.second))
+        {
+            std::cout << "Couldlnt Send Sprite Info To Other Players" << std::endl;
+            return;
+        }
+    }
+    // Want to add to the players vector
+    for (auto& player : this->players)
+    {
+        if (player.getID() == idx.getID())
+        {
+            player.setSpriteIndex(idx.getSpriteIndex());
+            break;
+        }
     }
 }
 
@@ -157,19 +216,44 @@ void UDPServer::handlePlayerJoined(ENetPacket* packet, ENetPeer* peer, size_t *o
     PlayerJoined joinedPlayer = PlayerJoined("");
     // Deserialize the buffer and offset into the player object
     joinedPlayer.deserialize(packet->data, offset);
+
+    // We Want to check if the player is inside our game
     // Need to read the buffer and offset to get the values of the player
     // Generate A Unique ID for the player
     generateUnqiuePlayerId(&joinedPlayer);
     // Add the player addresses to the map
-    this->clientPeers[joinedPlayer.getID()] = peer;
-    // Add the plaeyr to the players vector
-    // Print the player's name and ID
-    std::cout << "Player Joined: " << joinedPlayer.getName() << " ID: " << joinedPlayer.getID() << std::endl;
-    // We Want to Send the player their assigned ID
-    sendPlayerID(joinedPlayer.getID(), peer);       /** TODO Need to Fix This **/
-    Player player_to_add = Player(joinedPlayer.getID(), joinedPlayer.getName().c_str());
-    this->players.push_back(player_to_add);
 
+    // We Want to see if anyone else in our game has the same id
+
+    bool playerExists = false;
+    // Check if the player ID is already in the game
+    auto it = clientPeers.find(joinedPlayer.getID());
+    if (it != clientPeers.end()) 
+    {
+        std::cout << "Player Is Rejoining: ID = " << joinedPlayer.getID() << std::endl;
+        // Update their peer in case they disconnected before
+        it->second = peer; // Update the peer to the new connection
+        playerExists = true;
+    }
+
+    // If the player does not exist, add them
+    if (!playerExists) 
+    {
+        // Assign unique ID if needed
+        generateUnqiuePlayerId(&joinedPlayer);
+
+        // Store the player's peer
+        this->clientPeers[joinedPlayer.getID()] = peer;
+
+        // Add the player to the list
+        Player player_to_add = Player(joinedPlayer.getID(), joinedPlayer.getName().c_str());
+        this->players.push_back(player_to_add);
+
+        std::cout << "New Player Joined: " << joinedPlayer.getName() << " ID: " << joinedPlayer.getID() << std::endl;
+    }
+
+
+    sendPlayerID(joinedPlayer.getID(), peer);       /** TODO Need to Fix This **/
     // If Other Players Exist
     if (this->clientPeers.size() > 1)
     {
@@ -207,6 +291,20 @@ bool UDPServer::sendNewPlayerExistingClientInformation(PlayerJoined joinedPlayer
         std::cout << "Failed to send existing clients to new player" << std::endl;
         return false;
     }
+
+    // We Also Wanna Send The Sprite Index To The New Player
+    for (auto player : this->players)
+    {
+        SendPlayerSpriteIndex idx = SendPlayerSpriteIndex(player.getID(), player.getSpriteIndex());
+        uint8_t buffer[1024];
+        size_t offset = idx.serialize(buffer);
+        if (!sendMessageToClient(offset, buffer, peer))
+        {
+            std::cout << "Failed to send sprite index to new player" << std::endl;
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -283,3 +381,12 @@ void UDPServer::generateUnqiuePlayerId(PlayerJoined* joinedPlayer)
     joinedPlayer->setID(player_id);
 }
 
+
+void UDPServer::printPlayers()
+{
+    std::cout << "Players in the game: " << std::endl;
+    for (Player player : this->players)
+    {
+        std::cout << "ID: " << player.getID() << " Name: " << player.getName() << " Sprite Index: " << player.getSpriteIndex() << std::endl;
+    }
+}

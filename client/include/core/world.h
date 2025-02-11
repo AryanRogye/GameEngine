@@ -42,6 +42,8 @@ private:
      **/
     SDL_Texture* playerIdleTexture;     // Texture for Player
     SDL_Texture* playerRunTexture;    // Texture for Running
+    // For Sending to the server
+    bool sendPlayerTexture = false;
     
     // House Stuff
     bool enterHouse;                // If Player Is Entering House

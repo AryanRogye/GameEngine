@@ -286,3 +286,13 @@ void SendPlayerSpriteIndex::deserialize(const uint8_t *buffer, size_t *offset)
     std::memcpy(&this->spriteIndex, buffer + *offset, sizeof(this->spriteIndex));
     *offset += sizeof(this->spriteIndex);
 }
+
+int SendPlayerSpriteIndex::getID() const
+{
+    return this->id;
+}
+
+int SendPlayerSpriteIndex::getSpriteIndex() const
+{
+    return this->spriteIndex;
+}

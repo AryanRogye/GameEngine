@@ -49,7 +49,28 @@ void Sprite::fillRectVector(std::vector<SDL_Rect>& rect, int atlasWidth, int atl
         }
     }
 }
+// Version that accepts a precomputed destination rectangle
+void Sprite::renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture, const SDL_Rect &destRect, Player* player)
+{
+    SDL_Rect srcRect = { sprite.getCurrentFrame() * destRect.w, 0, destRect.w, destRect.h };
+    SDL_RendererFlip flip = player->getFacingRight() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+    if (SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, 0.0, NULL, flip) != 0)
+    {
+        std::cout << "(Sprite) Error: " << SDL_GetError() << std::endl;
+    }
+}
 
+// Overloaded version that calculates the destination rectangle internally
+void Sprite::renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture, int width, int height, Player* player, int camX, int camY)
+{
+    SDL_Rect srcRect = { sprite.getCurrentFrame() * width, 0, width, height };
+    SDL_Rect destRect = { static_cast<int>(player->getX() - camX), static_cast<int>(player->getY() - camY), PLAYER_WIDTH, PLAYER_HEIGHT };
+    SDL_RendererFlip flip = player->getFacingRight() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+    if (SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, 0.0, NULL, flip) != 0)
+    {
+        std::cout << "(Sprite) Error: " << SDL_GetError() << std::endl;
+    }
+}
 void Sprite::renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture, int width, int height, Player* player)
 {
     int windowWidth = WIDTH; 
@@ -62,7 +83,10 @@ void Sprite::renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* te
     // Determine if the sprite should be flipped horizontally
     SDL_RendererFlip flip = player->getFacingRight() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
     // Render the sprite with the flip
-    SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, 0.0, NULL, flip);
+    if (SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, 0.0, NULL, flip) != 0)
+    {
+        std::cout << "(Sprite) Error: " << SDL_GetError() << std::endl;
+    }
 }
 
 // Getters

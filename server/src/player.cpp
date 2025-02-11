@@ -13,6 +13,7 @@ Player::Player(int id, const char* name)
     this->height = 20;
     // Initialize the player's speed
     this->speed = 5;
+    this->spriteIndex = -1;
 }
 
 // Setter Functions
@@ -25,6 +26,9 @@ void Player::setID(int id) { this->id = id; }
 void Player::setWidth(int width) { this->width = width; }
 void Player::setHeight(int height) { this->height = height; }
 void Player::setSpeed(float speed) { this->speed = speed; }
+void Player::setFacingRight(bool facingRight) { this->facingRight = facingRight; }
+void Player::setIsWalking(bool isWalking) { this->isWalking = isWalking; }
+void Player::setSpriteIndex(int spriteIndex) { this->spriteIndex = spriteIndex; }
 void Player::setName(const std::string& name) 
 {
     std::strncpy(this->name, name.c_str(), sizeof(this->name) - 1);
@@ -41,7 +45,9 @@ float       Player::getY() { return this->position.y; }
 int         Player::getWidth() { return this->width; }
 int         Player::getHeight() { return this->height; }
 float       Player::getSpeed() { return this->speed; }
-
+bool        Player::getFacingRight() { return this->facingRight; }
+bool        Player::getIsWalking() { return this->isWalking; }
+int         Player::getSpriteIndex() { return this->spriteIndex; }
 
 
 size_t  Player::serialize(uint8_t *buffer)

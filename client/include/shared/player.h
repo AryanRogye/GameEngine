@@ -19,6 +19,7 @@ private:
     float speed;
     bool facingRight;
     bool isWalking;
+    int spriteIndex;
 public:
     // Constructor
     Player() = default;
@@ -36,6 +37,7 @@ public:
     void setSpeed(float speed);
     void setFacingRight(bool facingRight);
     void setIsWalking(bool isWalking);
+    void setSpriteIndex(int spriteIndex);
 
     // Getters
     int         getID();
@@ -49,6 +51,7 @@ public:
     float       getSpeed();
     bool        getFacingRight();
     bool        getIsWalking();
+    int         getSpriteIndex();
 
     // Debug
     void print();

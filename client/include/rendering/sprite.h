@@ -22,6 +22,8 @@ public:
     static void renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture, int width, int height, Player* player);
     static void renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture,SDL_Rect rect, int width, int height);
     static void renderSprite(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect srcRect, SDL_Rect destRect);
+    static void renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture, const SDL_Rect &destRect, Player* player);
+    static void renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture, int width, int height, Player* player, int camX, int camY);
     
     /*int tileSize = 16;*/
     /*int atlasWidth = 208;*/

@@ -120,6 +120,8 @@ class SendPlayerSpriteIndex : Serializable
     int spriteIndex;
     public:
     SendPlayerSpriteIndex(int id = 0, int spriteIndex = 0);
+    int getID() const;
+    int getSpriteIndex() const;
     size_t serialize(uint8_t *buffer) override;
     void deserialize(const uint8_t *buffer, size_t *offset) override;
 };

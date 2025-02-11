@@ -24,8 +24,13 @@ private:
     ENetHost* server;
     std::unordered_map<int, ENetPeer*> clientPeers;
     std::vector<Player> players;                        /** This is Old But I added it anyways **/
+    std::mutex playersMutex; // protects access to the players list
+
+    // Helper to print current players
+    void printPlayers();
     int nextPlayerId;
 public:
+    void handleCommands();
     UDPServer();
     ~UDPServer();
     // #########################################
@@ -58,6 +63,7 @@ public:
     void generateUnqiuePlayerId(PlayerJoined* joinedPlayer);
     void handlePacket(ENetPacket *packet, ENetPeer *peer);
     void handlePlayerMoved(ENetPacket* packet, ENetPeer* peer, size_t *offset);
+    void handlePlayerSpriteIndex(ENetPacket* packet,ENetPeer* peer, size_t* offset);
     void sendAllClientsPosition(PlayerMoved movedPlayer);
     bool sendPlayerID(int playerID, ENetPeer* peer);
     bool sendMessageToClient(size_t offset, uint8_t* buffer, ENetPeer* peer);

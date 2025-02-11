@@ -1,4 +1,6 @@
 #include "client/client.h"
+#include "packet.h"
+#include <mutex>
 
 /** Deconstructor For The Client Class **/
 Client::~Client() 
@@ -88,7 +90,6 @@ void Client::listenToServer()
             switch (event.type)
             {
                 case ENET_EVENT_TYPE_RECEIVE:
-                    std::cout << "Received packet of size: " << event.packet->dataLength << std::endl;
                     this->handleRecievedPacket(event.packet->data, event.packet->dataLength);
                     enet_packet_destroy(event.packet);
                     break;
@@ -136,7 +137,6 @@ void Client::handleRecievedPacket(uint8_t* buffer,ssize_t bytesRecieved)
             std::cout << "Need To Add Him To The Screen.. Wait" << std::endl;
             handleNewPlayerJoined(buffer, bytesRecieved, &offset);
             break;
-
         case PacketType::PLAYER_JOINED:
             std::cout << "!!!!!!!!!!!THIS SHOULD NOT GET CALLED BADDDDDD" << std::endl;
             break;
@@ -148,9 +148,33 @@ void Client::handleRecievedPacket(uint8_t* buffer,ssize_t bytesRecieved)
             std::cout << "Got Player ID From Server" << std::endl;
             handleIDRecieved(buffer, bytesRecieved, &offset);
             break;
+        case PacketType::SEND_PLAYER_SPRITE_INDEX:
+            handleSpriteRecieved(buffer, bytesRecieved, &offset);
+            std::cout << "Got Player Texture From Server" << std::endl;
+            break;
         default:
             std::cout << "Unknown Packet Type" << std::endl;
             break;
+    }
+}
+
+void Client::handleSpriteRecieved(uint8_t* buffer,ssize_t bytesRecieved,size_t* offset)
+{
+    SendPlayerSpriteIndex idx = SendPlayerSpriteIndex();
+    idx.deserialize(buffer, offset);
+
+    // We Dont Wanna do Anything with our ID
+    if (idx.getID() == this->player->getID()) return;
+    
+    std::lock_guard<std::mutex> lock(this->playersMutex);
+    for (Player* p : this->players)
+    {
+        if (p->getID() == idx.getID())
+        {
+            std::cout << "Got Player [" << idx.getID() <<"] Texture Index: " << idx.getSpriteIndex() << std::endl;
+            p->setSpriteIndex(idx.getSpriteIndex());
+            return;
+        }
     }
 }
 
@@ -187,12 +211,23 @@ void Client::handleOtherPlayersMoved(uint8_t* buffer, ssize_t bytesRecieved, siz
     {
         if (p->getID() == playerMoved.getID())
         {
-            p->setX(playerMoved.getX());
+            // Determine facing direction based on x-coordinate change
+            int oldX = p->getX();
+            int newX = playerMoved.getX();
+            
+            if (newX > oldX) {
+                p->setFacingRight(true);
+            }
+            else if (newX < oldX) {
+                p->setFacingRight(false);
+            }
+            // Update the player's position
+            p->setX(newX);
             p->setY(playerMoved.getY());
-            return;  // Found and updated the player; exit the function.
+            
+            return;
         }
     }
-    std::cout << "Player with ID " << playerMoved.getID() << " not found." << std::endl;
 }
 
 void Client::handleNewPlayerJoined(uint8_t* buffer,ssize_t bytesRecieved,size_t* offset)
@@ -298,6 +333,20 @@ bool Client::sendMessageToServer(size_t offset, uint8_t *buffer)
 
     return true;
 }
+
+bool Client::handleSendingPlayerTexture(int spriteIndex)
+{
+    SendPlayerSpriteIndex idx = SendPlayerSpriteIndex(this->player->getID(), spriteIndex);
+    uint8_t buffer[1024];
+    size_t offset = idx.serialize(buffer);
+    if (!sendMessageToServer(offset, buffer))
+    {
+        std::cout << "There Was An Error Sending The Player Texture To The Server" << std::endl;
+        return false;
+    }
+    return true;
+}
+
 
 /** Have To Create a packet for this **/
 void Client::handleZombieSpawn(int maxRow, int maxCol)

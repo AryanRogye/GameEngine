@@ -39,11 +39,14 @@ public:
     bool sendMessageToServer(size_t offset, uint8_t *buffer);
     void listenToServer();
     void handleRecievedPacket(uint8_t* buffer,ssize_t bytesRecieved);
+    void handleSpriteRecieved(uint8_t* buffer,ssize_t bytesRecieved, size_t *offset);
     void handleIDRecieved(uint8_t* buffer,ssize_t bytesRecieved, size_t* offset);
     void handleNewPlayerJoined(uint8_t* buffer,ssize_t bytesRecieved,size_t* offset);
     void handleOtherPlayersMoved(uint8_t* buffer,ssize_t bytesRecieved,size_t* offset);
+
     std::vector<Player*> getPlayersSafe();
     void handleExistingPlayers(uint8_t* buffer,ssize_t bytesRecieved,size_t* offset);
+    bool handleSendingPlayerTexture(int spriteIndex);
     /*this->client->handleZombieSpawn(this->mapData.size(), this->mapData[0].size());*/
     void handleZombieSpawn(int maxRows, int maxCols);
 };

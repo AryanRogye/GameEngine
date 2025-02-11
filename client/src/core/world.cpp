@@ -1,5 +1,6 @@
 #include "world.h"
 #include "configs.h"
+#include "sprite.h"
 #include <SDL_blendmode.h>
 #include <SDL_keycode.h>
 #include <SDL_render.h>
@@ -276,10 +277,23 @@ void World::updateServer(float *oldX, float *oldY)
         *oldX = player->getX();
         *oldY = player->getY();
     }
-
-    if (this->playerIdleTexture != nullptr)
-    {
-        // Send The Player Texture to the server
+    
+    if (!this->sendPlayerTexture) {
+        std::cout << "Sending Palyer Texture" << std::endl;
+        if (this->playerIdleTexture || this->playerRunTexture)
+        {
+            // Send The Player Texture to the server
+            // We will just send the index that is chosen
+            std::cout << "Sending Player Texture Inside" << std::endl;
+            if (this->client->handleSendingPlayerTexture(spriteIndex))
+            {
+                this->sendPlayerTexture = true;
+            } else {
+                std::cout << "Coudlnt Send Player Texture" << std::endl;
+            }
+        } else {
+            std::cout << "Nothing Yet" << std::endl;
+        }
     }
 
     if (this->mapData.size() > 0)
@@ -289,6 +303,7 @@ void World::updateServer(float *oldX, float *oldY)
         /*this->client->handleZombieSpawn(this->mapData.size(), this->mapData[0].size());*/
     }
 }
+
 
 void World::renderPlayer()
 {
@@ -351,7 +366,28 @@ void World::renderOtherPlayers()
         remotePlayerRect.y = remotePlayer->getY() - camY;
         remotePlayerRect.w = remotePlayer->getWidth();
         remotePlayerRect.h = remotePlayer->getHeight();
-        SDL_RenderFillRect(renderer, &remotePlayerRect);
+        /*Sprite::renderSprite(this->playerIdleSprite, this->renderer, playerIdleTexture, 30, 45, player);*/
+        /** 
+        this is the default value (-1) were just checking for change
+        **/
+        bool displayed = false;
+        if (remotePlayer->getSpriteIndex() != -1)
+        {
+            SDL_Texture* player_texture = nullptr;
+            if (!Texture::loadTexture(PlayerIdlePaths[remotePlayer->getSpriteIndex()].getPath(), &player_texture, this->renderer))
+                std::cout << " Failed to load player texture " << std::endl;
+
+            // if We make it in here we need to change the width and the height of the remotePlayerRect
+            remotePlayerRect.w = 30;
+            remotePlayerRect.h = 45;
+
+            Sprite::renderSprite(PlayerIdlePaths[remotePlayer->getSpriteIndex()], this->renderer, player_texture, remotePlayerRect, remotePlayer);
+            displayed = true;
+         }
+        if (!displayed)
+        {
+            SDL_RenderFillRect(renderer, &remotePlayerRect);
+        }
     }
 }
 
