@@ -1,12 +1,7 @@
 #include "world.h"
-#include "configs.h"
-#include "sprite.h"
-#include <SDL_blendmode.h>
-#include <SDL_keycode.h>
-#include <SDL_render.h>
 
 World::World(
-    SDL_Renderer* renderer, 
+    SDL_Renderer* renderer,
     SDL_Window* window
 )
 // Setting the player Run Sprites Through Here
@@ -49,7 +44,7 @@ void World::updateAndRender()
         mapLoader.hotReload(this->mapData);
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); SDL_RenderClear(renderer);
-        
+
         // Render Map
         this->renderMap();
         this->updateServer(&oldX, &oldY);
@@ -114,16 +109,16 @@ void World::handleCommandInput(SDL_Event& e) {
         CommandSystem::getInstance().executeCommand(this->commandInput, this);
         this->commandInput.clear();
         this->commandMode = false;
-    } 
+    }
     else if (e.key.keysym.sym == SDLK_BACKSPACE) {
         if (!this->commandInput.empty()) {
             this->commandInput.pop_back();
         }
-    } 
+    }
     else if (e.key.keysym.sym == SDLK_ESCAPE) {
         this->commandInput.clear();
         this->commandMode = false;
-    } 
+    }
     else {
         if ((e.key.keysym.sym >= SDLK_SPACE && e.key.keysym.sym <= SDLK_z) ||
             (e.key.keysym.sym >= SDLK_0 && e.key.keysym.sym <= SDLK_9)) {
@@ -132,7 +127,7 @@ void World::handleCommandInput(SDL_Event& e) {
     }
 }
 
-void World::handleEvent(SDL_Event e) 
+void World::handleEvent(SDL_Event e)
 {
     if (e.type == SDL_QUIT) {
         this->keep_window_open = false;
@@ -171,7 +166,7 @@ void World::handleEvent(SDL_Event e)
     }
 }
 
-/** 
+/**
  * Main Loop of the Game Will Be Called in Here
  * **/
 void World::setupWorld()
@@ -181,7 +176,7 @@ void World::setupWorld()
 
     /** Set The Player X and Y Coordinate To The Center of The Screen **/
     this->client->getPlayer()->setX(static_cast<int>(WIDTH / 2));
-    this->client->getPlayer()->setY(static_cast<int>(HEIGHT / 2));    
+    this->client->getPlayer()->setY(static_cast<int>(HEIGHT / 2));
 
     // Load Tiles
     if(!Texture::loadTexture(
@@ -199,7 +194,7 @@ void World::setupWorld()
     this->mapLoader.parseFile(this->mapData);
 
 
-    /** 
+    /**
      * Load Textures Of Player
      *      - Idle
      *      - Run
@@ -237,7 +232,7 @@ void World::renderMap()
     int mapHeightInTiles = mapData.size();
 
     Player* player = this->client->getPlayer();
-    
+
     // Camera follows player, centered
     int camX = player->getX() + static_cast<int>(player->getWidth() / 2 - WIDTH / 2);
     int camY = player->getY() + static_cast<int>(player->getHeight() / 2 - HEIGHT / 2);
@@ -263,7 +258,7 @@ void World::renderMap()
                     displayTileSize,
                     displayTileSize
                 };
-                
+
                 SDL_RenderCopy(this->renderer, this->tileAtlasTexture, &this->tiles[tileIndex], &destRect);
             }
         }
@@ -280,7 +275,7 @@ void World::updateServer(float *oldX, float *oldY)
         *oldX = player->getX();
         *oldY = player->getY();
     }
-    
+
     if (!this->sendPlayerTexture) {
         std::cout << "Sending Palyer Texture" << std::endl;
         if (this->playerIdleTexture || this->playerRunTexture)
@@ -343,7 +338,7 @@ void World::renderPlayer()
         Sprite::renderSprite(this->playerRunSprite, this->renderer, this->playerRunTexture, 30, 45, player, this->hitbox);
         this->bf.printBlockInfoByPosition(centerX, feetY, this->mapData);
     }
-    if (DEBUG) 
+    if (DEBUG)
         Sprite::renderDebugHitbox(this->renderer, hitbox);
 }
 
@@ -376,7 +371,7 @@ void World::renderOtherPlayers()
         remotePlayerRect.w = remotePlayer->getWidth();
         remotePlayerRect.h = remotePlayer->getHeight();
         /*Sprite::renderSprite(this->playerIdleSprite, this->renderer, playerIdleTexture, 30, 45, player);*/
-        /** 
+        /**
         this is the default value (-1) were just checking for change
         **/
         bool displayed = false;

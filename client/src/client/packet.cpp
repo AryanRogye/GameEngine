@@ -296,3 +296,72 @@ int SendPlayerSpriteIndex::getSpriteIndex() const
 {
     return this->spriteIndex;
 }
+
+
+
+std::vector<std::vector<int>>& SendMapData::getMapData()
+{
+    return this->mapData;
+}
+size_t SendMapData::serialize(uint8_t *buffer)
+{
+    PacketType type = PacketType::SEND_MAP_DATA;
+    std::memcpy(buffer, &type, sizeof(type));
+    size_t offset = sizeof(type);
+
+    // Ensure mapData is not empty before accessing mapData[0]
+    int num_rows = static_cast<int>(this->mapData.size());
+    int num_cols = num_rows > 0 ? static_cast<int>(this->mapData[0].size()) : 0;
+
+    std::memcpy(buffer + offset, &num_rows, sizeof(num_rows));
+    offset += sizeof(num_rows);
+    std::memcpy(buffer + offset, &num_cols, sizeof(num_cols));
+    offset += sizeof(num_cols);
+
+    // Serialize mapData safely
+    for (const auto &row : this->mapData)
+    {
+        for (int value : row)
+        {
+            std::memcpy(buffer + offset, &value, sizeof(value));
+            offset += sizeof(value);
+        }
+    }
+
+    return offset;
+}
+
+
+void SendMapData::deserialize(const uint8_t *buffer, size_t *offset)
+{
+    // Clear the mapData
+    this->mapData.clear();
+
+
+    // Deserialize the number of rows
+    int num_rows;
+    std::memcpy(&num_rows, buffer + *offset, sizeof(num_rows));
+    *offset += sizeof(num_rows);
+
+    // Deserialize the number of columns
+    int num_cols;
+    std::memcpy(&num_cols, buffer + *offset, sizeof(num_cols));
+    *offset += sizeof(num_cols);
+
+    // Resize mapData beforehand for efficiency
+    this->mapData.resize(num_rows, std::vector<int>(num_cols));
+
+    // Deserialize the map mapData
+    for (int i = 0; i < num_rows; i++)
+    {
+        std::vector<int> row;
+        for (int j = 0; j < num_cols; j++)
+        {
+            int data;
+            std::memcpy(&data, buffer + *offset, sizeof(data));
+            *offset += sizeof(data);
+            row.push_back(data);
+        }
+        this->mapData.push_back(row);
+    }
+}

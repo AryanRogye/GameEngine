@@ -19,6 +19,7 @@ enum PacketType
     SEND_NEW_PLAYER_EXISTING_CLIENTS,
     SEND_EXISTING_CLIENTS_NEW_PLAYER,
     SEND_PLAYER_SPRITE_INDEX,
+    SEND_MAP_DATA,
 };
 
 class Serializable
@@ -122,6 +123,16 @@ class SendPlayerSpriteIndex : Serializable
     SendPlayerSpriteIndex(int id = 0, int spriteIndex = 0);
     int getID() const;
     int getSpriteIndex() const;
+    size_t serialize(uint8_t *buffer) override;
+    void deserialize(const uint8_t *buffer, size_t *offset) override;
+};
+
+class SendMapData: Serializable
+{
+private:
+    std::vector<std::vector<int>> mapData;  // Stores Index of Tile In TileSet
+public:
+    std::vector<std::vector<int>>& getMapData();
     size_t serialize(uint8_t *buffer) override;
     void deserialize(const uint8_t *buffer, size_t *offset) override;
 };
