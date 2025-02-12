@@ -1,4 +1,5 @@
 #include "client/client.h"
+#include "packet.h"
 
 /** Deconstructor For The Client Class **/
 Client::~Client() 
@@ -350,4 +351,19 @@ bool Client::handleSendingPlayerTexture(int spriteIndex)
 void Client::handleZombieSpawn(int maxRow, int maxCol)
 {
 
+}
+
+void Client::handleSendingMapInfo(std::vector<std::vector<int>> mapdata)
+{
+    SendMapData mapData(mapdata);
+
+    // Assume getSerializedSize() returns the number of bytes needed.
+    size_t requiredSize = mapData.getSeralizedSize();
+    std::vector<uint8_t> buffer(requiredSize);
+
+    size_t offset = mapData.serialize(buffer.data());
+    if (!sendMessageToServer(offset, buffer.data()))
+    {
+        std::cout << "There Was An Error Sending The Map Data To The Server" << std::endl;
+    }
 }

@@ -123,10 +123,44 @@ void UDPServer::handlePacket(ENetPacket *packet, ENetPeer *peer)
         case PacketType::SEND_PLAYER_SPRITE_INDEX:
             handlePlayerSpriteIndex(packet, peer, &offset);
             break;
+        case PacketType::SEND_MAP_DATA:
+            if (!this->receivedMapData)
+            {
+                handleMapData(packet, peer, &offset);
+                this->receivedMapData = true;
+            }
+            break;
         default:
             std::cout << "Unknown Packet Type" << std::endl;
             break;
     }
+}
+
+void UDPServer::handleMapData(ENetPacket* packet, ENetPeer* peer, size_t* offset)
+{
+    SendMapData mapData = SendMapData();
+    mapData.deserialize(packet->data, offset);
+        
+    std::vector<std::vector<int>> map = mapData.getMapData();
+    std::cout << "Received map data from client: " << std::endl;
+    // Determine max width for proper spacing
+    int maxWidth = 0;
+    for (const auto& row : map) {
+        for (int num : row) {
+            int width = std::to_string(num).length();
+            if (width > maxWidth) {
+                maxWidth = width;
+            }
+        }
+    }
+    for (const auto& row : map) {
+        for (int num : row) {
+            std::cout << std::setw(maxWidth + 1) << num << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    // In The Map 2D is a door for a house that we can assign to a villager
 }
 
 void UDPServer::handlePlayerSpriteIndex(ENetPacket* packet,ENetPeer* peer, size_t* offset)

@@ -1,4 +1,5 @@
 #include "world.h"
+#include "configs.h"
 
 World::World(
     SDL_Renderer* renderer,
@@ -294,6 +295,15 @@ void World::updateServer(float *oldX, float *oldY)
         }
     }
 
+    if (!this->sentMap)
+    {
+        if (this->mapData.size() > 0)
+        {
+            this->client->handleSendingMapInfo(this->mapData);
+            this->sentMap = true;
+        }
+    }
+
     if (this->mapData.size() > 0)
     {
         // I want to send The Max Rows and Cols inside Here
@@ -324,7 +334,6 @@ void World::renderPlayer()
             this->lastFrameTime = now;
         }
         Sprite::renderSprite(this->playerIdleSprite, this->renderer, playerIdleTexture, 30, 45, player, this->hitbox);
-        this->bf.printBlockInfoByPosition(centerX, feetY, this->mapData);
     }
     else
     {
@@ -336,10 +345,25 @@ void World::renderPlayer()
             this->lastFrameTime = now;
         }
         Sprite::renderSprite(this->playerRunSprite, this->renderer, this->playerRunTexture, 30, 45, player, this->hitbox);
-        this->bf.printBlockInfoByPosition(centerX, feetY, this->mapData);
     }
     if (DEBUG)
         Sprite::renderDebugHitbox(this->renderer, hitbox);
+    if(DEBUG)
+    {
+        UI::renderTextAtPosition(
+            this->renderer,
+            this->font_texture,
+            this->fonts,
+            this->bf.returnBlockInfoByPosition(centerX, feetY, this->mapData),
+            20,
+            HEIGHT - 20,
+            FONT_WIDTH,
+            FONT_HEIGHT,
+            FONT_SCALE,
+            false,
+            1
+        );
+    }
 }
 
 void World::drawGreen() { SDL_SetRenderDrawColor(this->renderer, 0, 255, 0, 255); }

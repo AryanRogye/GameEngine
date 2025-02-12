@@ -180,6 +180,7 @@ public:
     std::string getBlockName(BlockType type);
     void printBlockInfo() const;
     void printBlockInfoByPosition(int x, int y, const std::vector<std::vector<int>>& mapData);
+    std::string returnBlockInfoByPosition(int x, int y, const std::vector<std::vector<int>>& mapData);
     bool checkCollision(SDL_Rect rect, const std::vector<std::vector<int>>& mapData);
     bool checkEnterable(int x, int y, const std::vector<std::vector<int>>& mapData);
 };

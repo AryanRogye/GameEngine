@@ -1,5 +1,7 @@
 #include "block.h"
 #include "configs.h"
+#include "sprite.h"
+#include "ui.h"
 
 CollisionComponent::CollisionComponent(bool isSolid)
 {
@@ -153,7 +155,31 @@ void BlockFactory::printBlockInfo() const {
 
 // Initialize static variable
 BlockType BlockFactory::oldBlockType = BlockType::EMPTY;
+std::string BlockFactory::returnBlockInfoByPosition(int x, int y, const std::vector<std::vector<int>>& mapData)
+{
+    // Convert pixel pos to til idx
+    int tileX = x / TILE_SIZE; 
+    int tileY = y / TILE_SIZE;
+    
+    if (tileY < 0 || tileY >= mapData.size() || tileX < 0 || tileX >= mapData[tileY].size()) {
+        return "Player is outside map bounds!";
+    }
 
+    // Get ID of block
+    int blockIndex = mapData[tileY][tileX] - 1;
+
+    /** Convert BlockIndex to BlockType **/
+    BlockType blockType = static_cast<BlockType>(blockIndex);
+
+    for (const auto&pair : this->blocks)
+    {
+        if (pair.second.type == blockType)
+        {
+            return pair.second.name;
+        }
+    }
+    return "unknown block";
+}
 void BlockFactory::printBlockInfoByPosition(int x, int y, const std::vector<std::vector<int>>& mapData) 
 {
     // Convert pixel pos to til idx

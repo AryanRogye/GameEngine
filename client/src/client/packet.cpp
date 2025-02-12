@@ -303,6 +303,16 @@ std::vector<std::vector<int>>& SendMapData::getMapData()
 {
     return this->mapData;
 }
+size_t SendMapData::getSeralizedSize()
+{
+    size_t size = sizeof(PacketType) + sizeof(int); // for number of rows
+    for (const auto &row : this->mapData)
+    {
+        size += sizeof(int); // for the row size
+        size += row.size() * sizeof(int); // for the row data
+    }
+return size;
+}
 size_t SendMapData::serialize(uint8_t *buffer)
 {
     PacketType type = PacketType::SEND_MAP_DATA;
@@ -331,6 +341,10 @@ size_t SendMapData::serialize(uint8_t *buffer)
     return offset;
 }
 
+SendMapData::SendMapData(std::vector<std::vector<int>> mapData)
+{
+    this->mapData = mapData;
+}
 
 void SendMapData::deserialize(const uint8_t *buffer, size_t *offset)
 {

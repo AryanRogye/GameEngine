@@ -16,6 +16,7 @@
 class World {
 private:
     bool commandMode = false;
+    bool sentMap = false;
     std::string commandInput = "";
     SDL_Rect commandBox;
     int command_box_width = WIDTH;

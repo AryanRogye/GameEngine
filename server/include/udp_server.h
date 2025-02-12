@@ -14,6 +14,7 @@
 #include <enet/enet.h>
 #include <unordered_map>
 #include "config.h"
+#include <iomanip> // Add this for setw
 
 #define PORT 8080
 
@@ -30,6 +31,7 @@ private:
     void printPlayers();
     int nextPlayerId;
 public:
+    bool receivedMapData = false;
     void handleCommands();
     UDPServer();
     ~UDPServer();
@@ -62,6 +64,7 @@ public:
     void addPlayer(Player player);
     void generateUnqiuePlayerId(PlayerJoined* joinedPlayer);
     void handlePacket(ENetPacket *packet, ENetPeer *peer);
+    void handleMapData(ENetPacket *packet, ENetPeer *peer, size_t *offset);
     void handlePlayerMoved(ENetPacket* packet, ENetPeer* peer, size_t *offset);
     void handlePlayerSpriteIndex(ENetPacket* packet,ENetPeer* peer, size_t* offset);
     void sendAllClientsPosition(PlayerMoved movedPlayer);

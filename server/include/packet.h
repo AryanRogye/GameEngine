@@ -132,6 +132,8 @@ class SendMapData: Serializable
 private:
     std::vector<std::vector<int>> mapData;  // Stores Index of Tile In TileSet
 public:
+    SendMapData(std::vector<std::vector<int>> mapData);
+    SendMapData() = default;
     std::vector<std::vector<int>>& getMapData();
     size_t serialize(uint8_t *buffer) override;
     void deserialize(const uint8_t *buffer, size_t *offset) override;

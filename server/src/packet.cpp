@@ -331,6 +331,10 @@ size_t SendMapData::serialize(uint8_t *buffer)
     return offset;
 }
 
+SendMapData::SendMapData(std::vector<std::vector<int>> mapData)
+{
+    this->mapData = mapData;
+}
 
 void SendMapData::deserialize(const uint8_t *buffer, size_t *offset)
 {
