@@ -26,7 +26,7 @@ private:
     int command_box_width = WIDTH;
     int command_box_height = 30;
     int command_box_x = 0;
-    int command_box_y = (HEIGHT - 20) - command_box_height;
+    int command_box_y;
 
     /** Renderer/Window **/
     SDL_Window* window;

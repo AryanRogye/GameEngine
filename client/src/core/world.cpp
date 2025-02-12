@@ -186,16 +186,16 @@ void World::handleEvent(SDL_Event e)
  * **/
 void World::setupWorld()
 {
-    /*// Get the screen dimensions*/
-    /*SDL_DisplayMode DM;*/
-    /*SDL_GetCurrentDisplayMode(0, &DM);  // Get primary display resolution*/
-    /**/
-    /*this->screenWidth = DM.w;*/
-    /*this->screenHeight = DM.h;*/
-    /**/
-    /*// Resize the window to match screen dimensions*/
-    /*SDL_SetWindowSize(this->window, screenWidth, screenHeight);*/
-    /*SDL_SetWindowPosition(this->window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);*/
+    // Get the screen dimensions
+    SDL_DisplayMode DM;
+    SDL_GetCurrentDisplayMode(0, &DM);  // Get primary display resolution
+
+    this->screenWidth = DM.w;
+    this->screenHeight = DM.h;
+
+    // Resize the window to match screen dimensions
+    SDL_SetWindowSize(this->window, screenWidth, screenHeight);
+    SDL_SetWindowPosition(this->window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
     /** Start The Client **/
     this->client->handlePlayerJoined(this->client->getPlayer()->getName());
@@ -251,44 +251,82 @@ void World::loadFont()
 
 void World::renderMap()
 {
+    const int BORDER_SIZE = 32;
+    const int TILE_BUFFER = 2;
+    
+    // Calculate the offset to center the game area
+    int offsetX = (screenWidth - WIDTH) / 2;
+    int offsetY = (screenHeight - HEIGHT) / 2;
+    
     int srcTileSize = 16;
     const int displayTileSize = TILE_SIZE;
-
     int mapWidthInTiles = (mapData.size() > 0 ? mapData[0].size() : 0);
     int mapHeightInTiles = mapData.size();
-
     Player* player = this->client->getPlayer();
 
     // Camera follows player, centered
-    int camX = player->getX() + static_cast<int>(player->getWidth() / 2 - WIDTH / 2);
-    int camY = player->getY() + static_cast<int>(player->getHeight() / 2 - HEIGHT / 2);
+    int camX = player->getX() + static_cast<int>(player->getWidth() / 2 - (WIDTH - 2 * BORDER_SIZE) / 2);
+    int camY = player->getY() + static_cast<int>(player->getHeight() / 2 - (HEIGHT - 2 * BORDER_SIZE) / 2);
 
-    // **Calculate which tiles are visible on the screen**
-    int startX = std::max(0, camX / displayTileSize);
-    int startY = std::max(0, camY / displayTileSize);
-    int endX = std::min(mapWidthInTiles, (camX + WIDTH) / displayTileSize + 1);
-    int endY = std::min(mapHeightInTiles, (camY + HEIGHT) / displayTileSize + 1);
+    // Calculate visible area with buffer
+    int startX = std::max(0, (camX - BORDER_SIZE) / displayTileSize - TILE_BUFFER);
+    int startY = std::max(0, (camY - BORDER_SIZE) / displayTileSize - TILE_BUFFER);
+    int endX = std::min(mapWidthInTiles, (camX + WIDTH) / displayTileSize + TILE_BUFFER);
+    int endY = std::min(mapHeightInTiles, (camY + HEIGHT) / displayTileSize + TILE_BUFFER);
 
-    // **Loop only through visible tiles**
+    // Draw black background for the entire window
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+    
+    // Render black border
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    
+    // Top border
+    SDL_Rect topBorder = {offsetX, offsetY, WIDTH, BORDER_SIZE};
+    SDL_RenderFillRect(renderer, &topBorder);
+    
+    // Bottom border
+    SDL_Rect bottomBorder = {offsetX, offsetY + HEIGHT - BORDER_SIZE, WIDTH, BORDER_SIZE};
+    SDL_RenderFillRect(renderer, &bottomBorder);
+    
+    // Left border
+    SDL_Rect leftBorder = {offsetX, offsetY, BORDER_SIZE, HEIGHT};
+    SDL_RenderFillRect(renderer, &leftBorder);
+    
+    // Right border
+    SDL_Rect rightBorder = {offsetX + WIDTH - BORDER_SIZE, offsetY, BORDER_SIZE, HEIGHT};
+    SDL_RenderFillRect(renderer, &rightBorder);
+
+    // Create a clip rectangle for the visible area
+    SDL_Rect clipRect = {
+        offsetX + BORDER_SIZE, 
+        offsetY + BORDER_SIZE, 
+        WIDTH - 2 * BORDER_SIZE, 
+        HEIGHT - 2 * BORDER_SIZE
+    };
+    SDL_RenderSetClipRect(renderer, &clipRect);
+
+    // Render tiles
     for (int y = startY; y < endY; y++)
     {
         for (int x = startX; x < endX; x++)
         {
             int tileIndex = mapData[y][x] - 1;
-
             if (tileIndex >= 0 && tileIndex < tiles.size())
             {
                 SDL_Rect destRect = {
-                    x * displayTileSize - camX,  // Apply camera offset
-                    y * displayTileSize - camY,
+                    x * displayTileSize - camX + BORDER_SIZE + offsetX,
+                    y * displayTileSize - camY + BORDER_SIZE + offsetY,
                     displayTileSize,
                     displayTileSize
                 };
-
                 SDL_RenderCopy(this->renderer, this->tileAtlasTexture, &this->tiles[tileIndex], &destRect);
             }
         }
     }
+
+    // Reset clip rectangle
+    SDL_RenderSetClipRect(renderer, NULL);
 }
 
 
@@ -338,50 +376,63 @@ void World::updateServer(float *oldX, float *oldY)
 }
 
 
-void World::renderPlayer()
+void World::renderPlayer() 
 {
     Player* player = this->client->getPlayer();
     Uint32 now = SDL_GetTicks();
-    int feetY = player->getY() + player->getHeight();
-    int centerX = player->getX() + static_cast<int>(player->getWidth() / 2);
 
-    int camX = player->getX() + static_cast<int>(player->getWidth() / 2 - WIDTH / 2);
-    int camY = player->getY() + static_cast<int>(player->getHeight() / 2 - HEIGHT / 2);
-    // Allow A Hit box to always be drawn even (this will be invisible)
+    // Calculate offsets as used in renderMap()
+    int offsetX = (screenWidth - WIDTH) / 2;
+    int offsetY = (screenHeight - HEIGHT) / 2;
+    int BORDER_SIZE = 32;
 
-    if (!player->getIsWalking())
-    {
-        // First Thing Reset the Running Frame
+    // Calculate camera position using the same logic as in renderMap()
+    int camX = player->getX() + player->getWidth() / 2 - (WIDTH - 2 * BORDER_SIZE) / 2;
+    int camY = player->getY() + player->getHeight() / 2 - (HEIGHT - 2 * BORDER_SIZE) / 2;
+
+    // Determine the player's drawing position relative to the screen
+    SDL_Rect playerRect;
+    playerRect.x = player->getX() - camX + BORDER_SIZE + offsetX;
+    playerRect.y = player->getY() - camY + BORDER_SIZE + offsetY;
+    playerRect.w = 30;  // your desired player width
+    playerRect.h = 45;  // your desired player height
+
+    // Handle animation frames
+    if (!player->getIsWalking()) {
+        // Reset running sprite frame when idle
         this->playerRunSprite.setCurrentFrame(0);
-        if (now - this->lastFrameTime >= this->frameDelay)
-        {
+        if (now - this->lastFrameTime >= this->frameDelay) {
             this->playerIdleSprite.setCurrentFrame((this->playerIdleSprite.getCurrentFrame() + 1) % this->playerIdleSprite.getFrameCount());
             this->lastFrameTime = now;
         }
-        Sprite::renderSprite(this->playerIdleSprite, this->renderer, playerIdleTexture, 30, 45, player, this->hitbox);
-    }
-    else
-    {
-        // First Thing Reset the Idle Frame
+        // Render the idle sprite using the calculated destination rectangle
+        Sprite::renderSprite(this->playerIdleSprite, this->renderer, playerIdleTexture, playerRect, player);
+    } else {
+        // Reset idle sprite frame when walking
         this->playerIdleSprite.setCurrentFrame(0);
-        if (now - this->lastFrameTime >= this->frameDelay)
-        {
-            this->playerRunSprite.setCurrentFrame ( (this->playerRunSprite.getCurrentFrame() + 1) % this->playerRunSprite.getFrameCount());
+        if (now - this->lastFrameTime >= this->frameDelay) {
+            this->playerRunSprite.setCurrentFrame((this->playerRunSprite.getCurrentFrame() + 1) % this->playerRunSprite.getFrameCount());
             this->lastFrameTime = now;
         }
-        Sprite::renderSprite(this->playerRunSprite, this->renderer, this->playerRunTexture, 30, 45, player, this->hitbox);
+        // Render the running sprite
+        Sprite::renderSprite(this->playerRunSprite, this->renderer, this->playerRunTexture, playerRect, player);
     }
+
+    // Optional: render debug hitbox if needed (ensure hitbox is also offset if necessary)
     if (DEBUG)
         Sprite::renderDebugHitbox(this->renderer, hitbox);
-    if(DEBUG)
-    {
+
+    // Optional: render additional debug info
+    if (DEBUG) {
+        int feetY = player->getY() + player->getHeight();
+        int centerX = player->getX() + player->getWidth() / 2;
         UI::renderTextAtPosition(
             this->renderer,
             this->font_texture,
             this->fonts,
             this->bf.returnBlockInfoByPosition(centerX, feetY, this->mapData),
             20,
-            HEIGHT - 20,
+            screenHeight - 20,
             FONT_WIDTH,
             FONT_HEIGHT,
             FONT_SCALE,
