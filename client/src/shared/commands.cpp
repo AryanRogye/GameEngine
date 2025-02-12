@@ -179,6 +179,7 @@ void CommandSystem::setupCommands()
         }
         int newWidth = std::stoi(std::string(args[1]));
         setHitBoxWidth(newWidth);
+        saveConfig();
     });
     cmdSys.registerCommand("/set-hitbox-height", [this](const std::vector<std::string_view>& args){
         if (args.size() > 2)
@@ -188,6 +189,7 @@ void CommandSystem::setupCommands()
         }
         int newHeight = std::stoi(std::string(args[1]));
         setHitBoxHeight(newHeight);
+        saveConfig();
     });
     cmdSys.registerCommand("/set-hitbox-x", [this](const std::vector<std::string_view>& args){
         if (args.size() > 2)
@@ -197,6 +199,7 @@ void CommandSystem::setupCommands()
         }
         int newX = std::stoi(std::string(args[1]));
         setOffsetX(newX);
+        saveConfig();
     });
     cmdSys.registerCommand("/set-hitbox-y", [this](const std::vector<std::string_view>& args){
         if (args.size() > 2)
@@ -206,6 +209,7 @@ void CommandSystem::setupCommands()
         }
         int newY = std::stoi(std::string(args[1]));
         setOffsetY(newY);
+        saveConfig();
     });
 
     /** Needs World

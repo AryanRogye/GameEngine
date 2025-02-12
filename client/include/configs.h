@@ -16,6 +16,7 @@
 
 // Global asset path
 extern std::string ASSET_PATH;
+extern std::string DATA_PATH;
 
 // Global vectors for character animations
 class Sprite;
@@ -33,6 +34,8 @@ extern void setHitBoxWidth(int width);
 extern void setHitBoxHeight(int height);
 extern void setOffsetX(int x);
 extern void setOffsetY(int y);
+extern void loadHitboxConfig();
+extern void saveConfig();
 
 // Function to initialize asset paths
 void initializePaths();
