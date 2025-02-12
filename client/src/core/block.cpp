@@ -1,7 +1,6 @@
 #include "block.h"
+#include "SDL2/SDL_rect.h"
 #include "configs.h"
-#include "sprite.h"
-#include "ui.h"
 
 CollisionComponent::CollisionComponent(bool isSolid)
 {
@@ -30,8 +29,24 @@ bool Enterable::getIsEnterable() const
     return isEnterable;
 }
 
+Breakable::Breakable(bool isBreakable, int numHits, int multiplier)
+{
+    this->isBreakable = isBreakable;
+    this->numHits = numHits;
+    this->multiplier = multiplier;
+}
 
-/** 
+Breakable::Breakable(int numHits, int multiplier)
+{
+    this->isBreakable = false;
+    this->numHits = numHits;
+    this->multiplier = multiplier;
+}
+bool Breakable::getIsBreakable() const {return this->isBreakable;}
+int  Breakable::getNumHits() const { return this->numHits; }
+int  Breakable::getMultiplier() const { return this->multiplier; }
+
+/**
  * Block Constructor Assume All Blocks Cant be walked through
  * At the start and when we add a block to the factory then
  * we can set it in there
@@ -56,7 +71,12 @@ BlockFactory::BlockFactory()
     this->addBlock(BlockType::VERTICAL_DIRT, "vertical_dirt");
     this->addBlock(BlockType::VERTICAL_LEFT_DIRT, "vertical_left_dirt");
     this->addBlock(BlockType::INTERSECTION_DIRT, "intersection_dirt");
+    // Making The Tree Block Breakable
     this->addBlock<CollisionComponent>(BlockType::TREE, "tree", true);
+    // We Wanna make tree breakable
+    Block& treeBlock = *this->type_to_block.at(BlockType::TREE);
+    this->addComponentsToBlock<Breakable>(treeBlock, true, 10, 1);
+
     this->addBlock(BlockType::HORIZONTAL_UP_DIRT, "horizontal_up_dirt");
     this->addBlock(BlockType::VERTICAL_RIGHT_DIRT, "vertical_right_dirt");
     this->addBlock(BlockType::HORIZONTAL_DOWN_DIRT, "horizontal_down_dirt");
@@ -96,7 +116,7 @@ BlockFactory::BlockFactory()
         this->type_to_block[pair.second.type] = &pair.second;
 }
 
-void BlockFactory::addBlock(BlockType type) 
+void BlockFactory::addBlock(BlockType type)
 {
     std::string blockName = getBlockName(type);
     if (blocks.count(blockName)) {
@@ -106,7 +126,7 @@ void BlockFactory::addBlock(BlockType type)
     blocks.emplace(blockName, Block(type, blockName));
     type_to_block[type] = &blocks.at(blockName);
 }
-void BlockFactory::addBlock(BlockType type, std::string name) 
+void BlockFactory::addBlock(BlockType type, std::string name)
 {
     if (blocks.count(name)) {
         std::cout << "Block already exists: " << name << std::endl;
@@ -117,7 +137,7 @@ void BlockFactory::addBlock(BlockType type, std::string name)
 }
 
 Block* BlockFactory::getBlockAtPosition(int x, int y, const std::vector<std::vector<int>>& mapData)
-{ 
+{
     int tileX = x / TILE_SIZE;
     int tileY = y / TILE_SIZE;
 
@@ -131,7 +151,7 @@ Block* BlockFactory::getBlockAtPosition(int x, int y, const std::vector<std::vec
 }
 
 /** Convert string to BlockType **/
-BlockType BlockFactory::getBlockTypeFromString(const std::string& name) 
+BlockType BlockFactory::getBlockTypeFromString(const std::string& name)
 {
     return this->blocks.at(name).type;
 }
@@ -158,9 +178,9 @@ BlockType BlockFactory::oldBlockType = BlockType::EMPTY;
 std::string BlockFactory::returnBlockInfoByPosition(int x, int y, const std::vector<std::vector<int>>& mapData)
 {
     // Convert pixel pos to til idx
-    int tileX = x / TILE_SIZE; 
+    int tileX = x / TILE_SIZE;
     int tileY = y / TILE_SIZE;
-    
+
     if (tileY < 0 || tileY >= mapData.size() || tileX < 0 || tileX >= mapData[tileY].size()) {
         return "Player is outside map bounds!";
     }
@@ -180,12 +200,12 @@ std::string BlockFactory::returnBlockInfoByPosition(int x, int y, const std::vec
     }
     return "unknown block";
 }
-void BlockFactory::printBlockInfoByPosition(int x, int y, const std::vector<std::vector<int>>& mapData) 
+void BlockFactory::printBlockInfoByPosition(int x, int y, const std::vector<std::vector<int>>& mapData)
 {
     // Convert pixel pos to til idx
-    int tileX = x / TILE_SIZE; 
+    int tileX = x / TILE_SIZE;
     int tileY = y / TILE_SIZE;
-    
+
     if (tileY < 0 || tileY >= mapData.size() || tileX < 0 || tileX >= mapData[tileY].size()) {
         std::cout << "Player is outside map bounds!" << std::endl;
         return;
@@ -213,47 +233,50 @@ void BlockFactory::printBlockInfoByPosition(int x, int y, const std::vector<std:
 }
 
 
-bool BlockFactory::checkCollision(SDL_Rect rect, const std::vector<std::vector<int>>& mapData)
+int BlockFactory::checkBlockState(SDL_Rect rect, const std::vector<std::vector<int>>& mapData)
 {
-   // Convert pixel coordinates to block coordinates
+    int state = BlockState::NONE;
+
     int startBlockX = rect.x / TILE_SIZE;
     int endBlockX = (rect.x + rect.w) / TILE_SIZE;
     int startBlockY = rect.y / TILE_SIZE;
     int endBlockY = (rect.y + rect.h) / TILE_SIZE;
-    
-    // Check all blocks that the hitbox might intersect with
+
     for (int blockY = startBlockY; blockY <= endBlockY; blockY++) {
         for (int blockX = startBlockX; blockX <= endBlockX; blockX++) {
             Block* block = getBlockAtPosition(blockX * TILE_SIZE, blockY * TILE_SIZE, mapData);
-            if (block && block->getComponent<CollisionComponent>() && 
-                block->getComponent<CollisionComponent>()->getIsSolid()) {
-                // Create block's rectangle
-                SDL_Rect blockRect = {
-                    blockX * TILE_SIZE,
-                    blockY * TILE_SIZE,
-                    TILE_SIZE,
-                    TILE_SIZE
-                };
-                
-                // Check for actual rectangle intersection
-                if (SDL_HasIntersection(&rect, &blockRect)) {
-                    return true;
+            if (!block) continue;
+
+            SDL_Rect blockRect = {
+                blockX * TILE_SIZE,
+                blockY * TILE_SIZE,
+                TILE_SIZE,
+                TILE_SIZE
+            };
+
+            // We Will Make A Breakable BlockRect with 1.2 times the size of the block for a bigger hitbox
+            double multiplier = 2;
+            SDL_Rect breakableBlockRect = {
+                static_cast<int>(blockX * TILE_SIZE - ((TILE_SIZE * multiplier) - TILE_SIZE) / 2),
+                static_cast<int>(blockY * TILE_SIZE - ((TILE_SIZE * multiplier) - TILE_SIZE) / 2),
+                static_cast<int>(TILE_SIZE * multiplier),
+                static_cast<int>(TILE_SIZE * multiplier)
+            };
+
+            if (SDL_HasIntersection(&rect, &breakableBlockRect)) {
+                if (block->getComponent<Breakable>() && block->getComponent<Breakable>()->getIsBreakable()) {
+                    state |= BlockState::BREAKABLE;  // Set breakable flag
+                }
+            }
+            if (SDL_HasIntersection(&rect, &blockRect)) {
+                if (block->getComponent<CollisionComponent>() && block->getComponent<CollisionComponent>()->getIsSolid()) {
+                    state |= BlockState::COLLISION;  // Set collision flag
+                }
+                if (block->getComponent<Enterable>() && block->getComponent<Enterable>()->getIsEnterable()) {
+                    state |= BlockState::ENTERABLE;  // Set enterable flag
                 }
             }
         }
     }
-    return false;
-}
-
-/** 
- * TODO: Check if this works
- **/
-bool BlockFactory::checkEnterable(int x, int y, const std::vector<std::vector<int>>& mapData)
-{
-    Block* block = getBlockAtPosition(x, y, mapData);
-    if (!block) return true;
-
-    if (auto enterable = block->getComponent<Enterable>())
-        return enterable->getIsEnterable();
-    return false;
+    return state;
 }

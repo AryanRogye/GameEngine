@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "Client",
+            "compilerPath": "/usr/bin/clang++",
+            "compileCommands": "${workspaceFolder}/client/compile_commands.json",
+            "cStandard": "c11",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "macos-clang-arm64"
+        },
+        {
+            "name": "Server",
+            "compilerPath": "/usr/bin/clang++",
+            "compileCommands": "${workspaceFolder}/server/compile_commands.json",
+            "cStandard": "c11",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "macos-clang-arm64"
+        }
+    ],
+    "version": 4
+}

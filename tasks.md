@@ -35,6 +35,33 @@ This document is your go-to tracker for game feature development. As you complet
   - [ ] Notify clients when an NPC dies.
   - [ ] Update server game state for dead NPCs.
 
+### 1.3 Weapon System
+- [ ] **Weapon Inventory System**
+  - [ ] Allow players to carry multiple weapons.
+- [ ] **Weapon Firing Mechanics**
+  - [ ] Different damage & fire rates per weapon type.
+- [ ] **Ammo System**
+  - [ ] Track remaining bullets per weapon.
+  - [ ] Implement reloading.
+- [ ] **Weapon Rarity & Loot Drops**
+  - [ ] Add common, rare, legendary weapon types.
+  - [ ] Dropped weapons disappear after a set time.
+
+### 1.4 Inventory System
+- [ ] **Basic Inventory UI**
+  - [ ] Display collected items & weapons.
+- [ ] **Item Pickup & Storage**
+  - [ ] Allow picking up and equipping items.
+- [ ] **Weight/Slot Limit System**
+  - [ ] Prevent overloading inventory.
+
+### 1.5 World Interaction
+- [ ] **Breaking System for Trees & Rocks**
+  - [ ] Implement player tool interaction.
+  - [ ] Generate resources upon breaking.
+- [ ] **Server-Side Resource Tracking**
+  - [ ] Prevent infinite resource respawning.
+
 ---
 
 ## 2️⃣ Client-Side Features
@@ -57,6 +84,9 @@ This document is your go-to tracker for game feature development. As you complet
 - [ ] **Add Villager Interaction System**
   - [ ] Implement “Talk” button.
   - [ ] Display trading interface.
+- [ ] **Implement Inventory UI**
+  - [ ] Drag & drop item management.
+  - [ ] Equip items from inventory.
 
 ---
 
@@ -69,10 +99,7 @@ graph TD;
     C --> D["4️⃣ Server-Side Shot Validation"];
     D --> E["5️⃣ Client UI & Feedback Improvements"];
     E --> F["6️⃣ Villager Interaction System"];
+    F --> G["7️⃣ Inventory System"];
+    G --> H["8️⃣ Weapon System"];
+    H --> I["9️⃣ Resource Gathering (Breaking Trees/Rocks)"];
 ```
-
-## 4 Asset Drawing
-- elevation tiles (multiple)
-- river tiles
-- house tiles (at least 3 more)
-- allow house tiles to be different sizes for different results

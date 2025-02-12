@@ -1,10 +1,10 @@
-/** 
- * Purpose Of this file is to define the block structure and the 
+/**
+ * Purpose Of this file is to define the block structure and the
  * functions that will be used to manipulate the block
  **/
 
 /**
- * Restructuring This Entire File To Follow The Design Pattern of 
+ * Restructuring This Entire File To Follow The Design Pattern of
  * Compostion Over Inheritance For the Block Class The reason why
  * is cuz some blocks have absolutely 0 purpose to inherit from and
  * if we do inherit itll have a bunch of useless functions that just
@@ -24,7 +24,16 @@
 #include <utility>
 #include <type_traits>
 #include <SDL2/SDL.h>
+#include "sprite.h"
+#include "ui.h"
 
+
+enum BlockState {
+    NONE        = 0,
+    COLLISION   = 1 << 0,  // 0001
+    BREAKABLE   = 1 << 1,  // 0010
+    ENTERABLE   = 1 << 2   // 0100
+};
 
 enum class BlockType {
     GRASS,
@@ -92,6 +101,18 @@ public:
     bool getIsEnterable() const;
 };
 
+class Breakable : public BlockComponent {
+    bool isBreakable;
+    int numHits;
+    int multiplier;
+public:
+    Breakable(bool isBreakable, int numHits, int multiplier);
+    Breakable(int numHits, int multiplier);
+    bool getIsBreakable() const;
+    int getNumHits() const;
+    int getMultiplier() const;
+};
+
 class Block {
 public:
 
@@ -101,7 +122,7 @@ public:
     /** Functions **/
     Block(BlockType type);
     Block(BlockType type, std::string name);
-    /** 
+    /**
      * This Looks Very Complicated byt its very simple
      * this is a variadic template function that takes in a type T
      * and a bunch of arguments and creates a new instance of T and
@@ -120,14 +141,14 @@ public:
         }
         components.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
     }
-    
-    /** 
-     * This Function is a getter function 
+
+    /**
+     * This Function is a getter function
      **/
     template <typename T>
     T* getComponent() const
     {
-        for (auto& comp : components) 
+        for (auto& comp : components)
         {
             if (comp && dynamic_cast<T*>(comp.get()))
                 return static_cast<T*>(comp.get());
@@ -136,7 +157,7 @@ public:
     }
 };
 
-/** 
+/**
  * Purpose of this class is to create a bunch of blocks
  * which is kind of like a "Factory" Design Pattern
  **/
@@ -147,9 +168,9 @@ class BlockFactory {
 public:
     BlockFactory();
     template <typename T, typename... Args>
-    void addComponentToBlock(BlockType type, Args&&... args) 
+    void addComponentToBlock(BlockType type, Args&&... args)
     {
-        if (type_to_block.count(type)) 
+        if (type_to_block.count(type))
         {
             type_to_block.at(type)->addComponent<T>(std::forward<Args>(args)...);
         }
@@ -174,15 +195,15 @@ public:
             addComponentsToBlock<Rest...>(block, std::forward<Args>(args)...);
         }
     }
-    
+
     Block* getBlockAtPosition(int x, int y, const std::vector<std::vector<int>>& mapData);
     BlockType getBlockTypeFromString(const std::string& name);
     std::string getBlockName(BlockType type);
     void printBlockInfo() const;
     void printBlockInfoByPosition(int x, int y, const std::vector<std::vector<int>>& mapData);
     std::string returnBlockInfoByPosition(int x, int y, const std::vector<std::vector<int>>& mapData);
-    bool checkCollision(SDL_Rect rect, const std::vector<std::vector<int>>& mapData);
-    bool checkEnterable(int x, int y, const std::vector<std::vector<int>>& mapData);
+
+    int checkBlockState(SDL_Rect rect, const std::vector<std::vector<int>>& mapData);
 };
 
 #endif // BLOCK_H

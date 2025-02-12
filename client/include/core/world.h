@@ -15,8 +15,12 @@
 
 class World {
 private:
+    int screenWidth;
+    int screenHeight;
+
     bool commandMode = false;
     bool sentMap = false;
+    bool allowBreak = false;
     std::string commandInput = "";
     SDL_Rect commandBox;
     int command_box_width = WIDTH;
@@ -103,6 +107,7 @@ public:
 
     // Interactions With The Map
     void checkIfPosIsEnterable();
+    void checkIfPosIsBreakable();
 
     // Color functions
     void drawGreen();

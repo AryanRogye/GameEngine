@@ -1,5 +1,5 @@
 #include "world.h"
-#include "configs.h"
+#include <istream>
 
 World::World(
     SDL_Renderer* renderer,
@@ -53,6 +53,7 @@ void World::updateAndRender()
         this->renderPlayer();
         this->renderOtherPlayers();
         this->checkIfPosIsEnterable();
+        this->checkIfPosIsBreakable();
         const Uint8 *state = SDL_GetKeyboardState(NULL);
         handlePlayerMovement(state, dt);
         // Kinda Like Minecraft Black Box Chat thing
@@ -92,15 +93,18 @@ void World::handlePlayerMovement(const Uint8* state, float dt) {
     // Try horizontal movement
     player->setX(newX);
     player->updateWorldHitbox(hitboxOffsetX, hitboxOffsetY);
-    if (this->bf.checkCollision(player->getWorldHitbox(), this->mapData)) {
-        player->setX(originalX);
-    }
+    int colState = this->bf.checkBlockState(player->getWorldHitbox(), this->mapData);
 
+    if (colState & BlockState::COLLISION) {
+        player->setX(originalX);  // Undo horizontal movement
+    }
     // Try vertical movement
     player->setY(newY);
     player->updateWorldHitbox(hitboxOffsetX, hitboxOffsetY);
-    if (this->bf.checkCollision(player->getWorldHitbox(), this->mapData)) {
-        player->setY(originalY);
+    colState = this->bf.checkBlockState(player->getWorldHitbox(), this->mapData);
+
+    if (colState & BlockState::COLLISION) {
+        player->setY(originalY);  // Undo vertical movement
     }
 }
 
@@ -140,6 +144,7 @@ void World::handleEvent(SDL_Event e)
 
     if (e.type == SDL_KEYDOWN) {
         keyStates[e.key.keysym.sym] = true;  // ✅ Mark key as pressed
+
         if (this->enterHouse)
         {
             if (e.key.keysym.sym == SDLK_e)
@@ -148,6 +153,15 @@ void World::handleEvent(SDL_Event e)
                 std::cout << "Press E To Enter" << std::endl;
             }
         }
+
+        if (this->allowBreak)
+        {
+            if (e.key.keysym.sym == SDLK_e)
+            {
+                std::cout << "Press E To Break" << std::endl;
+            }
+        }
+
         if (this->commandMode)
         {
             // ✅ Moved command input here!
@@ -172,6 +186,17 @@ void World::handleEvent(SDL_Event e)
  * **/
 void World::setupWorld()
 {
+    /*// Get the screen dimensions*/
+    /*SDL_DisplayMode DM;*/
+    /*SDL_GetCurrentDisplayMode(0, &DM);  // Get primary display resolution*/
+    /**/
+    /*this->screenWidth = DM.w;*/
+    /*this->screenHeight = DM.h;*/
+    /**/
+    /*// Resize the window to match screen dimensions*/
+    /*SDL_SetWindowSize(this->window, screenWidth, screenHeight);*/
+    /*SDL_SetWindowPosition(this->window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);*/
+
     /** Start The Client **/
     this->client->handlePlayerJoined(this->client->getPlayer()->getName());
 
@@ -444,15 +469,50 @@ void World::renderCommandInput()
 }
 Client* World::getClient() { return client.get(); }
 
+void World::checkIfPosIsBreakable()
+{
+    int breakableState = this->bf.checkBlockState(this->client->getPlayer()->getWorldHitbox(), this->mapData);
+    if (breakableState & BlockState::BREAKABLE)
+    {
+        UI::renderTextAtPosition(
+            this->renderer,
+            this->font_texture,
+            this->fonts,
+            "Press [E] to Break",
+            20,
+            20,
+            FONT_WIDTH,
+            FONT_HEIGHT,
+            FONT_SCALE,
+            false,
+            1
+        );
+        this->allowBreak = true;
+    }
+}
+
 void World::checkIfPosIsEnterable()
 {
-    if(this->bf.checkEnterable(this->client->getPlayer()->getX(), this->client->getPlayer()->getY(), this->mapData))
+    int enterableState = this->bf.checkBlockState(this->client->getPlayer()->getWorldHitbox(), this->mapData);
+
+    if (enterableState & BlockState::ENTERABLE) 
     {
         this->enterHouse = true;
-        // Render Text To Screen That tells the person "oh you can enter"
-        UI::renderTextAtPosition(this->renderer, this->font_texture, this->fonts, "Press [E] to Enter", 20, 20, FONT_WIDTH, FONT_HEIGHT, FONT_SCALE, false, 1);
-    }
-    else
+        UI::renderTextAtPosition(
+            this->renderer,
+            this->font_texture,
+            this->fonts,
+            "Press [E] to Enter",
+            20,
+            20,
+            FONT_WIDTH,
+            FONT_HEIGHT,
+            FONT_SCALE,
+            false,
+            1
+        );
+    } 
+    else 
     {
         this->enterHouse = false;
     }
