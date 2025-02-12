@@ -10,6 +10,13 @@ struct Position {
     float y;
 };
 
+enum Facing {
+    LEFT,
+    RIGHT,
+    FORWARD,
+    BACKWARD
+};
+
 class Player {
 private:
     int id;
@@ -18,8 +25,8 @@ private:
     Position position;
     int width, height;
     float speed;
-    bool facingRight;
     bool isWalking;
+    Facing facing;
     int spriteIndex;
     SDL_Rect worldHitbox;
 public:
@@ -37,9 +44,10 @@ public:
     void setWidth(int width);
     void setHeight(int height);
     void setSpeed(float speed);
-    void setFacingRight(bool facingRight);
     void setIsWalking(bool isWalking);
     void setSpriteIndex(int spriteIndex);
+    void setFacing(Facing facing);
+
 
     // Getters
     int         getID();
@@ -51,10 +59,10 @@ public:
     int         getWidth();
     int         getHeight();
     float       getSpeed();
-    bool        getFacingRight();
     bool        getIsWalking();
     int         getSpriteIndex();
     SDL_Rect    getWorldHitbox();
+    Facing      getFacing();
 
     // Debug
     void print();

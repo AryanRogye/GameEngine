@@ -5,6 +5,7 @@
 #include "core/map_loader.h"
 #include "block.h"
 #include "configs.h"
+#include "shared/player.h"
 #include "rendering/sprite.h"
 #include <SDL2/SDL.h>
 #include <memory>
@@ -40,14 +41,28 @@ private:
     Uint32 lastFrameTime = 0;
     const Uint32 frameDelay = 180;  // How Long Each Frame of a Sprite Lasts
     SDL_Rect hitbox;
-    Sprite playerIdleSprite;        // Sprite for Player Idle
-    Sprite playerRunSprite;         // Sprite for Player Running
+
+    Sprite playerFrontIdleSprite;
+    Sprite playerBackIdleSprite;
+    Sprite playerSideIdleSprite;
+
+    Sprite playerFrontRunSprite;
+    Sprite playerBackRunSprite;
+    Sprite playerSideRunSprite;
     /** 
      * Player Stuff This Should Be Loaded At The Start 
      *      - Later On May Add Skins For Characters
      **/
-    SDL_Texture* playerIdleTexture;     // Texture for Player
-    SDL_Texture* playerRunTexture;    // Texture for Running
+
+    SDL_Texture* playerFrontIdleTexture;
+    SDL_Texture* playerBackIdleTexture;
+    SDL_Texture* playerSideIdleTexture;
+
+    SDL_Texture* playerFrontRunTexture;
+    SDL_Texture* playerBackRunTexture;
+    SDL_Texture* playerSideRunTexture;
+
+
     // For Sending to the server
     bool sendPlayerTexture = false;
     

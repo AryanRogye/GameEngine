@@ -12,8 +12,13 @@ std::string ASSET_PATH;
 std::string DATA_PATH;
 
 // Global sprite animation paths (declared, but initialized later)
-std::vector<Sprite> PlayerIdlePaths;
-std::vector<Sprite> PlayerRunningPaths;
+std::vector<Sprite> PlayerFrontIdlePaths;
+std::vector<Sprite> PlayerBackIdlePaths;
+std::vector<Sprite> PlayerSideIdlePaths;
+
+std::vector<Sprite> PlayerFrontRunningPaths;
+std::vector<Sprite> PlayerBackRunningPaths;
+std::vector<Sprite> PlayerSideRunningPaths;
 bool DEBUG;
 int spriteIndex;
 
@@ -51,16 +56,38 @@ void initializePaths() {
     DATA_PATH = exePath + "/../Data/configs.ini";
     loadHitboxConfig();
     ASSET_PATH = exePath + "/../Assets/";
+    std::string CHAR_PATH = "Characters/";
 
     // Now, initialize the sprite paths using the correct ASSET_PATH
-    PlayerIdlePaths = {
-        {"Girl", ASSET_PATH + "char_idle2.png", 0, 7},
-        {"Boy", ASSET_PATH + "char_idle1.png", 0, 5}
+    PlayerFrontIdlePaths = {
+        {"Girl", ASSET_PATH +   CHAR_PATH + "girl-1/front_idle.png", 0, 7},
+        {"Boy", ASSET_PATH +    CHAR_PATH + "boy-1/front_idle.png", 0, 5},
+        {"Boy2", ASSET_PATH +   CHAR_PATH + "boy-2/front_idle.png", 0, 7}
     };
-
-    PlayerRunningPaths = {
-        {"Girl", ASSET_PATH + "char_idle2.png", 0, 7},
-        {"Boy", ASSET_PATH + "char_idle1.png", 0, 5}
+    PlayerBackIdlePaths = {
+        {"Girl", ASSET_PATH +   CHAR_PATH + "girl-1/front_idle.png", 0, 7},
+        {"Boy", ASSET_PATH +    CHAR_PATH + "boy-1/front_idle.png", 0, 5},
+        {"Boy2", ASSET_PATH +   CHAR_PATH + "boy-2/back_idle.png", 0, 6}
+    };
+    PlayerSideIdlePaths = {
+        {"Girl", ASSET_PATH +   CHAR_PATH + "girl-1/front_idle.png", 0, 7},
+        {"Boy", ASSET_PATH +    CHAR_PATH + "boy-1/front_idle.png", 0, 5},
+        {"Boy2", ASSET_PATH +   CHAR_PATH + "boy-2/back_idle.png", 0, 7}
+    };
+    PlayerFrontRunningPaths = {
+        {"Girl", ASSET_PATH +   CHAR_PATH + "girl-1/front_idle.png", 0, 7},
+        {"Boy", ASSET_PATH +    CHAR_PATH + "boy-1/front_idle.png", 0, 5},
+        {"Boy2", ASSET_PATH +   CHAR_PATH + "boy-2/front_walk.png", 0, 4}
+    };
+    PlayerBackRunningPaths = {
+        {"Girl", ASSET_PATH +   CHAR_PATH + "girl-1/front_idle.png", 0, 7},
+        {"Boy", ASSET_PATH +    CHAR_PATH + "boy-1/front_idle.png", 0, 5},
+        {"Boy2", ASSET_PATH +   CHAR_PATH + "boy-2/back_walk.png", 0, 5}
+    };
+    PlayerSideRunningPaths = {
+        {"Girl", ASSET_PATH +   CHAR_PATH + "girl-1/front_idle.png", 0, 7},
+        {"Boy", ASSET_PATH +    CHAR_PATH + "boy-1/front_idle.png", 0, 5},
+        {"Boy2", ASSET_PATH +   CHAR_PATH + "boy-2/back_idle.png", 0, 7}
     };
 }
 

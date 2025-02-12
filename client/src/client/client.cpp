@@ -215,10 +215,10 @@ void Client::handleOtherPlayersMoved(uint8_t* buffer, ssize_t bytesRecieved, siz
             int newX = playerMoved.getX();
             
             if (newX > oldX) {
-                p->setFacingRight(true);
+                p->setFacing(Facing::RIGHT);
             }
             else if (newX < oldX) {
-                p->setFacingRight(false);
+                p->setFacing(Facing::LEFT);
             }
             // Update the player's position
             p->setX(newX);

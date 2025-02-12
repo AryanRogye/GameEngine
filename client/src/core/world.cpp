@@ -1,12 +1,16 @@
 #include "world.h"
-#include <istream>
 
 World::World(
     SDL_Renderer* renderer,
     SDL_Window* window
 )
-// Setting the player Run Sprites Through Here
-: playerRunSprite(PlayerRunningPaths[spriteIndex]), playerIdleSprite(PlayerIdlePaths[spriteIndex])
+:   
+    playerFrontIdleSprite(PlayerFrontIdlePaths[spriteIndex]), 
+    playerBackIdleSprite(PlayerBackIdlePaths[spriteIndex]), 
+    playerSideIdleSprite(PlayerSideIdlePaths[spriteIndex]),
+    playerFrontRunSprite(PlayerFrontRunningPaths[spriteIndex]), 
+    playerBackRunSprite(PlayerBackRunningPaths[spriteIndex]), 
+    playerSideRunSprite(PlayerSideRunningPaths[spriteIndex])
 {
 
     this->window = window;      /** Set Window **/
@@ -65,45 +69,68 @@ void World::updateAndRender()
 }
 
 
-void World::handlePlayerMovement(const Uint8* state, float dt) {
-    if (this->commandMode) return;  // Don't move if in command mode
+void World::handlePlayerMovement(const Uint8* state, float dt) 
+{
+    if (!this->keep_window_open) return;
+    if (this->commandMode) return;
 
     Player *player = this->client->getPlayer();
-    float newX = player->getX();
-    float newY = player->getY();
-    float speed = player->getSpeed();  // pixels per second
+    float speed = player->getSpeed();
 
-    bool moving = false;
+    float dx = 0.0f;
+    float dy = 0.0f;
 
-    // Store original position
-    float originalX = newX;
-    float originalY = newY;
+    // Track which directions are being pressed
+    bool pressedW = state[SDL_SCANCODE_W];
+    bool pressedS = state[SDL_SCANCODE_S];
+    bool pressedA = state[SDL_SCANCODE_A];
+    bool pressedD = state[SDL_SCANCODE_D];
 
-    if (state[SDL_SCANCODE_W]) { newY -= speed * dt; moving = true; }
-    if (state[SDL_SCANCODE_A]) { newX -= speed * dt; player->setFacingRight(false); moving = true; }
-    if (state[SDL_SCANCODE_S]) { newY += speed * dt; moving = true; }
-    if (state[SDL_SCANCODE_D]) { newX += speed * dt; player->setFacingRight(true); moving = true; }
+    // Set movement vector
+    if (pressedW) dy -= 1.0f;
+    if (pressedA) dx -= 1.0f;
+    if (pressedS) dy += 1.0f;
+    if (pressedD) dx += 1.0f;
 
+    // Set facing direction with priority
+    if (pressedS && !pressedW) player->setFacing(Facing::FORWARD);
+    else if (pressedW && !pressedS) player->setFacing(Facing::BACKWARD);
+    else if (pressedA && !pressedD) player->setFacing(Facing::LEFT);
+    else if (pressedD && !pressedA) player->setFacing(Facing::RIGHT);
+    // If no direction is pressed, keep the last facing direction
+
+    /*std::cout << "Current Facing : " << player->getFacing() << std::endl;*/
+
+    // Normalize the vector to ensure diagonal movement isn't faster
+    float length = std::sqrt(dx * dx + dy * dy);
+    if (length > 0.0f) {
+        dx /= length;
+        dy /= length;
+    }
+
+    // Apply movement
+    float newX = player->getX() + dx * speed * dt;
+    float newY = player->getY() + dy * speed * dt;
+    bool moving = (dx != 0.0f || dy != 0.0f);
     player->setIsWalking(moving);
 
-    // Update position and hitbox - note we can offset the hitbox however we want
-    int hitboxOffsetX = 0;  // Adjust these offsets to position the hitbox
-    int hitboxOffsetY = 0;  // wherever you want relative to player position
+    // Collision Handling
+    int hitboxOffsetX = 0;
+    int hitboxOffsetY = 0;
 
     // Try horizontal movement
+    float originalX = player->getX();
     player->setX(newX);
     player->updateWorldHitbox(hitboxOffsetX, hitboxOffsetY);
-    int colState = this->bf.checkBlockState(player->getWorldHitbox(), this->mapData);
-
-    if (colState & BlockState::COLLISION) {
+    if (this->bf.checkBlockState(player->getWorldHitbox(), this->mapData) & BlockState::COLLISION) {
         player->setX(originalX);  // Undo horizontal movement
     }
+
     // Try vertical movement
+    float originalY = player->getY();
     player->setY(newY);
     player->updateWorldHitbox(hitboxOffsetX, hitboxOffsetY);
-    colState = this->bf.checkBlockState(player->getWorldHitbox(), this->mapData);
-
-    if (colState & BlockState::COLLISION) {
+    if (this->bf.checkBlockState(player->getWorldHitbox(), this->mapData) & BlockState::COLLISION) {
         player->setY(originalY);  // Undo vertical movement
     }
 }
@@ -174,7 +201,10 @@ void World::handleEvent(SDL_Event e)
         }
     }
     else if (e.type == SDL_KEYUP) {
-        if (e.key.keysym.sym == SDLK_a || e.key.keysym.sym == SDLK_d) {
+        if (e.key.keysym.sym == SDLK_w || 
+            e.key.keysym.sym == SDLK_a || 
+            e.key.keysym.sym == SDLK_s || 
+            e.key.keysym.sym == SDLK_d) {
             Player *player = this->client->getPlayer();
             player->setIsWalking(false);
         }
@@ -226,14 +256,34 @@ void World::setupWorld()
      *      - Run
      **/
     if(!Texture::loadTexture(
-        this->playerIdleSprite.getPath(),
-        &this->playerIdleTexture,
+        this->playerFrontIdleSprite.getPath(),
+        &this->playerFrontIdleTexture,
         this->renderer
     )) std::cout << "Failed to load playerIdleTexture" << std::endl;
-
     if(!Texture::loadTexture(
-        this->playerRunSprite.getPath(),
-        &this->playerRunTexture,
+        this->playerBackIdleSprite.getPath(),
+        &this->playerBackIdleTexture,
+        this->renderer
+    )) std::cout << "Failed to load playerIdleTexture" << std::endl;
+    if(!Texture::loadTexture(
+        this->playerSideIdleSprite.getPath(),
+        &this->playerSideIdleTexture,
+        this->renderer
+    )) std::cout << "Failed to load playerIdleTexture" << std::endl;
+    
+    if(!Texture::loadTexture(
+        this->playerFrontRunSprite.getPath(),
+        &this->playerFrontRunTexture,
+        this->renderer
+    )) std::cout << "Failed to load playerRunTexture" << std::endl;
+    if(!Texture::loadTexture(
+        this->playerBackRunSprite.getPath(),
+        &this->playerBackRunTexture,
+        this->renderer
+    )) std::cout << "Failed to load playerRunTexture" << std::endl;
+    if(!Texture::loadTexture(
+        this->playerSideRunSprite.getPath(),
+        &this->playerSideRunTexture,
         this->renderer
     )) std::cout << "Failed to load playerRunTexture" << std::endl;
 
@@ -251,49 +301,80 @@ void World::loadFont()
 
 void World::renderMap()
 {
+    const int BORDER_SIZE = 48;
+    const int TILE_BUFFER = 2; // Add extra tiles to prevent pop-in
+    
     int srcTileSize = 16;
     const int displayTileSize = TILE_SIZE;
-
     int mapWidthInTiles = (mapData.size() > 0 ? mapData[0].size() : 0);
     int mapHeightInTiles = mapData.size();
-
     Player* player = this->client->getPlayer();
 
     // Camera follows player, centered
-    int camX = player->getX() + static_cast<int>(player->getWidth() / 2 - WIDTH / 2);
-    int camY = player->getY() + static_cast<int>(player->getHeight() / 2 - HEIGHT / 2);
+    int camX = player->getX() + static_cast<int>(player->getWidth() / 2 - (WIDTH - 2 * BORDER_SIZE) / 2);
+    int camY = player->getY() + static_cast<int>(player->getHeight() / 2 - (HEIGHT - 2 * BORDER_SIZE) / 2);
 
-    // **Calculate which tiles are visible on the screen**
-    int startX = std::max(0, camX / displayTileSize);
-    int startY = std::max(0, camY / displayTileSize);
-    int endX = std::min(mapWidthInTiles, (camX + WIDTH) / displayTileSize + 1);
-    int endY = std::min(mapHeightInTiles, (camY + HEIGHT) / displayTileSize + 1);
+    // Calculate visible area with buffer
+    int startX = std::max(0, (camX - BORDER_SIZE) / displayTileSize - TILE_BUFFER);
+    int startY = std::max(0, (camY - BORDER_SIZE) / displayTileSize - TILE_BUFFER);
+    int endX = std::min(mapWidthInTiles, (camX + WIDTH) / displayTileSize + TILE_BUFFER);
+    int endY = std::min(mapHeightInTiles, (camY + HEIGHT) / displayTileSize + TILE_BUFFER);
 
-    // **Loop only through visible tiles**
+    // Render black border
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    
+    // Top border
+    SDL_Rect topBorder = {0, 0, WIDTH, BORDER_SIZE};
+    SDL_RenderFillRect(renderer, &topBorder);
+    
+    // Bottom border
+    SDL_Rect bottomBorder = {0, HEIGHT - BORDER_SIZE, WIDTH, BORDER_SIZE};
+    SDL_RenderFillRect(renderer, &bottomBorder);
+    
+    // Left border
+    SDL_Rect leftBorder = {0, 0, BORDER_SIZE, HEIGHT};
+    SDL_RenderFillRect(renderer, &leftBorder);
+    
+    // Right border
+    SDL_Rect rightBorder = {WIDTH - BORDER_SIZE, 0, BORDER_SIZE, HEIGHT};
+    SDL_RenderFillRect(renderer, &rightBorder);
+
+    // Create a clip rectangle for the visible area
+    SDL_Rect clipRect = {
+        BORDER_SIZE, 
+        BORDER_SIZE, 
+        WIDTH - 2 * BORDER_SIZE, 
+        HEIGHT - 2 * BORDER_SIZE
+    };
+    SDL_RenderSetClipRect(renderer, &clipRect);
+
+    // Render tiles
     for (int y = startY; y < endY; y++)
     {
         for (int x = startX; x < endX; x++)
         {
             int tileIndex = mapData[y][x] - 1;
-
             if (tileIndex >= 0 && tileIndex < tiles.size())
             {
                 SDL_Rect destRect = {
-                    x * displayTileSize - camX,  // Apply camera offset
-                    y * displayTileSize - camY,
+                    x * displayTileSize - camX + BORDER_SIZE,
+                    y * displayTileSize - camY + BORDER_SIZE,
                     displayTileSize,
                     displayTileSize
                 };
-
                 SDL_RenderCopy(this->renderer, this->tileAtlasTexture, &this->tiles[tileIndex], &destRect);
             }
         }
     }
+
+    // Reset clip rectangle
+    SDL_RenderSetClipRect(renderer, NULL);
 }
 
 
 void World::updateServer(float *oldX, float *oldY)
 {
+    if (!this->keep_window_open) return;
     Player* player = this->client->getPlayer();
     // Only Call This if the Player has Moved
     if(*oldX != player->getX() || *oldY != player->getY()) {
@@ -304,7 +385,7 @@ void World::updateServer(float *oldX, float *oldY)
 
     if (!this->sendPlayerTexture) {
         std::cout << "Sending Palyer Texture" << std::endl;
-        if (this->playerIdleTexture || this->playerRunTexture)
+        if (this->playerFrontIdleTexture || this->playerFrontRunTexture)
         {
             // Send The Player Texture to the server
             // We will just send the index that is chosen
@@ -340,6 +421,7 @@ void World::updateServer(float *oldX, float *oldY)
 
 void World::renderPlayer()
 {
+    if (this->keep_window_open == false) return;
     Player* player = this->client->getPlayer();
     Uint32 now = SDL_GetTicks();
     int feetY = player->getY() + player->getHeight();
@@ -351,25 +433,124 @@ void World::renderPlayer()
 
     if (!player->getIsWalking())
     {
-        // First Thing Reset the Running Frame
-        this->playerRunSprite.setCurrentFrame(0);
-        if (now - this->lastFrameTime >= this->frameDelay)
+        switch(player->getFacing())
         {
-            this->playerIdleSprite.setCurrentFrame((this->playerIdleSprite.getCurrentFrame() + 1) % this->playerIdleSprite.getFrameCount());
-            this->lastFrameTime = now;
+            case Facing::FORWARD:
+                std::cout << "Showing Forward" << std::endl;
+                this->playerSideIdleSprite.setCurrentFrame(0);
+                this->playerBackIdleSprite.setCurrentFrame(0);
+                this->playerFrontRunSprite.setCurrentFrame(0);
+                this->playerBackRunSprite.setCurrentFrame(0);
+                this->playerSideRunSprite.setCurrentFrame(0);
+
+                if (now - this->lastFrameTime >= this->frameDelay)
+                {
+                    this->playerFrontIdleSprite.setCurrentFrame((this->playerFrontIdleSprite.getCurrentFrame() + 1) % this->playerFrontIdleSprite.getFrameCount());
+                    this->lastFrameTime = now;
+                }
+                if (spriteIndex == 2)
+                    Sprite::renderSprite(this->playerFrontIdleSprite, this->renderer, playerFrontIdleTexture, 32, 32, player, this->hitbox);
+                else
+                    Sprite::renderSprite(this->playerFrontIdleSprite, this->renderer, playerFrontIdleTexture, 30, 45, player, this->hitbox);
+                break;
+            case Facing::BACKWARD:
+                std::cout << "Showing Backward" << std::endl;
+                this->playerFrontIdleSprite.setCurrentFrame(0);
+                this->playerSideIdleSprite.setCurrentFrame(0);
+                this->playerFrontRunSprite.setCurrentFrame(0);
+                this->playerSideRunSprite.setCurrentFrame(0);
+                this->playerBackRunSprite.setCurrentFrame(0);
+
+                if (now - this->lastFrameTime >= this->frameDelay)
+                {
+                    this->playerBackIdleSprite.setCurrentFrame((this->playerBackIdleSprite.getCurrentFrame() + 1) % this->playerBackIdleSprite.getFrameCount());
+                    this->lastFrameTime = now;
+                }
+                if (spriteIndex == 2)
+                    Sprite::renderSprite(this->playerBackIdleSprite, this->renderer, playerBackIdleTexture, 32, 32, player, this->hitbox);
+                else
+                    Sprite::renderSprite(this->playerBackIdleSprite, this->renderer, playerBackIdleTexture, 30, 45, player, this->hitbox);
+                break;
+            case Facing::LEFT:
+            case Facing::RIGHT:
+                // Set All The Other Sprites to 0
+                this->playerFrontIdleSprite.setCurrentFrame(0);
+                this->playerBackIdleSprite.setCurrentFrame(0);
+                this->playerFrontRunSprite.setCurrentFrame(0);
+                this->playerBackRunSprite.setCurrentFrame(0);
+                this->playerSideRunSprite.setCurrentFrame(0);
+
+                if (now - this->lastFrameTime >= this->frameDelay)
+                {
+                    this->playerSideIdleSprite.setCurrentFrame((this->playerSideIdleSprite.getCurrentFrame() + 1) % this->playerSideIdleSprite.getFrameCount());
+                    this->lastFrameTime = now;
+                }
+                if (spriteIndex == 2)
+                    Sprite::renderSprite(this->playerSideIdleSprite, this->renderer, playerSideIdleTexture, 32, 32, player, this->hitbox);
+                else
+                    Sprite::renderSprite(this->playerSideIdleSprite, this->renderer, playerSideIdleTexture, 30, 45, player, this->hitbox);
+                break;
         }
-        Sprite::renderSprite(this->playerIdleSprite, this->renderer, playerIdleTexture, 30, 45, player, this->hitbox);
     }
     else
     {
-        // First Thing Reset the Idle Frame
-        this->playerIdleSprite.setCurrentFrame(0);
-        if (now - this->lastFrameTime >= this->frameDelay)
+        switch (player->getFacing())
         {
-            this->playerRunSprite.setCurrentFrame ( (this->playerRunSprite.getCurrentFrame() + 1) % this->playerRunSprite.getFrameCount());
-            this->lastFrameTime = now;
+            case Facing::FORWARD:
+                this->playerSideIdleSprite.setCurrentFrame(0);
+                this->playerBackIdleSprite.setCurrentFrame(0);
+                this->playerFrontIdleSprite.setCurrentFrame(0);
+                this->playerSideRunSprite.setCurrentFrame(0);
+                this->playerBackRunSprite.setCurrentFrame(0);
+                
+                if (now - this->lastFrameTime >= this->frameDelay)
+                {
+                    this->playerFrontRunSprite.setCurrentFrame((this->playerFrontRunSprite.getCurrentFrame() + 1) % this->playerFrontRunSprite.getFrameCount());
+                    this->lastFrameTime = now;
+                }
+                if (spriteIndex == 2)
+                    Sprite::renderSprite(this->playerFrontRunSprite, this->renderer, playerFrontRunTexture, 32, 32, player, this->hitbox);
+                else
+                    Sprite::renderSprite(this->playerFrontRunSprite, this->renderer, playerFrontRunTexture, 30, 45, player, this->hitbox);
+            break;
+            case Facing::BACKWARD:
+                this->playerFrontIdleSprite.setCurrentFrame(0);
+                this->playerSideIdleSprite.setCurrentFrame(0);
+                this->playerBackIdleSprite.setCurrentFrame(0);
+                this->playerSideRunSprite.setCurrentFrame(0);
+                this->playerFrontRunSprite.setCurrentFrame(0);
+
+                if (now - this->lastFrameTime >= this->frameDelay)
+                {
+                    this->playerBackRunSprite.setCurrentFrame((this->playerBackRunSprite.getCurrentFrame() + 1) % this->playerBackRunSprite.getFrameCount());
+                    this->lastFrameTime = now;
+                }
+
+                if (spriteIndex == 2)
+                    Sprite::renderSprite(this->playerBackRunSprite, this->renderer, playerBackRunTexture, 32, 32, player, this->hitbox);
+                else
+                    Sprite::renderSprite(this->playerBackRunSprite, this->renderer, playerBackRunTexture, 30, 45, player, this->hitbox);
+                break;
+            case Facing::LEFT:
+            case Facing::RIGHT:
+                this->playerFrontIdleSprite.setCurrentFrame(0);
+                this->playerBackIdleSprite.setCurrentFrame(0);
+                this->playerSideIdleSprite.setCurrentFrame(0);
+                this->playerFrontRunSprite.setCurrentFrame(0);
+                this->playerBackRunSprite.setCurrentFrame(0);
+
+                if (now - this->lastFrameTime >= this->frameDelay)
+                {
+                    this->playerSideRunSprite.setCurrentFrame((this->playerSideRunSprite.getCurrentFrame() + 1) % this->playerSideRunSprite.getFrameCount());
+                    this->lastFrameTime = now;
+                }
+                if (spriteIndex == 2)
+                    Sprite::renderSprite(this->playerSideRunSprite, this->renderer, playerSideRunTexture, 32, 32, player, this->hitbox);
+                else
+                    Sprite::renderSprite(this->playerSideRunSprite, this->renderer, playerSideRunTexture, 30, 45, player, this->hitbox);
+
+                break;
         }
-        Sprite::renderSprite(this->playerRunSprite, this->renderer, this->playerRunTexture, 30, 45, player, this->hitbox);
     }
     if (DEBUG)
         Sprite::renderDebugHitbox(this->renderer, hitbox);
@@ -381,7 +562,7 @@ void World::renderPlayer()
             this->fonts,
             this->bf.returnBlockInfoByPosition(centerX, feetY, this->mapData),
             20,
-            HEIGHT - 20,
+            HEIGHT - 25,
             FONT_WIDTH,
             FONT_HEIGHT,
             FONT_SCALE,
@@ -398,6 +579,7 @@ void World::drawYellow() { SDL_SetRenderDrawColor(this->renderer, 255, 255, 0, 2
 
 void World::renderOtherPlayers()
 {
+    if (this->keep_window_open == false) return;
     const auto& remotePlayers = this->client->getPlayersSafe();
     // Set a different color for remote players
     this->drawGreen();
@@ -427,14 +609,14 @@ void World::renderOtherPlayers()
         if (remotePlayer->getSpriteIndex() != -1)
         {
             SDL_Texture* player_texture = nullptr;
-            if (!Texture::loadTexture(PlayerIdlePaths[remotePlayer->getSpriteIndex()].getPath(), &player_texture, this->renderer))
+            if (!Texture::loadTexture(PlayerFrontIdlePaths[remotePlayer->getSpriteIndex()].getPath(), &player_texture, this->renderer))
                 std::cout << " Failed to load player texture " << std::endl;
 
             // if We make it in here we need to change the width and the height of the remotePlayerRect
             remotePlayerRect.w = 30;
             remotePlayerRect.h = 45;
 
-            Sprite::renderSprite(PlayerIdlePaths[remotePlayer->getSpriteIndex()], this->renderer, player_texture, remotePlayerRect, remotePlayer);
+            Sprite::renderSprite(PlayerFrontIdlePaths[remotePlayer->getSpriteIndex()], this->renderer, player_texture, remotePlayerRect, remotePlayer);
             displayed = true;
          }
         if (!displayed)
@@ -447,6 +629,7 @@ void World::renderOtherPlayers()
 // Transparent Skinny Box Stetching across the screen
 void World::renderCommandInput()
 {
+    if (!this->keep_window_open) return;
     if (this->commandMode)
     {
         this->commandBox.x = this->command_box_x;
@@ -471,6 +654,7 @@ Client* World::getClient() { return client.get(); }
 
 void World::checkIfPosIsBreakable()
 {
+    if(!this->keep_window_open) return;
     int breakableState = this->bf.checkBlockState(this->client->getPlayer()->getWorldHitbox(), this->mapData);
     if (breakableState & BlockState::BREAKABLE)
     {
@@ -493,6 +677,7 @@ void World::checkIfPosIsBreakable()
 
 void World::checkIfPosIsEnterable()
 {
+    if(!this->keep_window_open) return;
     int enterableState = this->bf.checkBlockState(this->client->getPlayer()->getWorldHitbox(), this->mapData);
 
     if (enterableState & BlockState::ENTERABLE) 

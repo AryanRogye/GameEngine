@@ -1,4 +1,5 @@
 #include "rendering/sprite.h"
+#include "SDL2/SDL_render.h"
 #include <_wchar.h>
 
 Sprite::Sprite(std::string name, std::string path, int currentFrame, int frameCount)
@@ -53,7 +54,9 @@ void Sprite::fillRectVector(std::vector<SDL_Rect>& rect, int atlasWidth, int atl
 void Sprite::renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* texture, const SDL_Rect &destRect, Player* player)
 {
     SDL_Rect srcRect = { sprite.getCurrentFrame() * destRect.w, 0, destRect.w, destRect.h };
-    SDL_RendererFlip flip = player->getFacingRight() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+    SDL_RendererFlip flip = SDL_FLIP_NONE;
+    if (player->getFacing() == Facing::RIGHT) { flip = SDL_FLIP_HORIZONTAL; }
+    else { flip = SDL_FLIP_NONE; }
     if (SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, 0.0, NULL, flip) != 0)
     {
         std::cout << "(Sprite) Error: " << SDL_GetError() << std::endl;
@@ -65,7 +68,10 @@ void Sprite::renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* te
 {
     SDL_Rect srcRect = { sprite.getCurrentFrame() * width, 0, width, height };
     SDL_Rect destRect = { static_cast<int>(player->getX() - camX), static_cast<int>(player->getY() - camY), PLAYER_WIDTH, PLAYER_HEIGHT };
-    SDL_RendererFlip flip = player->getFacingRight() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+    SDL_RendererFlip flip = SDL_FLIP_NONE;
+    if (player->getFacing() == Facing::RIGHT) { flip = SDL_FLIP_HORIZONTAL; }
+    else { flip = SDL_FLIP_NONE; }
+
     if (SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, 0.0, NULL, flip) != 0)
     {
         std::cout << "(Sprite) Error: " << SDL_GetError() << std::endl;
@@ -90,7 +96,9 @@ void Sprite::renderSprite(Sprite sprite, SDL_Renderer* renderer, SDL_Texture* te
     };
 
     // Determine if the sprite should be flipped horizontally
-    SDL_RendererFlip flip = player->getFacingRight() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+    SDL_RendererFlip flip = SDL_FLIP_NONE;
+    if (player->getFacing() == Facing::RIGHT) { flip = SDL_FLIP_HORIZONTAL; }
+    else { flip = SDL_FLIP_NONE; }
     // Render the sprite with the flip
     if (SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, 0.0, NULL, flip) != 0)
     {

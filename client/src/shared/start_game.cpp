@@ -58,20 +58,32 @@ void StartGame::renderCharacterSelection()
     Uint32 now = SDL_GetTicks();
     if (now - this->lastFrameTime > this->frameDelay)
     {
-        PlayerIdlePaths[spriteIndex].setCurrentFrame((
-            PlayerIdlePaths[spriteIndex].getCurrentFrame() + 1
-        ) % PlayerIdlePaths[spriteIndex].getFrameCount());
+        PlayerFrontIdlePaths[spriteIndex].setCurrentFrame((
+            PlayerFrontIdlePaths[spriteIndex].getCurrentFrame() + 1
+        ) % PlayerFrontIdlePaths[spriteIndex].getFrameCount());
         this->lastFrameTime = now;
     }
     // Define the source rectangle if using a sprite sheet (assuming each sprite is 30x30)
-    Sprite::renderSprite(
-        PlayerIdlePaths[spriteIndex],
-        this->renderer, 
-        this->character_textures[spriteIndex], 
-        this->character_rect, 
-        30, 
-        45
-    );
+    if (spriteIndex == 2)
+    {
+        Sprite::renderSprite(
+            PlayerFrontIdlePaths[spriteIndex],
+            this->renderer, 
+            this->character_textures[spriteIndex], 
+            this->character_rect, 
+            32,
+            32
+        );
+    } else {
+        Sprite::renderSprite(
+            PlayerFrontIdlePaths[spriteIndex],
+            this->renderer, 
+            this->character_textures[spriteIndex], 
+            this->character_rect, 
+            30, 
+            45
+        );
+    }
 }
 std::vector<int> getCharacterIndices(const std::string& input) {
     std::vector<int> indices;
@@ -128,7 +140,7 @@ void StartGame::renderStartButton()
 
 void StartGame::loadCharacterTextures()
 {
-    for (auto& character : PlayerIdlePaths)
+    for (auto& character : PlayerFrontIdlePaths)
     {
         SDL_Surface* character_surface = IMG_Load(character.getPath().c_str());
         std::cout << "File Path: " << character.getPath() << std::endl;
@@ -230,7 +242,7 @@ void StartGame::handleEvent(SDL_Event e)
         {
             std::cout << "Start Button Clicked" << std::endl;
             // We Will Pass The Selected Character To The Game
-            PlayerIdlePaths[spriteIndex].setCurrentFrame(0);
+            PlayerFrontIdlePaths[spriteIndex].setCurrentFrame(0);
             
             this->keep_window_open = false;
             // Close This Window And Everything Related To It
@@ -244,12 +256,12 @@ void StartGame::handleEvent(SDL_Event e)
         if(this->checkButtonClicked(this->forward_arrow_rect, mouseX, mouseY))
         {
             std::cout << "Forward Arrow Clicked" << std::endl;
-            spriteIndex = (spriteIndex + 1) % PlayerIdlePaths.size();
+            spriteIndex = (spriteIndex + 1) % PlayerFrontIdlePaths.size();
         }
         if(this->checkButtonClicked(this->backward_arrow_rect, mouseX, mouseY))
         {
             std::cout << "Backward Arrow Clicked" << std::endl;
-            spriteIndex = (spriteIndex - 1) % PlayerIdlePaths.size();
+            spriteIndex = (spriteIndex - 1) % PlayerFrontIdlePaths.size();
         }
     }
 }

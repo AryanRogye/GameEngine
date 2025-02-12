@@ -20,8 +20,13 @@ extern std::string DATA_PATH;
 
 // Global vectors for character animations
 class Sprite;
-extern std::vector<Sprite> PlayerIdlePaths;
-extern std::vector<Sprite> PlayerRunningPaths;
+extern std::vector<Sprite> PlayerFrontIdlePaths;
+extern std::vector<Sprite> PlayerBackIdlePaths;
+extern std::vector<Sprite> PlayerSideIdlePaths;
+extern std::vector<Sprite> PlayerFrontRunningPaths;
+extern std::vector<Sprite> PlayerBackRunningPaths;
+extern std::vector<Sprite> PlayerSideRunningPaths;
+
 extern bool DEBUG;
 extern int spriteIndex;
 
