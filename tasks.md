@@ -70,3 +70,9 @@ graph TD;
     D --> E["5️⃣ Client UI & Feedback Improvements"];
     E --> F["6️⃣ Villager Interaction System"];
 ```
+
+## 4 Asset Drawing
+- elevation tiles (multiple)
+- river tiles
+- house tiles (at least 3 more)
+- allow house tiles to be different sizes for different results
