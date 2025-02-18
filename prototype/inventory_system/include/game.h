@@ -9,7 +9,7 @@
 
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
-#include "gui_values.h"
+#include "debug_gui.h"
 
 
 /** 
@@ -25,9 +25,7 @@ class Game
 private:
 
     std::vector<bool> layerInfo;
-    GuiValues guiValues;
 
-    float mapScale = 3;
 
     SDL_Window *window;
     SDL_Renderer *renderer;

@@ -1,0 +1,5 @@
+prototype/inventory_system/include/third_party/
+external/
+vendor/
+deps/
+lib/

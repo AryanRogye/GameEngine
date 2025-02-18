@@ -32,6 +32,7 @@ set(IMGUI_SOURCES
 
 add_executable(prototype_map_system
     src/game.cpp
+    src/debug_gui.cpp
     src/main.cpp
     ${IMGUI_SOURCES}  # Add ImGui source files to the build
 )

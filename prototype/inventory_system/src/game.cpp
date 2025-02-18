@@ -15,6 +15,7 @@ void Game::start_game()
     this->loadMap();
     this->layerInfo.resize(TSDL::getLayersSize(this->map));
     // fill it with false
+    // TODO Move out of here to gui
     std::fill(this->layerInfo.begin(), this->layerInfo.end(), true);
 
     while (this->running)
@@ -51,66 +52,9 @@ void Game::start_game()
     SDL_Quit();
 }
 
-void Game::renderGui()
-{
-    if (!this->guiValues.toggleGui) return; // Only render if debug UI is enabled
 
-    ImGui_ImplSDLRenderer2_NewFrame();
-    ImGui_ImplSDL2_NewFrame();
-    ImGui::NewFrame();
 
-    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_FirstUseEver);
-
-    ImGui::Begin("Debug Window", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-    ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-
-    if (ImGui::Button("Toggle Layers"))
-    {
-        this->guiValues.showLayerInfo = !this->guiValues.showLayerInfo;
-    }
-    ImGui::SameLine();
-    ImGui::Text(this->guiValues.showLayerInfo ? "On" : "Off");
-
-    for (int i = 0; i < this->layerInfo.size(); i++)
-    {
-        if (ImGui::Button(std::to_string(i).c_str()))
-        {
-            this->layerInfo[i] = !this->layerInfo[i];
-        }
-        ImGui::SameLine();
-        ImGui::Text(this->layerInfo[i] ? "On" : "Off");
-    }
-
-    // checkbox to allow color for different tsx
-    ImGui::Checkbox("Color for different tsx", &this->guiValues.colorForDifferentTexture);
-    ImGui::Checkbox("Show Grid Over Textture", &this->guiValues.drawGridOverTexture);
-
-    // Allow slider to change the map scale
-    ImGui::SliderFloat("Map Scale", &this->mapScale, 1.0f, 10.0f);
-
-    ImGui::End();
-
-    ImGui::Render();
-    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), this->renderer);
-}
-
-void Game::initGui()
-{
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-
-    ImGui_ImplSDL2_InitForSDLRenderer(this->window, this->renderer);
-    ImGui_ImplSDLRenderer2_Init(this->renderer);
-}
-
-void Game::drawMap()
-{
-    TSDL::drawMap(this->renderer,this->font ,this->fontNumbers, this->map, this->mapScale, this->layerInfo, this->guiValues); 
-}
-
+void Game::drawMap() { TSDL::drawMap(this->renderer,this->font ,this->fontNumbers, this->map, this->layerInfo);  }
 void Game::loadMap()
 {
     std::string path = __FILE__;
@@ -122,7 +66,6 @@ void Game::loadMap()
     }
 }
 
-
 void Game::handleEvent(SDL_Event e)
 {
     if (e.type == SDL_QUIT)
@@ -130,7 +73,7 @@ void Game::handleEvent(SDL_Event e)
         this->running = false;
     }
 
-    if (this->guiValues.toggleGui)
+    if (DebugGUI::guiValues.toggleGui)
     {
         ImGui_ImplSDL2_ProcessEvent(&e);
     }
@@ -138,7 +81,7 @@ void Game::handleEvent(SDL_Event e)
     // Toggle ImGui UI with Command + D
     if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_d && (SDL_GetModState() & KMOD_GUI))
     {
-        this->guiValues.toggleGui = !this->guiValues.toggleGui;
+        DebugGUI::guiValues.toggleGui = !DebugGUI::guiValues.toggleGui;
     }
 }
 
@@ -230,3 +173,6 @@ void Game::initRenderer()
         return;
     }
 }
+
+void Game::initGui() { DebugGUI::Init(this->window, this->renderer); }
+void Game::renderGui() { DebugGUI::Render(this->renderer); }

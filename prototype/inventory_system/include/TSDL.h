@@ -15,8 +15,7 @@ This is my implimentation of loading a Tiled map into a SDL Game.
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <pugixml.hpp>
-
-#include "gui_values.h"
+#include "debug_gui.h"
 
 using json = nlohmann::json;
 
@@ -265,14 +264,12 @@ public:
         TTF_Font *font,
         std::vector<SDL_Texture*> fontNumbers,
         TSDL_TileMap &tileMap,
-        float mapScale,
-        std::vector<bool> &layerInfo,
-        struct GuiValues guiValues = {}
+        std::vector<bool> &layerInfo
     )
     {
-        if (mapScale <= 0)
+        if (DebugGUI::guiValues.mapScale <= 0)
         {
-            mapScale = 1;
+            DebugGUI::guiValues.mapScale = 1;
         }
         /**
         So in this 0 is the bottom layer and the highest is the top layer we wanna
@@ -333,7 +330,7 @@ public:
                     if (!texture) continue; // Skip if the texture wasn't created properly
 
                     // This is a Debug Info Map to show the tile numbers and dfiferent layers
-                    if (guiValues.showLayerInfo)
+                    if (DebugGUI::guiValues.showLayerInfo)
                     {
                         // Get the texture for this number
                         SDL_Texture *textTexture = fontNumbers[tileIndex];
@@ -344,28 +341,42 @@ public:
                         SDL_QueryTexture(textTexture, NULL, NULL, &textW, &textH);
 
                         // Scale text size to match map scale
-                        float scaledTextW = textW * mapScale;
-                        float scaledTextH = textH * mapScale;
+                        float scaledTextW = textW * DebugGUI::guiValues.mapScale;
+                        float scaledTextH = textH * DebugGUI::guiValues.mapScale;
 
                         // Set position inside the tile (centered)
                         SDL_FRect textRect = {
-                            (x + 0.5f) * tileMap.tileWidth * mapScale - (scaledTextW / 2.0f), 
-                            (y + 0.5f) * tileMap.tileHeight * mapScale - (scaledTextH / 2.0f), 
+                            (x + 0.5f) * tileMap.tileWidth * DebugGUI::guiValues.mapScale - (scaledTextW / 2.0f), 
+                            (y + 0.5f) * tileMap.tileHeight * DebugGUI::guiValues.mapScale - (scaledTextH / 2.0f), 
                             scaledTextW, scaledTextH
                         };
 
                         // Create a rectangle for the tile boundary
                         SDL_FRect rect = {
-                            x * tileMap.tileWidth * mapScale, 
-                            y * tileMap.tileHeight * mapScale, 
-                            tileMap.tileWidth * mapScale, 
-                            tileMap.tileHeight * mapScale
+                            x * tileMap.tileWidth * DebugGUI::guiValues.mapScale, 
+                            y * tileMap.tileHeight * DebugGUI::guiValues.mapScale, 
+                            tileMap.tileWidth * DebugGUI::guiValues.mapScale, 
+                            tileMap.tileHeight * DebugGUI::guiValues.mapScale
                         };
 
+                        if (DebugGUI::guiValues.colorForDifferentLayer && DebugGUI::guiValues.colorForDifferentTexture)
+                        {
+                            DebugGUI::guiValues.colorForDifferentTexture = false;
+                            DebugGUI::guiValues.colorForDifferentLayer = false;
+                        }
+
                         // Get the tileset color dynamically (only if colorForDifferentTsx is enabled)
-                        if (guiValues.colorForDifferentTexture)
+                        if (DebugGUI::guiValues.colorForDifferentTexture)
                         {
                             SDL_Color color = getTilesetColor(textureIndex);
+                            SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+                            SDL_RenderFillRectF(renderer, &rect); // Fill background color
+                        }
+
+                        if (DebugGUI::guiValues.colorForDifferentLayer)
+                        {
+                            // Get the layer color dynamically
+                            SDL_Color color = getTilesetColor(i);
                             SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
                             SDL_RenderFillRectF(renderer, &rect); // Fill background color
                         }
@@ -390,17 +401,17 @@ public:
 
                         // Calculate the destination rectangle (on screen)
                         SDL_FRect destRect = {
-                            x * tileMap.tileWidth * float(mapScale), 
-                            y * tileMap.tileHeight * float(mapScale), 
-                            tileMap.tileWidth * float(mapScale), 
-                            tileMap.tileHeight * float(mapScale)
+                            x * tileMap.tileWidth * float(DebugGUI::guiValues.mapScale), 
+                            y * tileMap.tileHeight * float(DebugGUI::guiValues.mapScale), 
+                            tileMap.tileWidth * float(DebugGUI::guiValues.mapScale), 
+                            tileMap.tileHeight * float(DebugGUI::guiValues.mapScale)
                         };
 
                         // Render the tile with floating-point precision
                         SDL_RenderCopyF(renderer, texture, &srcRect, &destRect);
 
                         // draw grid if enabled
-                        if (guiValues.drawGridOverTexture)
+                        if (DebugGUI::guiValues.drawGridOverTexture)
                         {
                             SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
                             SDL_RenderDrawRectF(renderer, &destRect);
