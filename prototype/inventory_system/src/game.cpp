@@ -1,4 +1,6 @@
 #include "game.h"
+#include "comfy_lib.h"
+#include "debug_gui.h"
 #include "imgui.h"
 #include <SDL_ttf.h>
 #define WIDTH 800
@@ -12,24 +14,33 @@ void Game::start_game()
     std::cout << "======================================" << std::endl;
 
     this->running = true;
-    this->loadMap();
     this->layerInfo.resize(TSDL::getLayersSize(this->map));
     // fill it with false
     // TODO Move out of here to gui
     std::fill(this->layerInfo.begin(), this->layerInfo.end(), true);
+
+    time_t lastTime = -1;
+    time_t currentTime = 0;
 
     while (this->running)
     {
         SDL_Event e; while(SDL_PollEvent(&e)) this->handleEvent(e);  
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); SDL_RenderClear(renderer);
 
+        // Hot Reload
+        fileChanged(currentTime);
+        if (lastTime != currentTime)
+        {
+            DebugGUI::addDebugLog("File Changed", false, "FILE");
+            this->loadMap();
+            lastTime = currentTime;
+        }
         // Draw Here
         this->drawMap();
         this->renderGui();
 
         SDL_RenderPresent(this->renderer);
         SDL_Delay(16);
-
     }
 
     // Cleanup
@@ -52,18 +63,31 @@ void Game::start_game()
     SDL_Quit();
 }
 
-
-
-void Game::drawMap() { TSDL::drawMap(this->renderer,this->font ,this->fontNumbers, this->map, this->layerInfo);  }
+void Game::drawMap() { TSDL::drawMap(this->renderer,this->font ,this->fontNumbers, this->map);  }
 void Game::loadMap()
 {
-    std::string path = __FILE__;
-    path = path.substr(0, path.find_last_of("/"));
-    if (!TSDL::loadMap(this->renderer, this->map, path + "/../assets/map.json",  path + "/../assets/"))
+    
+    // TODO: Gonna change logic to now load through Data/map_data.ini file which will have the path
+    std::string path;
+    fetchMapConfigs(path);
+
+    std::cout << "Got Path: " << path << std::endl;
+    
+    // Load Debug Gui Values
+    // turn vector of bool to all false
+
+    // clear the map
+    this->map = {};
+
+    if (!TSDL::loadMap(this->renderer, this->map, path, path))
     {
         std::cout << "❌ Failed to load map" << std::endl;
         return;
     }
+    DebugGUI::guiValues.layerInfo.resize(TSDL::getLayersSize(this->map));
+    std::fill(DebugGUI::guiValues.layerInfo.begin(), DebugGUI::guiValues.layerInfo.end(), true);
+    std::cout << "Layer Info Size: " << DebugGUI::guiValues.layerInfo.size() << std::endl;
+
 }
 
 void Game::handleEvent(SDL_Event e)
@@ -99,7 +123,7 @@ Game::Game()
         return;
     }
 
-    this->font = TTF_OpenFont("/Library/Fonts/SF-Pro.ttf", 10);
+    this->font = TTF_OpenFont("/Users/aryanrogye/Library/Fonts/FiraCodeNerdFontMono-Regular.ttf", 10);
     if (!font)
     {
         std::cerr << "❌ Error: Failed to load font: " << TTF_GetError() << std::endl;
@@ -121,18 +145,18 @@ void Game::loadFontNumbers()
         SDL_Surface *surface = TTF_RenderText_Solid(this->font, std::to_string(i).c_str(), {255, 255, 255});
         if (!surface)
         {
-            std::cerr << "❌ Error: Failed to load font numbers: " << TTF_GetError() << std::endl;
+            DebugGUI::addDebugLog("Failed to create surface from text", false, "FONT");
             return;
         }
         this->fontNumbers[i] = SDL_CreateTextureFromSurface(this->renderer, surface);
         if (!this->fontNumbers[i])
         {
-            std::cerr << "❌ Error: Failed to load font numbers: " << SDL_GetError() << std::endl;
+            DebugGUI::addDebugLog("Failed to create texture from surface", false, "FONT");
             return;
         }
         SDL_FreeSurface(surface);
     }
-    std::cout << "✅ Loaded font numbers" << std::endl;
+    DebugGUI::addDebugLog("Loaded Font Numbers", false, "FONT");
 }
 
 void Game::initWindow()
@@ -155,15 +179,12 @@ void Game::initWindow()
 
     // make resizeable window
     SDL_SetWindowResizable(this->window, SDL_TRUE);
+    DebugGUI::addDebugLog("Window Made Resizable", false, "WINDOW");
 }
 
 void Game::initRenderer()
 {
-    this->renderer = SDL_CreateRenderer(
-        window,
-        -1,
-        SDL_RENDERER_ACCELERATED
-    );
+    this->renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     if(!this->renderer)
     {
@@ -172,6 +193,20 @@ void Game::initRenderer()
         SDL_Quit();
         return;
     }
+
+    int vsync = SDL_GetHintBoolean(SDL_HINT_RENDER_VSYNC, SDL_FALSE);
+    if (vsync)
+    {
+        DebugGUI::addDebugLog("Vsync is enabled", false, "VSYNC");
+        SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
+    }
+    else
+    {
+        DebugGUI::addDebugLog("Vsync is disabled", false, "VSYNC");
+    }
+    SDL_DisplayMode mode;
+    SDL_GetCurrentDisplayMode(0, &mode);
+    DebugGUI::addDebugLog("Monitor Resolution: " + std::to_string(mode.w) + "x" + std::to_string(mode.h), false,"RENDERER");
 }
 
 void Game::initGui() { DebugGUI::Init(this->window, this->renderer); }

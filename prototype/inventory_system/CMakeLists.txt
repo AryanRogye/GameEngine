@@ -4,6 +4,10 @@ project(prototype_map_system)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS_DEBUG "-g")  # Ensure debug symbols are added
+
 # SDL 2
 set(SDL2_DIR "/opt/homebrew/opt/sdl2/lib/cmake/SDL2")
 find_package(SDL2 REQUIRED)
@@ -32,6 +36,7 @@ set(IMGUI_SOURCES
 
 add_executable(prototype_map_system
     src/game.cpp
+    src/comfy_lib.cpp
     src/debug_gui.cpp
     src/main.cpp
     ${IMGUI_SOURCES}  # Add ImGui source files to the build

@@ -13,7 +13,10 @@
 #include <unistd.h>
 #include <format>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <format>
+#include <chrono>
 
 // #########################################################
 // Defines
@@ -103,3 +106,8 @@ void _log(const std::string& prefix,const std::string& msg,TextColor textColor,A
         SM_ERROR("Asserting HIT!");         \
     }                                       \
 }
+
+std::string getTimeStamp();
+bool loadMapConfigs(std::string& inPath);
+bool fetchMapConfigs(std::string& outPath);
+bool fileChanged(time_t& lastWriteTime);

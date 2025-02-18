@@ -88,63 +88,99 @@ public:
         // Open the file
         if (!file.is_open())
         {
-            std::cerr << "❌ Error: Could not open the file: (" << jsonPath << ")" << std::endl;
+            DebugGUI::addDebugLog("Error: Could not open the file:", false, "Json");
+            DebugGUI::addDebugLog(jsonPath, true);
             return false;
         }
+
         // Read the file
         json j;
         file >> j;
         // Close the File
         file.close();
 
+        std::cout << "Loading Map" << std::endl;
         // Load Basic Information
-        tileMap.width = j["width"];
-        tileMap.height = j["height"];
-        tileMap.tileWidth = j["tilewidth"];
-        tileMap.tileHeight = j["tileheight"];
+        tileMap.width = j.at("width");
+        tileMap.height = j.at("height");
+        tileMap.tileWidth = j.at("tilewidth");
+        tileMap.tileHeight = j.at("tileheight");
 
         // Load Tilesets
 
-        for (auto &tileset : j["tilesets"])
+        for (auto &tileset : j.at("tilesets"))
         {
             // Create a Tileset Object
             TSDL_Tileset t;
 
             // Load Basic Information
-            t.source = tileset["source"];
-            t.firstGid = tileset["firstgid"];
+            t.source = tileset.at("source");
+            t.firstGid = tileset.at("firstgid");
+
             tileMap.tilesets.push_back(t);
         }
 
         // Load Layers
-        for (auto &layer : j["layers"])
+        for (auto &layer : j.at("layers"))
         {
             // Create a Layer Object
             TSDL_Layer l;
-            
+
             // Load Basic Information
-            l.name = layer["name"];
-            l.width = layer["width"];
-            l.height = layer["height"];
-            l.data = layer["data"].get<std::vector<int>>();
+            l.name = layer.at("name");
+
+            // Only assign width and height if it's a tile layer
+            if (layer.contains("width") && layer.contains("height"))
+            {
+                l.width = layer.at("width");
+                l.height = layer.at("height");
+            }
+            else
+            {
+                // If it's an object layer, set width/height to 0 or handle differently
+                l.width = 0;
+                l.height = 0;
+            }
+
+            // Only parse "data" if it's present (Tile layers have data, object layers do not)
+            if (layer.contains("data"))
+            {
+                l.data = layer.at("data").get<std::vector<int>>();
+            }
 
             tileMap.layers.push_back(l);
         }
 
         // We Will load the tsx files right now
-        if (!loadTsx(tileMap, tsxPath))
+        // this will be whaterver ......assets/......
+        // we wanna remove everything after the last /
+        std::string path = tsxPath;
+        size_t lastSlash = path.find_last_of("/\\");
+        if (lastSlash != std::string::npos)
         {
+            path = path.substr(0, lastSlash + 1);
+        }
+        else
+        {
+            path = "";
+        }
+        if (!loadTsx(tileMap, path))
+        {
+            DebugGUI::addDebugLog("Error: Could not load the tsx file: (" + path + ")", false, "TSDL");
+            DebugGUI::addDebugLog(path, true, "TSDL");
             return false;
         }
 
         if (!loadTexture(renderer, tileMap))
         {
+            DebugGUI::addDebugLog("Error: Could not load the texture from the tsx file: (" + path + ")", false, "TSDL");
+            DebugGUI::addDebugLog(path, true, "TSDL");
             return false;
         }
 
-        std::cout << "✅Succesfully Loaded Json Into Map Struct "<< std::endl;
+        DebugGUI::addDebugLog("Succesfully Loaded Json Into Map Struct", false, "TSDL");
         /*std::cout << "Path: " << path << std::endl;*/
-        std::cout << "SourceNum: " << tileMap.tilesets.size() << std::endl;
+        DebugGUI::addDebugLog("Sources: " + std::to_string(tileMap.tilesets.size()), false, "TSDL");
         for (int i = 0; i < tileMap.tilesets.size(); i++)
         {
             TSDL_Tileset tile = tileMap.tilesets[i];
@@ -153,9 +189,9 @@ public:
             int endGid = tile.firstGid + tileSource.tileCount;
             tileMap.maxTileCount = endGid;
 
-            std::cout << "Source:\t" << tile.source << " | " << tile.firstGid << " -> " << endGid << std::endl;
+            DebugGUI::addDebugLog("Source:\t" + tile.source + " | " + std::to_string(tile.firstGid) + " -> " + std::to_string(endGid), false, "TSDL");
         }
-        std::cout << "Max Size: " << tileMap.maxTileCount << std::endl;
+        DebugGUI::addDebugLog("Max Size: " + std::to_string(tileMap.maxTileCount), false, "TSDL");
         std::cout << "======================================" << std::endl;
         
         return true;
@@ -170,13 +206,14 @@ public:
         // Tsx is a xml file there could be many inside tilesets so we need to parse it
         for (auto &t : tileMap.tilesets)
         {
+            std::string tempPath = path;
             // Create a Tileset Source Object
             pugi::xml_document doc;
 
             // Load the file
-            if (!doc.load_file(std::string(path + t.source).c_str()))
+            if (!doc.load_file(std::string(tempPath + t.source).c_str()))
             {
-                std::cerr << "❌ Error: Could not load the file: (" << path + t.source << ")" << std::endl;
+                std::cerr << "❌ Error: Could not load the file: (" << tempPath + t.source << ")" << std::endl;
                 return false;
             }
 
@@ -184,7 +221,7 @@ public:
             pugi::xml_node tilesetNode = doc.child("tileset");
             if (!tilesetNode)
             {
-                std::cerr << "❌ Error: Could not find the <tileset> node in (" << path + t.source << ")" << std::endl;
+                std::cerr << "❌ Error: Could not find the <tileset> node in (" << tempPath + t.source << ")" << std::endl;
                 return false;
             }
 
@@ -263,8 +300,7 @@ public:
         SDL_Renderer* renderer,
         TTF_Font *font,
         std::vector<SDL_Texture*> fontNumbers,
-        TSDL_TileMap &tileMap,
-        std::vector<bool> &layerInfo
+        TSDL_TileMap &tileMap
     )
     {
         if (DebugGUI::guiValues.mapScale <= 0)
@@ -278,7 +314,11 @@ public:
 
         for (int i = 0; i < tileMap.layers.size(); i++)
         {
-            if (!layerInfo[i]) continue;
+            // want to make sure that its of that size
+            if (DebugGUI::guiValues.layerInfo.size() == tileMap.layers.size())
+            {
+                if (!DebugGUI::guiValues.layerInfo[i]) continue;
+            }
             for (int y = 0 ; y < tileMap.layers[i].height; y++)
             {
                 for (int x = 0; x < tileMap.layers[i].width; x++)
@@ -312,6 +352,7 @@ public:
                     int maxColumns = 0;
 
                     int textureIndex = -1;
+                    int offset = 0;
                     for (int t = 0; t < tileMap.tilesetSources.size(); t++)
                     {
                         TSDL_Tileset tileset = tileMap.tilesets[t];
@@ -323,6 +364,7 @@ public:
                             sourceHeight = tilesetSource.tileHeight;
                             maxColumns = tilesetSource.columns;
                             tileIndex -= tileset.firstGid; // Adjust index
+                            offset = tileset.firstGid;
                             textureIndex = t;
                             break;
                         }
@@ -332,6 +374,8 @@ public:
                     // This is a Debug Info Map to show the tile numbers and dfiferent layers
                     if (DebugGUI::guiValues.showLayerInfo)
                     {
+                        tileIndex += offset; // Adjust index back for the debug info
+
                         // Get the texture for this number
                         SDL_Texture *textTexture = fontNumbers[tileIndex];
                         if (!textTexture) continue; // Skip if the texture wasn't created properly
