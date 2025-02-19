@@ -37,7 +37,7 @@ private:
 
     void initWindow();
     void initRenderer();
-    void handleEvent(SDL_Event e);
+    void handleEvent(SDL_Event e, float dt);
 
     void loadMap();
     void loadFontNumbers();

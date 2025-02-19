@@ -1,6 +1,6 @@
 // DebugGUI.cpp
 #include "debug_gui.h"
-#include "imgui.h"
+#include "player.h"
 
 DebugGUI::GUIValues DebugGUI::guiValues;
 
@@ -285,11 +285,102 @@ void DebugGUI::Render(SDL_Renderer* renderer)
         }
 
         // =====================================================================================================================
-        // 
+        // Player Tab
         // =====================================================================================================================
         if(ImGui::BeginTabItem("Player"))
         {
-            
+            if (guiValues.player) 
+            {
+                // Main Player Info
+                ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1.0f),"Player Status");
+                ImGui::Separator();
+
+                // =====================================================================================================================
+                // Player Position
+                // =====================================================================================================================
+                ImGui::Text("(%.1f, %.1f)", guiValues.player->getX(),guiValues.player->getY());
+
+                // =====================================================================================================================
+                // Player Stats
+                // =====================================================================================================================
+                if (ImGui::CollapsingHeader("Stats")) 
+                {
+                    int health = guiValues.player->getHealth();
+                    int maxHealth = guiValues.player->getMaxHealth();
+                    int level = guiValues.player->getLevel();
+                    int experience = guiValues.player->getExperience();
+
+                    // =====================================================================================================================
+                    // Health Progress Bar
+                    // =====================================================================================================================
+                    float healthPercentage = (float)health / (float)maxHealth;
+                    ImGui::ProgressBar(healthPercentage, ImVec2(200, 20), "Health");
+                    ImGui::SameLine();
+                    ImGui::Text("(%d/%d)", health, maxHealth);
+
+                    // =====================================================================================================================
+                    // Experience Progress Bar
+                    // =====================================================================================================================
+                    ImGui::ProgressBar((float)experience / 100.0f, ImVec2(200, 20), "EXP");
+                    ImGui::SameLine();
+                    ImGui::Text("Level %d", level);
+
+                    // =====================================================================================================================
+                    // Input fields for precise adjustments
+                    // =====================================================================================================================
+                    ImGui::InputInt("Health", &health);
+                    ImGui::InputInt("Level", &level);
+                    ImGui::InputInt("Experience", &experience);
+
+                    // Apply changes back to the player
+                    guiValues.player->setHealth(health);
+                    guiValues.player->setLevel(level);
+                    guiValues.player->setExperience(experience);
+
+                    // =====================================================================================================================
+                    // Save Button
+                    // =====================================================================================================================
+                    if (ImGui::Button("Save"))
+                    {
+                        // Need To Implement
+                        // Player should have a save function
+                    }
+                }
+
+                if (ImGui::CollapsingHeader("Movement")) 
+                {
+                    float maxSpeed = guiValues.player->getMaxSpeed();
+                    float acceleration = guiValues.player->getAcceleration();
+                    float friction = guiValues.player->getFriction();
+                    float velocityX = guiValues.player->getVelocityX();
+                    float velocityY = guiValues.player->getVelocityY();
+
+                    // =====================================================================================================================
+                    // Input fields for precise control
+                    // =====================================================================================================================
+                    ImGui::InputFloat("Acceleration", &acceleration);
+                    ImGui::InputFloat("Max Speed", &maxSpeed);
+                    ImGui::InputFloat("Friction", &friction);
+
+                    // =====================================================================================================================
+                    // Show current velocity
+                    // =====================================================================================================================
+                    ImGui::Text("Velocity: (%.2f, %.2f)", velocityX, velocityY);
+
+                    // Apply changes
+                    guiValues.player->setAcceleration(acceleration);
+                    guiValues.player->setMaxSpeed(maxSpeed);
+                    guiValues.player->setFriction(friction);
+                }
+
+                // =====================================================================================================================
+                // Future: Collapsible section for Sprite Control
+                // =====================================================================================================================
+                if (ImGui::CollapsingHeader("Sprite Control")) {
+                    ImGui::Text("Coming Soon!");
+                }
+
+              }
             ImGui::EndTabItem();
         }
 
@@ -301,3 +392,4 @@ void DebugGUI::Render(SDL_Renderer* renderer)
 }
 
 void DebugGUI::SetMapName(const std::string& mapName) { guiValues.mapName = mapName; }
+void DebugGUI::SetPlayer(Player* player) { guiValues.player = player; }

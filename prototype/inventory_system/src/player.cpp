@@ -2,83 +2,106 @@
 
 Player::Player()
 {
-    this->setX(0);
-    this->setY(0);
-    this->setHealth(100);
-    this->setDamage(10);
-    this->setLevel(1);
-    this->setExperience(0);
-    this->setMaxHealth(100);
-    this->setRenderer(NULL);
-    this->setSpeed(10);
-}
-Player::Player(int x, int y)
-{
-    this->setX(x);
-    this->setY(y);
-    this->setHealth(100);
-    this->setDamage(10);
-    this->setLevel(1);
-    this->setExperience(0);
-    this->setMaxHealth(100);
-    this->setRenderer(NULL);
-    this->setSpeed(10);
+    // We wanna load from a file
+    this->loadPlayer();
+    // Give a pointer to the debug gui to display its values
+    DebugGUI::SetPlayer(this);
 }
 
 // Getters
-int Player::getX() { return this->x; }
-int Player::getY() { return this->y; }
-int Player::getHealth() { return this->health; }
-int Player::getDamage() { return this->damage; }
-int Player::getLevel() { return this->level; }
-int Player::getExperience() { return this->experience; }
-int Player::getMaxHealth() { return this->maxHealth; }
-SDL_Renderer* Player::getRenderer() { return this->renderer; }
-int Player::getSpeed() { return this->speed; }
+float Player::getX() { return position.x; }
+float Player::getY() { return position.y; }
+int Player::getHealth() { return health; }
+int Player::getDamage() { return damage; }
+int Player::getLevel() { return level; }
+int Player::getExperience() { return experience; }
+int Player::getMaxHealth() { return maxHealth; }
+SDL_Renderer* Player::getRenderer() { return renderer; }
+float Player::getAcceleration() { return acceleration; }
+float Player::getMaxSpeed() { return maxSpeed; }
+float Player::getFriction() { return friction; }
+float Player::getVelocityX() { return velocity.x; }
+float Player::getVelocityY() { return velocity.y; }
+
 // Setters
-void Player::setX(int x) { this->x = x; }
-void Player::setY(int y) { this->y = y; }
-void Player::setHealth(int health) { this->health = health; }
-void Player::setDamage(int damage) { this->damage = damage; }
-void Player::setLevel(int level) { this->level = level; }
-void Player::setExperience(int experience) { this->experience = experience; }
-void Player::setMaxHealth(int maxHealth) { this->maxHealth = maxHealth; }
-void Player::setRenderer(SDL_Renderer* renderer) { this->renderer = renderer; }
-void Player::setSpeed(int speed) { this->speed = speed; }
+void Player::setX(float value) { position.x = value; }
+void Player::setY(float value) { position.y = value; }
+void Player::setHealth(int value) { health = value; }
+void Player::setDamage(int value) { damage = value; }
+void Player::setLevel(int value) { level = value; }
+void Player::setExperience(int value) { experience = value; }
+void Player::setMaxHealth(int value) { maxHealth = value; }
+void Player::setRenderer(SDL_Renderer* newRenderer) { renderer = newRenderer; }
+void Player::setAcceleration(float value) { acceleration = value; }
+void Player::setMaxSpeed(float value) { maxSpeed = value; }
+void Player::setFriction(float value) { friction = value; }
+void Player::setVelocityX(float value) { velocity.x = value; }
+void Player::setVelocityY(float value) { velocity.y = value; }
 // Methods
 
 void Player::loadPlayer() 
 { 
+    fetchPlayerConfigs(this);
+    DebugGUI::addDebugLog("Player File Loaded");
 }
-void Player::drawPlayer()
+void Player::drawPlayer(float dt)
 {
     if (!this->getRenderer())
     {
         std::cout << "No renderer set for player" << std::endl;
         return;
     }
-    SDL_SetRenderDrawColor(this->getRenderer(), 0, 0, 255, 255);
-    SDL_Rect playerRect = {this->getX(), this->getY(), 50, 50};
-    SDL_RenderFillRect(this->getRenderer(), &playerRect);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+    SDL_Rect playerRect = {(int)position.x, (int)position.y, 50, 50};
+    SDL_RenderFillRect(renderer, &playerRect);
 }
-void Player::handleInput(SDL_Event &event)
+void Player::handleInput(SDL_Event &event, float dt)
 {
-    if (event.type == SDL_KEYDOWN)
-    {
-        switch (event.key.keysym.sym)
-        {
-            case SDLK_w:
-                this->setY(this->getY() - this->getSpeed());
-                break;
-            case SDLK_s:
-                this->setY(this->getY() + this->getSpeed());
-                break;
-            case SDLK_a:
-                this->setX(this->getX() - this->getSpeed());
-                break;
-            case SDLK_d:
-                this->setX(this->getX() + this->getSpeed());
-                break;
+    // Track key states
+    if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+        bool pressed = (event.type == SDL_KEYDOWN);
+        switch (event.key.keysym.sym) {
+            case SDLK_w: keysPressed[0] = pressed; break;
+            case SDLK_s: keysPressed[1] = pressed; break;
+            case SDLK_a: keysPressed[2] = pressed; break;
+            case SDLK_d: keysPressed[3] = pressed; break;
         }
+    }
+}
+
+void Player::update(float dt)
+{
+    Vec2 direction(0.0f, 0.0f);
+    if (keysPressed[0]) direction.y -= 1.0f; // W
+    if (keysPressed[1]) direction.y += 1.0f; // S
+    if (keysPressed[2]) direction.x -= 1.0f; // A
+    if (keysPressed[3]) direction.x += 1.0f; // D
+
+    if (direction.x != 0.0f && direction.y != 0.0f) {
+        direction = direction.normalize();
+    }
+
+    velocity.x += direction.x * acceleration * dt;
+    velocity.y += direction.y * acceleration * dt;
+
+    float currentSpeed = velocity.length();
+    if (currentSpeed > maxSpeed) {
+        velocity = velocity.normalize() * maxSpeed;
+    }
+
+    if (direction.x == 0.0f) {
+        velocity.x *= pow(friction, dt * 60.0f);
+    }
+    if (direction.y == 0.0f) {
+        velocity.y *= pow(friction, dt * 60.0f);
+    }
+
+    position.x += velocity.x * dt;
+    position.y += velocity.y * dt;
+
+    if (velocity.length() > 1.0f) {
+        state = PlayerState::WALKING;
+    } else {
+        state = PlayerState::IDLE;
     }
 }

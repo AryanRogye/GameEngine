@@ -1,4 +1,5 @@
 #include "comfy_lib.h"
+#include "player.h"
 
 std::string getTimeStamp()
 {
@@ -8,6 +9,7 @@ std::string getTimeStamp()
     timeString.pop_back(); // remove the newline character
     return timeString;
 }
+
 
 
 /** 
@@ -38,9 +40,177 @@ bool loadMapConfigs(std::string& inPath)
     return true;
 }
 
+void removePadding(std::string& value)
+{
+    // Remove surrounding quotes if present
+    if (!value.empty() && value.front() == '\'' && value.back() == '\'')
+    {
+        value = value.substr(1, value.size() - 2);
+    }
+}
+
+/**
+This Function will load in values from the Data/player_data.ini file
+**/
+bool fetchPlayerConfigs(Player *player) // not sure how i want to get these values
+{
+    std::string basePath = __FILE__;
+    basePath = basePath.substr(0, basePath.find_last_of("/")); // Get directory of current file
+
+    // Construct the relative path to Data/player_data.ini
+    std::string configPath = basePath + "/../Data/player_data.ini";
+
+    std::ifstream configFile(configPath);
+    if (!configFile)
+    {
+        std::cerr << "⚠️ No player_data.ini found. Using default player." << std::endl;
+        return false;
+    }
+
+    std::string line, key, value;
+    while (std::getline(configFile, line))
+    {
+        std::istringstream iss(line);
+        if (std::getline(iss, key, '=') && std::getline(iss, value))
+        {
+            // =======================================================================================================
+            // Player Acceleration
+            // =======================================================================================================
+            if (key == "acceleration") 
+            {
+                removePadding(value);
+                std::cout << "Value: " << value << std::endl;
+                // convert string to a float
+                player->setAcceleration(std::stof(value));
+            }
+            // =======================================================================================================
+            // Player Max Speed
+            // =======================================================================================================
+            if (key == "maxSpeed") 
+            {
+                removePadding(value);
+                std::cout << "Value: " << value << std::endl;
+
+                // convert string to a float
+                player->setMaxSpeed(std::stof(value));
+            }
+            // =======================================================================================================
+            // Player Friction
+            // =======================================================================================================
+            if (key == "friction") 
+            {
+                removePadding(value);
+                std::cout << "Value: " << value << std::endl;
+
+                // convert string to a float
+                player->setFriction(std::stof(value));
+            }
+            // =======================================================================================================
+            // Player Health
+            // =======================================================================================================
+            if (key == "health") 
+            {
+                removePadding(value);
+                std::cout << "Value: " << value << std::endl;
+
+                // convert string to a int
+                player->setHealth(std::stoi(value));
+            }
+            // =======================================================================================================
+            // Player Max Health
+            // =======================================================================================================
+            if (key == "maxHealth") 
+            {
+                removePadding(value);
+                std::cout << "Value: " << value << std::endl;
+
+                // convert string to a int
+                player->setMaxHealth(std::stoi(value));
+            }
+            // =======================================================================================================
+            // Player Damage
+            // =======================================================================================================
+            if (key == "damage") 
+            {
+                removePadding(value);
+                std::cout << "Value: " << value << std::endl;
+
+                // convert string to a int
+                player->setDamage(std::stoi(value));
+            }
+            // =======================================================================================================
+            // Player Level
+            // =======================================================================================================
+            if (key == "level") 
+            {
+                removePadding(value);
+                std::cout << "Value: " << value << std::endl;
+
+                // convert string to a int
+                player->setLevel(std::stoi(value));
+            }
+            // =======================================================================================================
+            // Player Experience
+            // =======================================================================================================
+            if (key == "experience") 
+            {
+                removePadding(value);
+                std::cout << "Value: " << value << std::endl;
+
+                // convert string to a int
+                player->setExperience(std::stoi(value));
+            }
+            // =======================================================================================================
+            // Player X Position
+            // =======================================================================================================
+            if (key == "x") 
+            {
+                removePadding(value);
+                std::cout << "Value: " << value << std::endl;
+                
+                // convert string to a float
+                player->setX(std::stof(value));
+            }
+            // =======================================================================================================
+            // Player Y Position
+            // =======================================================================================================
+            if (key == "y") 
+            {
+                removePadding(value);
+                std::cout << "Value: " << value << std::endl;
+
+                // convert string to a float
+                player->setY(std::stof(value));
+            }
+            // =======================================================================================================
+            // Player Velocity X
+            // =======================================================================================================
+            if (key == "velocityX") 
+            {
+                removePadding(value);
+                std::cout << "Value: " << value << std::endl;
+                
+                // convert string to a float
+                player->setVelocityX(std::stof(value));
+            }
+            // =======================================================================================================
+            // Player Velocity Y
+            // =======================================================================================================
+            if (key == "velocityY") 
+            {
+                removePadding(value);
+                std::cout << "Value: " << value << std::endl;
+
+                // convert string to a float
+                player->setVelocityY(std::stof(value));
+            }
+        }
+    }
+    return true;
+}
 
 /** 
-Stored in Data/map_data.ini
+This Function will load in values from the Data/map_data.ini file
 **/
 bool fetchMapConfigs(std::string& outPath) 
 {

@@ -18,10 +18,19 @@ void Game::start_game()
     time_t lastTime = -1;
     time_t currentTime = 0;
 
+    // This is used to get delta time
+    Uint32 lastTicks = SDL_GetTicks();
+
     while (this->running)
     {
-        SDL_Event e; while(SDL_PollEvent(&e)) this->handleEvent(e);  
+        Uint32 nowTicks = SDL_GetTicks();
+        float dt = (nowTicks - lastTicks) * 0.001f;
+
+        SDL_Event e; while(SDL_PollEvent(&e)) this->handleEvent(e, dt);  
+        this->player->update(dt);
+
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); SDL_RenderClear(renderer);
+        SDL_RenderClear(renderer);
 
         // Hot Reload
         fileChanged(currentTime);
@@ -33,10 +42,11 @@ void Game::start_game()
         }
         // Draw Here
         this->drawMap();
-        this->player->drawPlayer();
+        this->player->drawPlayer(dt);
         this->renderGui();
 
         SDL_RenderPresent(this->renderer);
+        lastTicks = nowTicks;
         SDL_Delay(16);
     }
 
@@ -92,7 +102,7 @@ void Game::loadMap()
 
 }
 
-void Game::handleEvent(SDL_Event e)
+void Game::handleEvent(SDL_Event e, float dt)
 {
     if (e.type == SDL_QUIT)
     {
@@ -110,7 +120,7 @@ void Game::handleEvent(SDL_Event e)
         DebugGUI::guiValues.toggleGui = !DebugGUI::guiValues.toggleGui;
     }
 
-    this->player->handleInput(e);
+    this->player->handleInput(e, dt);
 }
 
 Game::Game()

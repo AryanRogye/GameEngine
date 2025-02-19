@@ -37,8 +37,14 @@ public:
         int currentMouseTileX = -1;
         int currentMouseTileY = -1;
         SDL_Texture *currentTileTexture;
+
+        // =====================================================================================================================
+        // Player Info
+        // =====================================================================================================================
+        Player* player;
     };
 
+    static void SetPlayer(Player* player);
     static void SetMapName(const std::string& mapName);
     static GUIValues guiValues;
     static std::vector<bool> layerInfo;
