@@ -24,7 +24,6 @@ class Game
 {
 private:
 
-    std::vector<bool> layerInfo;
 
 
     SDL_Window *window;

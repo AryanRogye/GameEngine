@@ -300,7 +300,9 @@ public:
         SDL_Renderer* renderer,
         TTF_Font *font,
         std::vector<SDL_Texture*> fontNumbers,
-        TSDL_TileMap &tileMap
+        TSDL_TileMap &tileMap,
+        int mouseX,
+        int mouseY
     )
     {
         if (DebugGUI::guiValues.mapScale <= 0)
@@ -314,11 +316,7 @@ public:
 
         for (int i = 0; i < tileMap.layers.size(); i++)
         {
-            // want to make sure that its of that size
-            if (DebugGUI::guiValues.layerInfo.size() == tileMap.layers.size())
-            {
-                if (!DebugGUI::guiValues.layerInfo[i]) continue;
-            }
+            if (!DebugGUI::guiValues.layerInfo[i]) continue;
             for (int y = 0 ; y < tileMap.layers[i].height; y++)
             {
                 for (int x = 0; x < tileMap.layers[i].width; x++)
@@ -370,6 +368,22 @@ public:
                         }
                     }
                     if (!texture) continue; // Skip if the texture wasn't created properly
+
+
+
+                    int tileX = mouseX / (tileMap.tileWidth * DebugGUI::guiValues.mapScale);
+                    int tileY = mouseY / (tileMap.tileHeight * DebugGUI::guiValues.mapScale);
+
+                    if (tileX == x && tileY == y)
+                    {
+                        DebugGUI::guiValues.currentMouseLayer = i;
+                        std::cout << "Current Mouse Layer: " << i << std::endl;
+                        DebugGUI::guiValues.currentTextureName = tileMap.tilesetSources[textureIndex].name;
+
+                        DebugGUI::guiValues.currentMouseTileX = x;
+                        DebugGUI::guiValues.currentMouseTileY = y;
+                    }
+
 
                     // This is a Debug Info Map to show the tile numbers and dfiferent layers
                     if (DebugGUI::guiValues.showLayerInfo)
@@ -459,6 +473,24 @@ public:
                         {
                             SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
                             SDL_RenderDrawRectF(renderer, &destRect);
+
+                            if (tileX == x && tileY == y)
+                            {
+                                // We wanna highlight the current tile red 
+                                // by red rect and opacity 50
+                                SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+                                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 50);
+                                SDL_RenderFillRectF(renderer, &destRect);
+
+                                int tempIndex = tileIndex + offset; 
+                                DebugGUI::showSelectedSDLTexture(
+                                    texture,
+                                    (tileIndex % maxColumns) * tileMap.tileWidth,   
+                                    (tileIndex / maxColumns) * tileMap.tileHeight,  
+                                    tileMap.tileWidth,
+                                    tileMap.tileHeight
+                                );
+                            }
                         }
                     }
                 }

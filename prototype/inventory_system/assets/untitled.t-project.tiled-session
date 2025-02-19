@@ -1,0 +1,51 @@
+{
+    "activeFile": "testtt.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "/Users/aryanrogye/Documents/CODE/LearningAndPractice/lua-code/love/DuskWatch/assets/map.tmx": {
+            "scale": 1.24375,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 283.01507537688445,
+                "y": 175.678391959799
+            }
+        },
+        "/Users/aryanrogye/Documents/CODE/LearningAndPractice/lua-code/love/DuskWatch/assets/map.tmx#tile_atlas": {
+            "scaleInDock": 1
+        },
+        "t.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "testtt.tmx": {
+            "scale": 1.57,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 201.2738853503185,
+                "y": 174.8407643312102
+            }
+        },
+        "tile_atlas.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "last.exportedFilePath": "/Users/aryanrogye/Documents/CODE/BigProjects/2D-Multiplayer-Game/prototype/inventory_system/assets",
+    "map.lastUsedExportFilter": "All Files (*)",
+    "openFiles": [
+        "testtt.tmx",
+        "tile_atlas.tsx",
+        "/Users/aryanrogye/Documents/CODE/LearningAndPractice/lua-code/love/DuskWatch/assets/map.tmx",
+        "t.tsx"
+    ],
+    "project": "untitled.t-project.tiled-project",
+    "recentFiles": [
+        "t.tsx",
+        "/Users/aryanrogye/Documents/CODE/LearningAndPractice/lua-code/love/DuskWatch/assets/map.tmx",
+        "tile_atlas.tsx",
+        "testtt.tmx"
+    ]
+}

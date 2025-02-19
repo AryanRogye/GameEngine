@@ -2,6 +2,7 @@
 #include "comfy_lib.h"
 #include "debug_gui.h"
 #include "imgui.h"
+#include <SDL_mouse.h>
 #include <SDL_ttf.h>
 #define WIDTH 800
 #define HEIGHT 600
@@ -14,11 +15,6 @@ void Game::start_game()
     std::cout << "======================================" << std::endl;
 
     this->running = true;
-    this->layerInfo.resize(TSDL::getLayersSize(this->map));
-    // fill it with false
-    // TODO Move out of here to gui
-    std::fill(this->layerInfo.begin(), this->layerInfo.end(), true);
-
     time_t lastTime = -1;
     time_t currentTime = 0;
 
@@ -63,7 +59,13 @@ void Game::start_game()
     SDL_Quit();
 }
 
-void Game::drawMap() { TSDL::drawMap(this->renderer,this->font ,this->fontNumbers, this->map);  }
+// want mouse as well
+
+void Game::drawMap() { 
+    int mouseX, mouseY;
+    SDL_GetMouseState(&mouseX, &mouseY);
+    TSDL::drawMap(this->renderer,this->font ,this->fontNumbers, this->map, mouseX, mouseY);  
+}
 void Game::loadMap()
 {
     
@@ -71,8 +73,6 @@ void Game::loadMap()
     std::string path;
     fetchMapConfigs(path);
 
-    std::cout << "Got Path: " << path << std::endl;
-    
     // Load Debug Gui Values
     // turn vector of bool to all false
 
@@ -84,6 +84,7 @@ void Game::loadMap()
         std::cout << "❌ Failed to load map" << std::endl;
         return;
     }
+    DebugGUI::SetMapName(path);
     DebugGUI::guiValues.layerInfo.resize(TSDL::getLayersSize(this->map));
     std::fill(DebugGUI::guiValues.layerInfo.begin(), DebugGUI::guiValues.layerInfo.end(), true);
     std::cout << "Layer Info Size: " << DebugGUI::guiValues.layerInfo.size() << std::endl;
@@ -179,6 +180,8 @@ void Game::initWindow()
 
     // make resizeable window
     SDL_SetWindowResizable(this->window, SDL_TRUE);
+    // maximize window
+    SDL_MaximizeWindow(this->window);
     DebugGUI::addDebugLog("Window Made Resizable", false, "WINDOW");
 }
 
