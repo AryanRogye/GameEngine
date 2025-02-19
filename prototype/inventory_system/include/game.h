@@ -18,6 +18,7 @@ This File is a protype for my library for loading a tiled map
 
 
 #include "TSDL.h"
+#include "player.h"
 
 
 class Game 
@@ -31,6 +32,8 @@ private:
     TTF_Font *font;
     TSDL_TileMap map;
     std::vector<SDL_Texture*> fontNumbers;
+
+    Player* player;
 
     void initWindow();
     void initRenderer();

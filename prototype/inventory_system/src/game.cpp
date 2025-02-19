@@ -33,6 +33,7 @@ void Game::start_game()
         }
         // Draw Here
         this->drawMap();
+        this->player->drawPlayer();
         this->renderGui();
 
         SDL_RenderPresent(this->renderer);
@@ -108,6 +109,8 @@ void Game::handleEvent(SDL_Event e)
     {
         DebugGUI::guiValues.toggleGui = !DebugGUI::guiValues.toggleGui;
     }
+
+    this->player->handleInput(e);
 }
 
 Game::Game()
@@ -135,6 +138,10 @@ Game::Game()
     this->initRenderer();
     this->loadFontNumbers();
     this->initGui();
+
+    this->player = new Player();
+    player->setRenderer(this->renderer);
+
     this->running = false;
 }
 
