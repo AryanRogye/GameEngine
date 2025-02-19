@@ -221,12 +221,13 @@
         std::vector<SDL_Texture*> fontNumbers,
         TSDL_TileMap &tileMap,
         int mouseX,
-        int mouseY
+        int mouseY,
+        float mapScale
     )
     {
-        if (DebugGUI::guiValues.mapScale <= 0)
+        if (mapScale <= 0)
         {
-            DebugGUI::guiValues.mapScale = 1;
+            mapScale = 1;
         }
         /**
         So in this 0 is the bottom layer and the highest is the top layer we wanna
@@ -311,8 +312,8 @@
                     // ==========================================================================================================================
                     // Calculate the mouse position in tile coordinates
                     // ==========================================================================================================================
-                    int tileX = mouseX / (tileMap.tileWidth * DebugGUI::guiValues.mapScale);
-                    int tileY = mouseY / (tileMap.tileHeight * DebugGUI::guiValues.mapScale);
+                    int tileX = mouseX / (tileMap.tileWidth * mapScale);
+                    int tileY = mouseY / (tileMap.tileHeight * mapScale);
 
                     // ==========================================================================================================================
                     // Debug Mouse related Texture/Layer Info
@@ -348,15 +349,15 @@
                         // ==========================================================================================================================
                         // Scale text size to match map scale
                         // ==========================================================================================================================
-                        float scaledTextW = textW * DebugGUI::guiValues.mapScale;
-                        float scaledTextH = textH * DebugGUI::guiValues.mapScale;
+                        float scaledTextW = textW * mapScale;
+                        float scaledTextH = textH * mapScale;
 
                         // ==========================================================================================================================
                         // Set position inside the tile (centered)
                         // ==========================================================================================================================
                         SDL_FRect textRect = {
-                            (x + 0.5f) * tileMap.tileWidth * DebugGUI::guiValues.mapScale - (scaledTextW / 2.0f), 
-                            (y + 0.5f) * tileMap.tileHeight * DebugGUI::guiValues.mapScale - (scaledTextH / 2.0f), 
+                            (x + 0.5f) * tileMap.tileWidth *  mapScale - (scaledTextW / 2.0f), 
+                            (y + 0.5f) * tileMap.tileHeight * mapScale - (scaledTextH / 2.0f), 
                             scaledTextW, scaledTextH
                         };
 
@@ -364,10 +365,10 @@
                         // Create a rectangle for the tile boundary
                         // ==========================================================================================================================
                         SDL_FRect rect = {
-                            x * tileMap.tileWidth * DebugGUI::guiValues.mapScale, 
-                            y * tileMap.tileHeight * DebugGUI::guiValues.mapScale, 
-                            tileMap.tileWidth * DebugGUI::guiValues.mapScale, 
-                            tileMap.tileHeight * DebugGUI::guiValues.mapScale
+                            x * tileMap.tileWidth *  mapScale, 
+                            y * tileMap.tileHeight * mapScale, 
+                            tileMap.tileWidth *      mapScale, 
+                            tileMap.tileHeight *     mapScale
                         };
 
                         // ==========================================================================================================================
@@ -433,10 +434,10 @@
                         // Calculate the destination rectangle (on screen)
                         // ==========================================================================================================================
                         SDL_FRect destRect = {
-                            x * tileMap.tileWidth * float(DebugGUI::guiValues.mapScale), 
-                            y * tileMap.tileHeight * float(DebugGUI::guiValues.mapScale), 
-                            tileMap.tileWidth * float(DebugGUI::guiValues.mapScale), 
-                            tileMap.tileHeight * float(DebugGUI::guiValues.mapScale)
+                            x * tileMap.tileWidth *  float(mapScale), 
+                            y * tileMap.tileHeight * float(mapScale), 
+                            tileMap.tileWidth *      float(mapScale), 
+                            tileMap.tileHeight *     float(mapScale)
                         };
 
                         // ==========================================================================================================================

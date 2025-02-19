@@ -44,7 +44,7 @@ void Player::loadPlayer()
     fetchPlayerConfigs(this);
     DebugGUI::addDebugLog("Player File Loaded");
 }
-void Player::drawPlayer(float dt)
+void Player::drawPlayer(float dt, float scale)
 {
     if (!this->getRenderer())
     {
@@ -52,8 +52,13 @@ void Player::drawPlayer(float dt)
         return;
     }
     SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-    SDL_Rect playerRect = {(int)position.x, (int)position.y, 50, 50};
-    SDL_RenderFillRect(renderer, &playerRect);
+    SDL_FRect playerRect = {
+        (int)position.x * scale,
+        (int)position.y * scale,
+        50 * scale,
+        50 * scale
+    };
+    SDL_RenderFillRectF(renderer, &playerRect);
 }
 void Player::handleInput(SDL_Event &event, float dt)
 {

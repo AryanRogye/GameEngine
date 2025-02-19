@@ -104,7 +104,8 @@ public:
         std::vector<SDL_Texture*> fontNumbers,
         TSDL_TileMap &tileMap,
         int mouseX,
-        int mouseY
+        int mouseY,
+        float mapScale
     );
 };
 

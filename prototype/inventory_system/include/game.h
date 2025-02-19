@@ -34,6 +34,7 @@ private:
     std::vector<SDL_Texture*> fontNumbers;
 
     Player* player;
+    float gameScale;
 
     void initWindow();
     void initRenderer();

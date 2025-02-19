@@ -73,7 +73,7 @@ public:
     void setVelocityY(float velocityY);
     // Methods
     void loadPlayer();
-    void drawPlayer(float dt);
+    void drawPlayer(float dt, float scale);
 
     void handleInput(SDL_Event &event, float dt);
     void update(float dt);

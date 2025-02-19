@@ -42,7 +42,7 @@ void Game::start_game()
         }
         // Draw Here
         this->drawMap();
-        this->player->drawPlayer(dt);
+        this->player->drawPlayer(dt, this->gameScale);
         this->renderGui();
 
         SDL_RenderPresent(this->renderer);
@@ -75,7 +75,7 @@ void Game::start_game()
 void Game::drawMap() { 
     int mouseX, mouseY;
     SDL_GetMouseState(&mouseX, &mouseY);
-    TSDL::drawMap(this->renderer,this->font ,this->fontNumbers, this->map, mouseX, mouseY);  
+    TSDL::drawMap(this->renderer,this->font ,this->fontNumbers, this->map, mouseX, mouseY, this->gameScale);  
 }
 void Game::loadMap()
 {
@@ -149,8 +149,11 @@ Game::Game()
     this->loadFontNumbers();
     this->initGui();
 
+    this->gameScale = 2.0f;
     this->player = new Player();
     player->setRenderer(this->renderer);
+
+    DebugGUI::setMapScale(&this->gameScale);
 
     this->running = false;
 }

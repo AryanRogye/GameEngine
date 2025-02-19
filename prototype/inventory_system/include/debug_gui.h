@@ -22,7 +22,7 @@ public:
     struct GUIValues {
         std::string mapName = "";
         bool toggleGui = true;
-        float mapScale = 2.0;
+        float *mapScale;
         bool showLayerInfo = false;
         bool colorForDifferentTexture = false;
         bool colorForDifferentLayer = false;
@@ -50,4 +50,5 @@ public:
     static std::vector<bool> layerInfo;
     static void addDebugLog(const std::string& log, bool copyClipboard = false ,const std::string& label="");
     static void showSelectedSDLTexture(SDL_Texture* texture, int x, int y, int w, int h);
+    static void setMapScale(float *scale);
 };

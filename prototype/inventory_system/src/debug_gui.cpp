@@ -106,7 +106,7 @@ void DebugGUI::Render(SDL_Renderer* renderer)
     // =====================================================================================================================
     // Map Scale Slider
     // =====================================================================================================================
-    ImGui::SliderFloat("Map Scale", &guiValues.mapScale, 1.0f, 10.0f);
+    ImGui::SliderFloat("Map Scale", guiValues.mapScale, 1.0f, 10.0f);
 
     // =====================================================================================================================
     // Recompile & Restart Button
@@ -393,3 +393,4 @@ void DebugGUI::Render(SDL_Renderer* renderer)
 
 void DebugGUI::SetMapName(const std::string& mapName) { guiValues.mapName = mapName; }
 void DebugGUI::SetPlayer(Player* player) { guiValues.player = player; }
+void DebugGUI::setMapScale(float *scale) { guiValues.mapScale = scale; }
