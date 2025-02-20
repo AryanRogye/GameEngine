@@ -315,6 +315,30 @@ void DebugGUI::Render(SDL_Renderer* renderer)
                 guiValues.player->setX(playerX);
                 guiValues.player->setY(playerY);
 
+
+                // =====================================================================================================================
+                // Player State
+                // =====================================================================================================================
+                switch(guiValues.player->getState())
+                {
+                    case Player::PlayerState::COLLIDING:
+                        ImGui::Text("Colliding");
+                        break;
+                    case Player::PlayerState::IDLE:
+                        ImGui::Text("Idle");
+                        break;
+                    case Player::PlayerState::WALKING:
+                        ImGui::Text("Walking");
+                        break;
+                    case Player::PlayerState::ATTACK:
+                        ImGui::Text("Attacking");
+                        break;
+                    default:
+                        ImGui::Text("Unknown State");
+                        break;
+                }
+                ImGui::Separator();
+
                 // =====================================================================================================================
                 // Player Stats
                 // =====================================================================================================================
@@ -379,16 +403,6 @@ void DebugGUI::Render(SDL_Renderer* renderer)
                     // Allow Showing Collision 
                     // =====================================================================================================================
                     ImGui::Checkbox("Show Collision", &showCollision);
-                    ImGui::Separator();
-
-                    // =====================================================================================================================
-                    // Collision State
-                    // =====================================================================================================================
-                    std::string stateText = (guiValues.player->getState() ==
-                                             Player::PlayerState::COLLIDING)
-                                                ? "Colliding"
-                                                : "Not Colliding";
-                    ImGui::Text("%s", stateText.c_str());
                     ImGui::Separator();
 
                     // =====================================================================================================================

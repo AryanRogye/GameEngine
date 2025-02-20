@@ -98,11 +98,28 @@ void Player::update(float dt)
 {
     // Create a direction vector based on the keys pressed
     Vec2 direction(0.0f, 0.0f);
+    bool isMoving = false;
     // W, S, A, D
-    if (keysPressed[0]) direction.y -= 1.0f; // W
-    if (keysPressed[1]) direction.y += 1.0f; // S
-    if (keysPressed[2]) direction.x -= 1.0f; // A
-    if (keysPressed[3]) direction.x += 1.0f; // D
+    if (keysPressed[0]) 
+    {
+        direction.y -= 1.0f; // W
+        isMoving = true;
+    }
+    if (keysPressed[1]) 
+    {
+        direction.y += 1.0f; // S
+        isMoving = true;
+    }
+    if (keysPressed[2]) 
+    {
+        direction.x -= 1.0f; // A
+        isMoving = true;
+    }
+    if (keysPressed[3]) 
+    {
+        direction.x += 1.0f; // D
+        isMoving = true;
+    }
 
     // Normalize the direction vector if moving diagonally
     if (direction.x != 0.0f && direction.y != 0.0f) {
@@ -122,7 +139,7 @@ void Player::update(float dt)
     // Apply friction
     if (direction.x == 0.0f) {
         velocity.x *= pow(friction, dt * 60.0f);
-    }
+    
     if (direction.y == 0.0f) {
         velocity.y *= pow(friction, dt * 60.0f);
     }
@@ -130,12 +147,19 @@ void Player::update(float dt)
     // Used For Collision
     Vec2 previousPosition = position;
 
+    // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO Make Sure That Player Colliding State is set if player is currently pressing key and is colliding not if hes still
+    // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    bool isColliding = false;
+
     // Update the x pos and check if its colliding
     position.x += velocity.x * dt;
     if (this->collision->collidesWithMapLayer(this->getTileMap(), this->getPlayerScale()))
     {
         // if it does collide then we set the position back to the previous position
         position.x = previousPosition.x;
+        this->setState(PlayerState::COLLIDING);
+        isColliding = true;
         velocity.x = 0; // Stop the player from moving
     }
 
@@ -143,8 +167,10 @@ void Player::update(float dt)
     position.y += velocity.y * dt;
     if (this->collision->collidesWithMapLayer(this->getTileMap(), this->getPlayerScale()))
     {
-        // if it does collide then we set the position back to the previous position
+        // if it does collide then we set the position boxack to the previous position
         position.y = previousPosition.y;
+        this->setState(PlayerState::COLLIDING);
+        isColliding = true;
         velocity.y = 0; // Stop the player from moving
     }
 
@@ -152,7 +178,15 @@ void Player::update(float dt)
     if (this->collision->collidesWithMapLayer(this->getTileMap(), playerScale)) 
     {
         this->setState(PlayerState::COLLIDING);
-    } 
+        isColliding = true;
+    }
+    if (
+        (isColliding && isMoving) || 
+        (this->collision->collidesWithMapLayer(this->getTileMap(), playerScale))
+    )
+    {
+        this->setState(PlayerState::COLLIDING);
+    }
     // If the player is moving
     else 
     {
@@ -165,5 +199,4 @@ void Player::update(float dt)
             state = PlayerState::IDLE;
         }
     }
-
 }

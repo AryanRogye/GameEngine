@@ -41,6 +41,8 @@ set(IMGUI_SOURCES
 add_executable(prototype_map_system
 
     src/utils/collision.cpp
+    src/utils/camera.cpp
+    src/utils/sprite.cpp
 
     src/game.cpp
     src/comfy_lib.cpp
