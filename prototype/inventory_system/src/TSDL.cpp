@@ -4,7 +4,7 @@
     Load the map and store it inside the TSDL_TileMap Struct
     **/
     bool
-    TSDL::loadMap(SDL_Renderer* renderer, TSDL_TileMap &tileMap, const std::string& jsonPath, const std::string& tsxPath)
+    TSDL::loadMap(SDL_Renderer* renderer, TSDL_TileMap *tileMap, const std::string& jsonPath, const std::string& tsxPath)
     {
         std::ifstream file(jsonPath);
         // Open the file
@@ -22,10 +22,10 @@
         file.close();
 
         // Load Basic Information
-        tileMap.width = j.at("width");
-        tileMap.height = j.at("height");
-        tileMap.tileWidth = j.at("tilewidth");
-        tileMap.tileHeight = j.at("tileheight");
+        tileMap->width = j.at("width");
+        tileMap->height = j.at("height");
+        tileMap->tileWidth = j.at("tilewidth");
+        tileMap->tileHeight = j.at("tileheight");
 
         // Load Tilesets
 
@@ -38,7 +38,7 @@
             t.source = tileset.at("source");
             t.firstGid = tileset.at("firstgid");
 
-            tileMap.tilesets.push_back(t);
+            tileMap->tilesets.push_back(t);
         }
 
         // Load Layers
@@ -69,7 +69,7 @@
                 l.data = layer.at("data").get<std::vector<int>>();
             }
 
-            tileMap.layers.push_back(l);
+            tileMap->layers.push_back(l);
         }
 
         // We Will load the tsx files right now
@@ -101,18 +101,18 @@
 
         DebugGUI::addDebugLog("Succesfully Loaded Json Into Map Struct", false, "TSDL");
         /*std::cout << "Path: " << path << std::endl;*/
-        DebugGUI::addDebugLog("Sources: " + std::to_string(tileMap.tilesets.size()), false, "TSDL");
-        for (int i = 0; i < tileMap.tilesets.size(); i++)
+        DebugGUI::addDebugLog("Sources: " + std::to_string(tileMap->tilesets.size()), false, "TSDL");
+        for (int i = 0; i < tileMap->tilesets.size(); i++)
         {
-            TSDL_Tileset tile = tileMap.tilesets[i];
-            TSDL_TilesetSource tileSource = tileMap.tilesetSources[i];
+            TSDL_Tileset tile = tileMap->tilesets[i];
+            TSDL_TilesetSource tileSource = tileMap->tilesetSources[i];
             // End GID will be the firstGid + tileCount
             int endGid = tile.firstGid + tileSource.tileCount;
-            tileMap.maxTileCount = endGid;
+            tileMap->maxTileCount = endGid;
 
             DebugGUI::addDebugLog("Source:\t" + tile.source + " | " + std::to_string(tile.firstGid) + " -> " + std::to_string(endGid), false, "TSDL");
         }
-        DebugGUI::addDebugLog("Max Size: " + std::to_string(tileMap.maxTileCount), false, "TSDL");
+        DebugGUI::addDebugLog("Max Size: " + std::to_string(tileMap->maxTileCount), false, "TSDL");
         std::cout << "======================================" << std::endl;
         
         return true;
@@ -121,10 +121,10 @@
     /**
     Load the Tileset Source from the .tsx file
     **/
-    bool TSDL::loadTsx(TSDL_TileMap &tileMap, const std::string &path)
+    bool TSDL::loadTsx(TSDL_TileMap *tileMap, const std::string &path)
     {
         // Tsx is a xml file there could be many inside tilesets so we need to parse it
-        for (auto &t : tileMap.tilesets)
+        for (auto &t : tileMap->tilesets)
         {
             std::string tempPath = path;
             // Create a Tileset Source Object
@@ -166,7 +166,7 @@
             ts.imageHeight = imageNode.attribute("height").as_int();
 
             // Add to the vector
-            tileMap.tilesetSources.push_back(ts);
+            tileMap->tilesetSources.push_back(ts);
             DebugGUI::addDebugLog("Succesfully Loaded Tsx: " + ts.name, false, "TSDL");
         }
         return true;
@@ -175,9 +175,9 @@
     /** 
     The tilesetsources already contain the image path so we can load the texture from there
     **/
-    bool TSDL::loadTexture(SDL_Renderer *renderer,TSDL_TileMap &tileMap)
+    bool TSDL::loadTexture(SDL_Renderer *renderer,TSDL_TileMap *tileMap)
     {
-        for (auto &ts : tileMap.tilesetSources)
+        for (auto &ts : tileMap->tilesetSources)
         {
             // Get the Image Path
              std::string imagePath = ts.imagePath;
@@ -219,7 +219,7 @@
         SDL_Renderer* renderer,
         TTF_Font *font,
         std::vector<SDL_Texture*> fontNumbers,
-        TSDL_TileMap &tileMap,
+        TSDL_TileMap *tileMap,
         int mouseX,
         int mouseY,
         float mapScale
@@ -237,7 +237,7 @@
         // ==========================================================================================================================
         // Iterating Layers
         // ==========================================================================================================================
-        for (int i = 0; i < tileMap.layers.size(); i++)
+        for (int i = 0; i < tileMap->layers.size(); i++)
         {
             // ==========================================================================================================================
             // Debug Checking : Showing Layer Info
@@ -246,17 +246,17 @@
             // ==========================================================================================================================
             // Iterating Tiles Horizontally
             // ==========================================================================================================================
-            for (int y = 0 ; y < tileMap.layers[i].height; y++)
+            for (int y = 0 ; y < tileMap->layers[i].height; y++)
             {
                 // ==========================================================================================================================
                 // Iterating Tiles Vertically
                 // ==========================================================================================================================
-                for (int x = 0; x < tileMap.layers[i].width; x++)
+                for (int x = 0; x < tileMap->layers[i].width; x++)
                 {
                     // ==========================================================================================================================
                     // This is the index of the tile we have to map onto the screen
                     // ==========================================================================================================================
-                    int tileIndex = tileMap.layers[i].data[x + y * tileMap.layers[i].width];
+                    int tileIndex = tileMap->layers[i].data[x + y * tileMap->layers[i].width];
                     if (tileIndex == 0) continue;
 
                     // ==========================================================================================================================
@@ -264,9 +264,9 @@
                     // !OPTIMIZATION: This can be optimized by storing the highest tile index for each position
                     // ==========================================================================================================================
                     bool isCovered = false;
-                    for (int j = i + 1; j < tileMap.layers.size(); j++)
+                    for (int j = i + 1; j < tileMap->layers.size(); j++)
                     {
-                        int upperTile = tileMap.layers[j].data[x + y * tileMap.layers[j].width]; // Correct width usage
+                        int upperTile = tileMap->layers[j].data[x + y * tileMap->layers[j].width]; // Correct width usage
                         if (upperTile > 0)
                         {
                             isCovered = true;
@@ -291,10 +291,10 @@
 
                     int textureIndex = -1;
                     int offset = 0;
-                    for (int t = 0; t < tileMap.tilesetSources.size(); t++)
+                    for (int t = 0; t < tileMap->tilesetSources.size(); t++)
                     {
-                        TSDL_Tileset tileset = tileMap.tilesets[t];
-                        TSDL_TilesetSource tilesetSource = tileMap.tilesetSources[t];
+                        TSDL_Tileset tileset = tileMap->tilesets[t];
+                        TSDL_TilesetSource tilesetSource = tileMap->tilesetSources[t];
                         if (tileIndex >= tileset.firstGid && tileIndex < tileset.firstGid + tilesetSource.tileCount)
                         {
                             texture = tilesetSource.texture;
@@ -312,8 +312,8 @@
                     // ==========================================================================================================================
                     // Calculate the mouse position in tile coordinates
                     // ==========================================================================================================================
-                    int tileX = mouseX / (tileMap.tileWidth * mapScale);
-                    int tileY = mouseY / (tileMap.tileHeight * mapScale);
+                    int tileX = mouseX / (tileMap->tileWidth * mapScale);
+                    int tileY = mouseY / (tileMap->tileHeight * mapScale);
 
                     // ==========================================================================================================================
                     // Debug Mouse related Texture/Layer Info
@@ -321,7 +321,7 @@
                     if (tileX == x && tileY == y)
                     {
                         DebugGUI::guiValues.currentMouseLayer = i;
-                        DebugGUI::guiValues.currentTextureName = tileMap.tilesetSources[textureIndex].name;
+                        DebugGUI::guiValues.currentTextureName = tileMap->tilesetSources[textureIndex].name;
 
                         DebugGUI::guiValues.currentMouseTileX = x;
                         DebugGUI::guiValues.currentMouseTileY = y;
@@ -356,8 +356,8 @@
                         // Set position inside the tile (centered)
                         // ==========================================================================================================================
                         SDL_FRect textRect = {
-                            (x + 0.5f) * tileMap.tileWidth *  mapScale - (scaledTextW / 2.0f), 
-                            (y + 0.5f) * tileMap.tileHeight * mapScale - (scaledTextH / 2.0f), 
+                            (x + 0.5f) * tileMap->tileWidth *  mapScale - (scaledTextW / 2.0f), 
+                            (y + 0.5f) * tileMap->tileHeight * mapScale - (scaledTextH / 2.0f), 
                             scaledTextW, scaledTextH
                         };
 
@@ -365,10 +365,10 @@
                         // Create a rectangle for the tile boundary
                         // ==========================================================================================================================
                         SDL_FRect rect = {
-                            x * tileMap.tileWidth *  mapScale, 
-                            y * tileMap.tileHeight * mapScale, 
-                            tileMap.tileWidth *      mapScale, 
-                            tileMap.tileHeight *     mapScale
+                            x * tileMap->tileWidth *  mapScale, 
+                            y * tileMap->tileHeight * mapScale, 
+                            tileMap->tileWidth *      mapScale, 
+                            tileMap->tileHeight *     mapScale
                         };
 
                         // ==========================================================================================================================
@@ -416,7 +416,11 @@
                         SDL_RenderCopyF(renderer, textTexture, NULL, &textRect);
                     }
                     // ==========================================================================================================================
+                    // ==========================================================================================================================
+                    // ==========================================================================================================================
                     // Showing The Map !!!! <Production>
+                    // ==========================================================================================================================
+                    // ==========================================================================================================================
                     // ==========================================================================================================================
                     else 
                     {
@@ -434,10 +438,10 @@
                         // Calculate the destination rectangle (on screen)
                         // ==========================================================================================================================
                         SDL_FRect destRect = {
-                            x * tileMap.tileWidth *  float(mapScale), 
-                            y * tileMap.tileHeight * float(mapScale), 
-                            tileMap.tileWidth *      float(mapScale), 
-                            tileMap.tileHeight *     float(mapScale)
+                            x * tileMap->tileWidth *  float(mapScale), 
+                            y * tileMap->tileHeight * float(mapScale), 
+                            tileMap->tileWidth *      float(mapScale), 
+                            tileMap->tileHeight *     float(mapScale)
                         };
 
                         // ==========================================================================================================================
@@ -464,10 +468,10 @@
                                 int tempIndex = tileIndex + offset; 
                                 DebugGUI::showSelectedSDLTexture(
                                     texture,
-                                    (tileIndex % maxColumns) * tileMap.tileWidth,   
-                                    (tileIndex / maxColumns) * tileMap.tileHeight,  
-                                    tileMap.tileWidth,
-                                    tileMap.tileHeight
+                                    (tileIndex % maxColumns) * tileMap->tileWidth,   
+                                    (tileIndex / maxColumns) * tileMap->tileHeight,  
+                                    tileMap->tileWidth,
+                                    tileMap->tileHeight
                                 );
                             }
                         }

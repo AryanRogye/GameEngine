@@ -1,6 +1,10 @@
 #include "player.h"
+#include "Vec2.h"
+#include "TSDL.h"
 
-Player::Player()
+Player::Player() :
+// Setting Player Collision Here
+collision(new Collision(this))
 {
     // We wanna load from a file
     this->loadPlayer();
@@ -22,6 +26,10 @@ float Player::getMaxSpeed() { return maxSpeed; }
 float Player::getFriction() { return friction; }
 float Player::getVelocityX() { return velocity.x; }
 float Player::getVelocityY() { return velocity.y; }
+Collision *Player::getCollision() { return collision; }
+TSDL_TileMap *Player::getTileMap() { return tileMap; }
+Player::PlayerState Player::getState() { return this->state; }
+float Player::getPlayerScale() { return playerScale; }
 
 // Setters
 void Player::setX(float value) { position.x = value; }
@@ -37,6 +45,11 @@ void Player::setMaxSpeed(float value) { maxSpeed = value; }
 void Player::setFriction(float value) { friction = value; }
 void Player::setVelocityX(float value) { velocity.x = value; }
 void Player::setVelocityY(float value) { velocity.y = value; }
+void Player::setCollision(Collision *value) { collision = value; }
+void Player::setTileMap(TSDL_TileMap *value) { tileMap = value; }
+void Player::setState(Player::PlayerState value) { state = value; }
+void Player::setPlayerScale(float value) { playerScale = value; }
+
 // Methods
 
 void Player::loadPlayer() 
@@ -46,6 +59,9 @@ void Player::loadPlayer()
 }
 void Player::drawPlayer(float dt, float scale)
 {
+    if (this->playerScale != scale)
+        this->playerScale = scale;
+
     if (!this->getRenderer())
     {
         std::cout << "No renderer set for player" << std::endl;
@@ -55,10 +71,14 @@ void Player::drawPlayer(float dt, float scale)
     SDL_FRect playerRect = {
         (int)position.x * scale,
         (int)position.y * scale,
-        50 * scale,
-        50 * scale
+        this->tileMap->tileWidth * scale,
+        this->tileMap->tileHeight * scale
     };
     SDL_RenderFillRectF(renderer, &playerRect);
+
+    // Draw The Collision Box (This is a debug feature)
+    // In Production You Wouldnt Want This
+    this->collision->drawPlayerCollision();
 }
 void Player::handleInput(SDL_Event &event, float dt)
 {
@@ -76,24 +96,30 @@ void Player::handleInput(SDL_Event &event, float dt)
 
 void Player::update(float dt)
 {
+    // Create a direction vector based on the keys pressed
     Vec2 direction(0.0f, 0.0f);
+    // W, S, A, D
     if (keysPressed[0]) direction.y -= 1.0f; // W
     if (keysPressed[1]) direction.y += 1.0f; // S
     if (keysPressed[2]) direction.x -= 1.0f; // A
     if (keysPressed[3]) direction.x += 1.0f; // D
 
+    // Normalize the direction vector if moving diagonally
     if (direction.x != 0.0f && direction.y != 0.0f) {
         direction = direction.normalize();
     }
 
+    // Update the velocity based on the direction
     velocity.x += direction.x * acceleration * dt;
     velocity.y += direction.y * acceleration * dt;
 
+    // Clamp the velocity to the max speed
     float currentSpeed = velocity.length();
     if (currentSpeed > maxSpeed) {
         velocity = velocity.normalize() * maxSpeed;
     }
 
+    // Apply friction
     if (direction.x == 0.0f) {
         velocity.x *= pow(friction, dt * 60.0f);
     }
@@ -101,12 +127,43 @@ void Player::update(float dt)
         velocity.y *= pow(friction, dt * 60.0f);
     }
 
-    position.x += velocity.x * dt;
-    position.y += velocity.y * dt;
+    // Used For Collision
+    Vec2 previousPosition = position;
 
-    if (velocity.length() > 1.0f) {
-        state = PlayerState::WALKING;
-    } else {
-        state = PlayerState::IDLE;
+    // Update the x pos and check if its colliding
+    position.x += velocity.x * dt;
+    if (this->collision->collidesWithMapLayer(this->getTileMap(), this->getPlayerScale()))
+    {
+        // if it does collide then we set the position back to the previous position
+        position.x = previousPosition.x;
+        velocity.x = 0; // Stop the player from moving
     }
+
+    // Update the y pos and check if its colliding
+    position.y += velocity.y * dt;
+    if (this->collision->collidesWithMapLayer(this->getTileMap(), this->getPlayerScale()))
+    {
+        // if it does collide then we set the position back to the previous position
+        position.y = previousPosition.y;
+        velocity.y = 0; // Stop the player from moving
+    }
+
+    // Update the collision box
+    if (this->collision->collidesWithMapLayer(this->getTileMap(), playerScale)) 
+    {
+        this->setState(PlayerState::COLLIDING);
+    } 
+    // If the player is moving
+    else 
+    {
+        if (velocity.length() > 1.0f) 
+        {
+            state = PlayerState::WALKING;
+        } 
+        else 
+        {
+            state = PlayerState::IDLE;
+        }
+    }
+
 }

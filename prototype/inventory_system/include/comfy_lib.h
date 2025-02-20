@@ -108,10 +108,13 @@ void _log(const std::string& prefix,const std::string& msg,TextColor textColor,A
 }
 
 class Player;
+class Collision;
 
 std::string getTimeStamp();
 bool loadMapConfigs(std::string& inPath);
 bool fetchPlayerConfigs(Player* player);
+bool fetchCollisionConfigs(Collision* collision);
+bool saveCollisionConfigs(Collision* collision);
 bool fetchMapConfigs(std::string& outPath);
 bool fileChanged(time_t& lastWriteTime);
 void removePadding(std::string& value);

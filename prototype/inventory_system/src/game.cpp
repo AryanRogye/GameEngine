@@ -38,6 +38,7 @@ void Game::start_game()
         {
             DebugGUI::addDebugLog("File Changed", false, "FILE");
             this->loadMap();
+            this->player->setTileMap(this->map);
             lastTime = currentTime;
         }
         // Draw Here
@@ -75,7 +76,11 @@ void Game::start_game()
 void Game::drawMap() { 
     int mouseX, mouseY;
     SDL_GetMouseState(&mouseX, &mouseY);
-    TSDL::drawMap(this->renderer,this->font ,this->fontNumbers, this->map, mouseX, mouseY, this->gameScale);  
+    if (this->map != nullptr)
+    {
+      TSDL::drawMap(this->renderer, this->font, this->fontNumbers, this->map,
+                    mouseX, mouseY, this->gameScale);
+    }
 }
 void Game::loadMap()
 {
@@ -84,11 +89,23 @@ void Game::loadMap()
     std::string path;
     fetchMapConfigs(path);
 
+    if (path.empty())
+    {
+        // Still Resize To 0
+        this->map = new TSDL_TileMap();
+        // And Resize the layerInfo to 0
+        DebugGUI::guiValues.layerInfo.resize(TSDL::getLayersSize(*this->map));
+        std::fill(DebugGUI::guiValues.layerInfo.begin(),
+                  DebugGUI::guiValues.layerInfo.end(), true);
+        std::cout << "❌ No Path Found" << std::endl;
+        return;
+    }
+
     // Load Debug Gui Values
     // turn vector of bool to all false
 
     // clear the map
-    this->map = {};
+    this->map = new TSDL_TileMap();
 
     if (!TSDL::loadMap(this->renderer, this->map, path, path))
     {
@@ -96,10 +113,8 @@ void Game::loadMap()
         return;
     }
     DebugGUI::SetMapName(path);
-    DebugGUI::guiValues.layerInfo.resize(TSDL::getLayersSize(this->map));
+    DebugGUI::guiValues.layerInfo.resize(TSDL::getLayersSize(*this->map));
     std::fill(DebugGUI::guiValues.layerInfo.begin(), DebugGUI::guiValues.layerInfo.end(), true);
-    std::cout << "Layer Info Size: " << DebugGUI::guiValues.layerInfo.size() << std::endl;
-
 }
 
 void Game::handleEvent(SDL_Event e, float dt)
@@ -119,8 +134,8 @@ void Game::handleEvent(SDL_Event e, float dt)
     {
         DebugGUI::guiValues.toggleGui = !DebugGUI::guiValues.toggleGui;
     }
-
-    this->player->handleInput(e, dt);
+    if (this->player)
+        this->player->handleInput(e, dt);
 }
 
 Game::Game()

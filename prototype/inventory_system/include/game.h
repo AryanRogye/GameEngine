@@ -30,7 +30,7 @@ private:
     SDL_Window *window;
     SDL_Renderer *renderer;
     TTF_Font *font;
-    TSDL_TileMap map;
+    TSDL_TileMap *map;
     std::vector<SDL_Texture*> fontNumbers;
 
     Player* player;

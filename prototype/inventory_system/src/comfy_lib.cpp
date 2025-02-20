@@ -1,5 +1,7 @@
 #include "comfy_lib.h"
 #include "player.h"
+#include "utils/collision.h"
+#include <fstream>
 
 std::string getTimeStamp()
 {
@@ -244,8 +246,12 @@ bool fetchMapConfigs(std::string& outPath)
                     value = value.substr(1, value.size() - 2);
                 }
 
-                // Convert relative path to absolute path
-                std::cout << "Value: " << value << std::endl;
+                if (value.empty())
+                {
+                    // We Return False but tbh theres no real problem with it being empty
+                    return false;
+                }
+
                 if (value.front() != '/')
                 {
                     value = basePath + "/../" + value;
@@ -262,10 +268,69 @@ bool fetchMapConfigs(std::string& outPath)
     return true;  
 }
 
+bool fetchCollisionConfigs(Collision *collision)
+{
+    std::string basePath = __FILE__;
+    basePath = basePath.substr(0, basePath.find_last_of("/")); // Get directory of current file
+
+    std::string configPath = basePath + "/../Data/collision_data.ini";
+
+    std::ifstream configFile(configPath);
+    if (!configFile)
+    {
+        std::cerr << "⚠️ No collision_data.ini found. Using default collision." << std::endl;
+        return false;
+    }
+
+    std::string line, key, value;
+    while (std::getline(configFile, line))
+    {
+        std::istringstream iss(line);
+        if (std::getline(iss, key, '=') && std::getline(iss, value))
+        {
+            // =======================================================================================================
+            // Player Acceleration
+            // =======================================================================================================
+            if (key == "width")
+            {
+                removePadding(value);
+                std::cout << "Value: " << value << std::endl;
+                // convert string to a float
+                collision->setWidth(std::stof(value));
+            }
+            if (key == "height")
+            {
+                removePadding(value);
+                std::cout << "Value: " << value << std::endl;
+                // convert string to a float
+                collision->setHeight(std::stof(value));
+            }
+            if (key == "xOffset")
+            {
+                removePadding(value);
+                std::cout << "Value: " << value << std::endl;
+                // convert string to a float
+                collision->setXOffset(std::stof(value));
+            }
+            if (key == "yOffset")
+            {
+                removePadding(value);
+                std::cout << "Value: " << value << std::endl;
+                // convert string to a float
+                collision->setYOffset(std::stof(value));
+            }
+        }
+    }
+    return true;
+}
+
+
+
+
+
 /** 
 Detect changes in file timestamps of the map_data.ini
 **/
-
 bool fileChanged(time_t& lastWriteTime)
 {
     // Get the absolute path of this file
@@ -285,4 +350,31 @@ bool fileChanged(time_t& lastWriteTime)
         }
     }
     return false;
+}
+
+/**
+    Will write to the Data/collision_data.ini file
+**/
+bool saveCollisionConfigs(Collision* collision)
+{
+    std::string basePath = __FILE__;
+    basePath = basePath.substr(0, basePath.find_last_of("/")); // Get directory of current file
+
+    // Construct the relative path to Data/collision_data.ini
+    std::string configPath = basePath + "/../Data/collision_data.ini";
+
+    std::ofstream configFile(configPath);
+    if (!configFile)
+    {
+        std::cerr << "⚠️ No collision_data.ini found. Using default collision." << std::endl;
+        return false;
+    }
+
+    configFile << "width='" << collision->getWidth() << "'" << std::endl;
+    configFile << "height='" << collision->getHeight() << "'" << std::endl;
+    configFile << "xOffset='" << collision->getXOffset() << "'" << std::endl;
+    configFile << "yOffset='" << collision->getYOffset() << "'" << std::endl;
+
+    std::cout << "Collision data written to " << configPath << std::endl;
+    return true;
 }

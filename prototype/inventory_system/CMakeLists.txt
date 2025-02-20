@@ -23,8 +23,12 @@ include_directories("/opt/homebrew/include")
 link_directories("/opt/homebrew/lib")
 
 # ImGui Paths
-set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/include/third_party/imgui)
-set(IMGUI_BACKENDS ${IMGUI_DIR}/backends)
+set(IMGUI_DIR 
+    ${CMAKE_SOURCE_DIR}/include/third_party/imgui
+)
+set(
+    IMGUI_BACKENDS ${IMGUI_DIR}/backends
+)
 set(IMGUI_SOURCES
     ${IMGUI_DIR}/imgui.cpp
     ${IMGUI_DIR}/imgui_draw.cpp
@@ -35,6 +39,9 @@ set(IMGUI_SOURCES
 )
 
 add_executable(prototype_map_system
+
+    src/utils/collision.cpp
+
     src/game.cpp
     src/comfy_lib.cpp
     src/debug_gui.cpp

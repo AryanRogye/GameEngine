@@ -81,17 +81,17 @@ public:
     /** 
     Load the map and store it inside the TSDL_TileMap Struct
     **/
-    static bool loadMap(SDL_Renderer* renderer, TSDL_TileMap &tileMap, const std::string& jsonPath, const std::string& tsxPath);
+    static bool loadMap(SDL_Renderer* renderer, TSDL_TileMap *tileMap, const std::string& jsonPath, const std::string& tsxPath);
 
     /**
     Load the Tileset Source from the .tsx file
     **/
-    static bool loadTsx(TSDL_TileMap &tileMap, const std::string &path);
+    static bool loadTsx(TSDL_TileMap *tileMap, const std::string &path);
 
     /** 
     The tilesetsources already contain the image path so we can load the texture from there
     **/
-    static bool loadTexture(SDL_Renderer *renderer,TSDL_TileMap &tileMap);
+    static bool loadTexture(SDL_Renderer *renderer,TSDL_TileMap *tileMap);
 
     /**
     Get the Texture from the tileset source
@@ -102,7 +102,7 @@ public:
         SDL_Renderer* renderer,
         TTF_Font *font,
         std::vector<SDL_Texture*> fontNumbers,
-        TSDL_TileMap &tileMap,
+        TSDL_TileMap *tileMap,
         int mouseX,
         int mouseY,
         float mapScale
