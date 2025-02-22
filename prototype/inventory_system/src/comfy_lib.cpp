@@ -1,7 +1,7 @@
 #include "comfy_lib.h"
-#include "player.h"
-#include "utils/collision.h"
-#include <fstream>
+// Needs to be included in this file to avoid circular dependencies
+#include "entity/player.h"
+// end of last checked includes
 
 std::string getTimeStamp()
 {
@@ -81,7 +81,6 @@ bool fetchPlayerConfigs(Player *player) // not sure how i want to get these valu
             if (key == "acceleration") 
             {
                 removePadding(value);
-                std::cout << "Value: " << value << std::endl;
                 // convert string to a float
                 player->setAcceleration(std::stof(value));
             }
@@ -91,7 +90,6 @@ bool fetchPlayerConfigs(Player *player) // not sure how i want to get these valu
             if (key == "maxSpeed") 
             {
                 removePadding(value);
-                std::cout << "Value: " << value << std::endl;
 
                 // convert string to a float
                 player->setMaxSpeed(std::stof(value));
@@ -102,7 +100,6 @@ bool fetchPlayerConfigs(Player *player) // not sure how i want to get these valu
             if (key == "friction") 
             {
                 removePadding(value);
-                std::cout << "Value: " << value << std::endl;
 
                 // convert string to a float
                 player->setFriction(std::stof(value));
@@ -113,7 +110,6 @@ bool fetchPlayerConfigs(Player *player) // not sure how i want to get these valu
             if (key == "health") 
             {
                 removePadding(value);
-                std::cout << "Value: " << value << std::endl;
 
                 // convert string to a int
                 player->setHealth(std::stoi(value));
@@ -124,7 +120,6 @@ bool fetchPlayerConfigs(Player *player) // not sure how i want to get these valu
             if (key == "maxHealth") 
             {
                 removePadding(value);
-                std::cout << "Value: " << value << std::endl;
 
                 // convert string to a int
                 player->setMaxHealth(std::stoi(value));
@@ -135,7 +130,6 @@ bool fetchPlayerConfigs(Player *player) // not sure how i want to get these valu
             if (key == "damage") 
             {
                 removePadding(value);
-                std::cout << "Value: " << value << std::endl;
 
                 // convert string to a int
                 player->setDamage(std::stoi(value));
@@ -146,7 +140,6 @@ bool fetchPlayerConfigs(Player *player) // not sure how i want to get these valu
             if (key == "level") 
             {
                 removePadding(value);
-                std::cout << "Value: " << value << std::endl;
 
                 // convert string to a int
                 player->setLevel(std::stoi(value));
@@ -157,7 +150,6 @@ bool fetchPlayerConfigs(Player *player) // not sure how i want to get these valu
             if (key == "experience") 
             {
                 removePadding(value);
-                std::cout << "Value: " << value << std::endl;
 
                 // convert string to a int
                 player->setExperience(std::stoi(value));
@@ -168,7 +160,6 @@ bool fetchPlayerConfigs(Player *player) // not sure how i want to get these valu
             if (key == "x") 
             {
                 removePadding(value);
-                std::cout << "Value: " << value << std::endl;
                 
                 // convert string to a float
                 player->setX(std::stof(value));
@@ -179,7 +170,6 @@ bool fetchPlayerConfigs(Player *player) // not sure how i want to get these valu
             if (key == "y") 
             {
                 removePadding(value);
-                std::cout << "Value: " << value << std::endl;
 
                 // convert string to a float
                 player->setY(std::stof(value));
@@ -190,7 +180,6 @@ bool fetchPlayerConfigs(Player *player) // not sure how i want to get these valu
             if (key == "velocityX") 
             {
                 removePadding(value);
-                std::cout << "Value: " << value << std::endl;
                 
                 // convert string to a float
                 player->setVelocityX(std::stof(value));
@@ -201,7 +190,6 @@ bool fetchPlayerConfigs(Player *player) // not sure how i want to get these valu
             if (key == "velocityY") 
             {
                 removePadding(value);
-                std::cout << "Value: " << value << std::endl;
 
                 // convert string to a float
                 player->setVelocityY(std::stof(value));
@@ -266,6 +254,88 @@ bool fetchMapConfigs(std::string& outPath)
     outPath = basePath + "/../assets/map.json"; // Default fallback with absolute path
     loadMapConfigs(outPath);
     return true;  
+}
+
+bool fetchSpritesConfigs(Sprites *sprites)
+{
+    std::string basePath = __FILE__;
+    basePath = basePath.substr(0, basePath.find_last_of("/")); // Get directory of current file
+
+    std::string configPath = basePath + "/../Data/sprites_data.ini";
+
+    std::ifstream configFile(configPath);
+    if (!configFile)
+    {
+        std::cerr << "⚠️ No sprites_data.ini found. Using default sprites." << std::endl;
+        return false;
+    }
+
+    std::string line, key, value;
+    while (std::getline(configFile, line))
+    {
+        std::istringstream iss(line);
+        if (std::getline(iss, key, '=') && std::getline(iss, value))
+        {
+            // =======================================================================================================
+            // Player Acceleration
+            // =======================================================================================================
+            if (key == "paths")
+            {
+              std::istringstream pathStream(value);
+              std::string path;
+              sprites->clearSpritePaths(); // Clear existing paths before loading
+              while (std::getline(pathStream, path, ',')) {
+                sprites->addSpritePath(path);
+              }
+              DebugGUI::addDebugLog("Loaded Sprite Paths from config", false,
+                                    "SPRITE");
+            }
+        }
+    }
+    return true;
+}
+
+bool saveSpritesConfigs(Sprites *sprites, std::string path)
+{
+    std::string basePath = __FILE__;
+    basePath = basePath.substr(0, basePath.find_last_of("/")); // Get directory of current file
+
+    // Construct the relative path to Data/collision_data.ini
+    std::string spritePath = basePath + "/../Data/sprites_data.ini";
+
+    std::ofstream spriteFile(spritePath);
+    if (!spriteFile)
+    {
+        std::cerr << "⚠️ No collision_data.ini found. Using default collision." << std::endl;
+        return false;
+    }
+
+    // Write the section header
+    spriteFile << "[Sprites]\n";
+
+    // if path isnt emtpy we wanna add it to the vector of sprite paths
+    if (!path.empty())
+    {
+        sprites->addSpritePath(path);
+        DebugGUI::addDebugLog("Added Sprite Path\n" + path, false, "SPRITE");
+    }
+
+    // Write each sprite path to the file
+    spriteFile << "paths=";
+    for (size_t i = 0; i < sprites->getSpritePaths().size(); i++)
+    {
+        spriteFile << sprites->getSpritePaths()[i].path;
+        if (i < sprites->getSpritePaths().size() - 1)
+        {
+            spriteFile << ","; // Separate paths with commas
+        }
+    }
+    spriteFile << "\n";
+
+    spriteFile.close();
+
+    std::cout << "Collision data written to " << spritePath << std::endl;
+    return true;
 }
 
 bool fetchCollisionConfigs(Collision *collision)

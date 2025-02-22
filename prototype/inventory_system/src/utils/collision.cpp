@@ -1,7 +1,8 @@
 #include "utils/collision.h"
-#include "comfy_lib.h"
-#include "player.h"
+// Required to be in this file to avoid circular imports
+#include "entity/player.h"
 #include "TSDL.h"
+// End of last checked required includes
 
 Collision::Collision(Player *player) 
 { 
@@ -113,7 +114,7 @@ bool Collision::collidesWithMapLayer(TSDL_TileMap *tileMap, float scale)
                     int tileIndex = layer.data[x + y * layer.width];
                     if (tileIndex > 0) {
                         // Calculate tile bounds using the same scaling as drawMap
-                        float tileLeft = x * tileMap->tileWidth * scale;
+                        float tileLeft = (x * tileMap->tileWidth) * scale;
                         float tileRight = tileLeft + (tileMap->tileWidth * scale);
                         float tileTop = y * tileMap->tileHeight * scale;
                         float tileBottom = tileTop + (tileMap->tileHeight * scale);

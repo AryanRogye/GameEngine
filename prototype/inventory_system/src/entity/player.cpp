@@ -1,10 +1,13 @@
-#include "player.h"
+#include "entity/player.h"
 #include "Vec2.h"
 #include "TSDL.h"
+#include "comfy_lib.h"
 
 Player::Player() :
 // Setting Player Collision Here
-collision(new Collision(this))
+collision(new Collision(this)),
+camera(new Camera(this)),
+sprite(new Sprites(this))
 {
     // We wanna load from a file
     this->loadPlayer();
@@ -30,6 +33,8 @@ Collision *Player::getCollision() { return collision; }
 TSDL_TileMap *Player::getTileMap() { return tileMap; }
 Player::PlayerState Player::getState() { return this->state; }
 float Player::getPlayerScale() { return playerScale; }
+Camera *Player::getCamera() { return camera; }
+Sprites *Player::getSprite() { return sprite; }
 
 // Setters
 void Player::setX(float value) { position.x = value; }
@@ -49,6 +54,8 @@ void Player::setCollision(Collision *value) { collision = value; }
 void Player::setTileMap(TSDL_TileMap *value) { tileMap = value; }
 void Player::setState(Player::PlayerState value) { state = value; }
 void Player::setPlayerScale(float value) { playerScale = value; }
+void Player::setCamera(Camera *value) { camera = value; }
+void Player::setSprite(Sprites *value) { sprite = value; }
 
 // Methods
 
@@ -57,7 +64,7 @@ void Player::loadPlayer()
     fetchPlayerConfigs(this);
     DebugGUI::addDebugLog("Player File Loaded");
 }
-void Player::drawPlayer(float dt, float scale)
+void Player::draw(float dt, float scale)
 {
     if (this->playerScale != scale)
         this->playerScale = scale;
@@ -76,10 +83,12 @@ void Player::drawPlayer(float dt, float scale)
     };
     SDL_RenderFillRectF(renderer, &playerRect);
 
+
     // Draw The Collision Box (This is a debug feature)
     // In Production You Wouldnt Want This
     this->collision->drawPlayerCollision();
 }
+
 void Player::handleInput(SDL_Event &event, float dt)
 {
     // Track key states
@@ -122,7 +131,8 @@ void Player::update(float dt)
     }
 
     // Normalize the direction vector if moving diagonally
-    if (direction.x != 0.0f && direction.y != 0.0f) {
+    if (direction.x != 0.0f && direction.y != 0.0f) 
+    {
         direction = direction.normalize();
     }
 
@@ -132,15 +142,19 @@ void Player::update(float dt)
 
     // Clamp the velocity to the max speed
     float currentSpeed = velocity.length();
-    if (currentSpeed > maxSpeed) {
+    if (currentSpeed > maxSpeed) 
+    {
         velocity = velocity.normalize() * maxSpeed;
     }
 
     // Apply friction
-    if (direction.x == 0.0f) {
+    if (direction.x == 0.0f) 
+    {
         velocity.x *= pow(friction, dt * 60.0f);
+    }
     
-    if (direction.y == 0.0f) {
+    if (direction.y == 0.0f) 
+    {
         velocity.y *= pow(friction, dt * 60.0f);
     }
 
@@ -148,7 +162,8 @@ void Player::update(float dt)
     Vec2 previousPosition = position;
 
     // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    // TODO Make Sure That Player Colliding State is set if player is currently pressing key and is colliding not if hes still
+    // TODO This funciton now works perfectly but its not optimized to be the best it can be
+    // TODO so when i dont feel lazy and tired i'll do it then
     // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     bool isColliding = false;
 
@@ -172,6 +187,27 @@ void Player::update(float dt)
         this->setState(PlayerState::COLLIDING);
         isColliding = true;
         velocity.y = 0; // Stop the player from moving
+    }
+
+    if (this->tileMap)
+    {
+        // Ensure the camera doesn't go beyond the map boundaries
+        float mapWidth =
+            this->getTileMap()->width * this->getTileMap()->tileWidth;
+        float mapHeight =
+            this->getTileMap()->height * this->getTileMap()->tileHeight;
+
+        float camMinX = 0;
+        float camMinY = 0;
+        float camMaxX = mapWidth - this->camera->getWidth();
+        float camMaxY = mapHeight - this->camera->getHeight();
+
+        // Set the new camera position and clamp it
+        float newCamX = this->position.x - (this->camera->getWidth() / 2);
+        float newCamY = this->position.y - (this->camera->getHeight() / 2);
+
+        this->camera->setX(std::max(camMinX, std::min(newCamX, camMaxX)));
+        this->camera->setY(std::max(camMinY, std::min(newCamY, camMaxY)));
     }
 
     // Update the collision box

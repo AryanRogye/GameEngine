@@ -4,6 +4,7 @@
 #define UTILS_COLLISION_H
 
 #include <SDL2/SDL.h>
+#include "comfy_lib.h"
 
 // Since we dont want circular imports we need this here
 // inside the implimentation file include the player.h

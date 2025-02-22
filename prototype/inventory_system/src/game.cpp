@@ -1,9 +1,4 @@
 #include "game.h"
-#include "comfy_lib.h"
-#include "debug_gui.h"
-#include "imgui.h"
-#include <SDL_mouse.h>
-#include <SDL_ttf.h>
 #define WIDTH 800
 #define HEIGHT 600
 
@@ -43,7 +38,7 @@ void Game::start_game()
         }
         // Draw Here
         this->drawMap();
-        this->player->drawPlayer(dt, this->gameScale);
+        this->player->draw(dt, this->gameScale);
         this->renderGui();
 
         SDL_RenderPresent(this->renderer);
@@ -79,7 +74,7 @@ void Game::drawMap() {
     if (this->map != nullptr)
     {
       TSDL::drawMap(this->renderer, this->font, this->fontNumbers, this->map,
-                    mouseX, mouseY, this->gameScale);
+                    mouseX, mouseY, this->gameScale, this->player->getCamera());
     }
 }
 void Game::loadMap()
@@ -91,6 +86,7 @@ void Game::loadMap()
 
     if (path.empty())
     {
+        DebugGUI::addDebugLog("No Path Found", false, "MAP");
         // Still Resize To 0
         this->map = new TSDL_TileMap();
         // And Resize the layerInfo to 0

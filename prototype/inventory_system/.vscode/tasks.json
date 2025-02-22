@@ -5,6 +5,8 @@
             "label": "Build with CMake",
             "type": "shell",
             "command": "cmake --build build",
+            "args": [
+            ],
             "problemMatcher": [],
             "group": {
                 "kind": "build",

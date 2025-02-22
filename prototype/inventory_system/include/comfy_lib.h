@@ -18,6 +18,10 @@
 #include <format>
 #include <chrono>
 
+
+#include "utils/collision.h"
+
+
 // #########################################################
 // Defines
 // #########################################################
@@ -109,10 +113,15 @@ void _log(const std::string& prefix,const std::string& msg,TextColor textColor,A
 
 class Player;
 class Collision;
+class Sprites;
 
 std::string getTimeStamp();
 bool loadMapConfigs(std::string& inPath);
 bool fetchPlayerConfigs(Player* player);
+
+bool fetchSpritesConfigs(Sprites *sprites);
+bool saveSpritesConfigs(Sprites *sprites, std::string path = "");
+
 bool fetchCollisionConfigs(Collision* collision);
 bool saveCollisionConfigs(Collision* collision);
 bool fetchMapConfigs(std::string& outPath);

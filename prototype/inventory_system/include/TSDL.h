@@ -16,6 +16,7 @@ This is my implimentation of loading a Tiled map into a SDL Game.
 #include <nlohmann/json.hpp>
 #include <pugixml.hpp>
 #include "debug_gui.h"
+#include "utils/camera.h"
 
 using json = nlohmann::json;
 
@@ -105,7 +106,8 @@ public:
         TSDL_TileMap *tileMap,
         int mouseX,
         int mouseY,
-        float mapScale
+        float mapScale,
+        Camera *camera
     );
 };
 

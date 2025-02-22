@@ -3,20 +3,25 @@
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
+#include <SDL_render.h>
 #include <vector>
 #include <iostream>
-#include <SDL2/SDL.h>
-#include <SDL_image.h>
+#include <SDL2/SDL.h> 
+#include <SDL_image.h> 
 #include <string>
 #include <map>
-#include "comfy_lib.h"
 #include <SDL_clipboard.h>
 #include <ctime>
+
+#include "entity/entity.h"
+#include "entity/player.h"
+
 
 class DebugGUI {
 public:
     static void Init(SDL_Window* window, SDL_Renderer* renderer);
     static void ApplyGuiStyle();
+    static void renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer);
     static void Render(SDL_Renderer* renderer);
 
     struct GUIValues {

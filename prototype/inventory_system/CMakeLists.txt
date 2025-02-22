@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_FLAGS_DEBUG "-g")  # Ensure debug symbols are added
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
+
 
 # SDL 2
 set(SDL2_DIR "/opt/homebrew/opt/sdl2/lib/cmake/SDL2")
@@ -44,11 +46,12 @@ add_executable(prototype_map_system
     src/utils/camera.cpp
     src/utils/sprite.cpp
 
+    src/entity/player.cpp
+
     src/game.cpp
     src/comfy_lib.cpp
     src/debug_gui.cpp
     src/TSDL.cpp
-    src/player.cpp
     src/main.cpp
     ${IMGUI_SOURCES}  # Add ImGui source files to the build
 )

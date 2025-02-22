@@ -10,6 +10,7 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
 #include "debug_gui.h"
+#include "comfy_lib.h"
 
 
 /** 
@@ -18,7 +19,7 @@ This File is a protype for my library for loading a tiled map
 
 
 #include "TSDL.h"
-#include "player.h"
+#include "entity/player.h"
 
 
 class Game 
