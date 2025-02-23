@@ -276,19 +276,38 @@ bool fetchSpritesConfigs(Sprites *sprites)
         std::istringstream iss(line);
         if (std::getline(iss, key, '=') && std::getline(iss, value))
         {
-            // =======================================================================================================
-            // Player Acceleration
-            // =======================================================================================================
             if (key == "paths")
             {
-              std::istringstream pathStream(value);
-              std::string path;
-              sprites->clearSpritePaths(); // Clear existing paths before loading
-              while (std::getline(pathStream, path, ',')) {
-                sprites->addSpritePath(path);
-              }
-              DebugGUI::addDebugLog("Loaded Sprite Paths from config", false,
-                                    "SPRITE");
+                std::istringstream pathStream(value);
+                std::string path;
+                // Clear existing paths before loading
+                sprites->clearSpritePaths();
+                while (std::getline(pathStream, path, ',')) {
+                    sprites->addSpritePath(path);
+                }
+                DebugGUI::addDebugLog("Loaded Sprite Paths from config", false, "SPRITE");
+            }
+            if (key == "numFramesX")
+            {
+                std::istringstream numFramesXStream(value);
+                std::string path;
+                int i = 0;
+                while (std::getline(numFramesXStream, path, ',')) {
+                    sprites->getSpritePaths()[i].numFramesX = std::stoi(path);
+                    i++;
+                }
+                DebugGUI::addDebugLog("Loaded numFramesX from config", false, "SPRITE");
+            }
+            if (key == "numFramesY")
+            {
+                std::istringstream numFramesYStream(value);
+                std::string path;
+                int i = 0;
+                while (std::getline(numFramesYStream, path, ',')) {
+                    sprites->getSpritePaths()[i].numFramesY = std::stoi(path);
+                    i++;
+                }
+                DebugGUI::addDebugLog("Loaded numFramesY from config", false, "SPRITE");
             }
         }
     }
@@ -310,17 +329,18 @@ bool saveSpritesConfigs(Sprites *sprites, std::string path)
         return false;
     }
 
-    // Write the section header
-    spriteFile << "[Sprites]\n";
-
-    // if path isnt emtpy we wanna add it to the vector of sprite paths
     if (!path.empty())
     {
         sprites->addSpritePath(path);
         DebugGUI::addDebugLog("Added Sprite Path\n" + path, false, "SPRITE");
     }
 
-    // Write each sprite path to the file
+    // ======================================================================
+    // Sprite Section Header
+    // ======================================================================
+    spriteFile << "[Sprites]\n";
+
+    // List of sprite paths
     spriteFile << "paths=";
     for (size_t i = 0; i < sprites->getSpritePaths().size(); i++)
     {
@@ -328,6 +348,50 @@ bool saveSpritesConfigs(Sprites *sprites, std::string path)
         if (i < sprites->getSpritePaths().size() - 1)
         {
             spriteFile << ","; // Separate paths with commas
+        }
+    }
+    spriteFile << "\n";
+
+    // ======================================================================
+    // Num FramesX Section Header
+    // ======================================================================
+    spriteFile << "[numFramesX]\n";
+
+    spriteFile << "numFramesX=";
+    for (size_t i = 0; i < sprites->getSpritePaths().size(); i++)
+    {
+        // first we need to make sure that the value is not empty
+        if (sprites->getSpritePaths()[i].numFramesX)
+        {
+            spriteFile << sprites->getSpritePaths()[i].numFramesX;
+        } else {
+            spriteFile << "0";
+        }
+        if (i < sprites->getSpritePaths().size() - 1)
+        {
+            spriteFile << ",";
+        }
+    }
+    spriteFile << "\n";
+
+    // ======================================================================
+    // Num FramesY Section Header
+    // ======================================================================
+    spriteFile << "[numFramesY]\n";
+
+    spriteFile << "numFramesY=";
+    for (size_t i = 0; i < sprites->getSpritePaths().size(); i++)
+    {
+        // first we need to make sure that the value is not empty
+        if (sprites->getSpritePaths()[i].numFramesY)
+        {
+            spriteFile << sprites->getSpritePaths()[i].numFramesY;
+        } else {
+            spriteFile << "0";
+        }
+        if (i < sprites->getSpritePaths().size() - 1)
+        {
+            spriteFile << ",";
         }
     }
     spriteFile << "\n";

@@ -8,6 +8,7 @@
 #include <SDL_render.h>
 #include <SDL_surface.h>
 #include <cstddef>
+#include <type_traits>
 
 DebugGUI::GUIValues DebugGUI::guiValues;
 static std::string oldOnboardingSpritePath = "";
@@ -590,53 +591,79 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
 
             static int selected = -1;
             static bool showDeletePopup = false;
+            static float currentSpritesZoom = 1.0f;
+            // =====================================================================================================================
+            // Add Slider zoom controls here
+            // =====================================================================================================================
+            ImGui::SliderFloat("Zoom", &currentSpritesZoom, 0.1f, 10.0f);
+            if (currentSpritesZoom < 0.1f) currentSpritesZoom = 0.1f;
+
+            // Push a style for a rounded frame and a subtle background color
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f);
+            ImGui::BeginChild("SpritesChild", ImVec2(0, 300), true, ImGuiWindowFlags_AlwaysUseWindowPadding);
+
             // =====================================================================================================================
             // Display the sprite paths
             // =====================================================================================================================
             for (size_t i = 0; i < spritePaths.size(); i++)
             {
+                ImGui::Columns(2, ("SpriteColumns##" + std::to_string(i)).c_str(), false);
+                ImGui::SetColumnWidth(0, 120.0f * currentSpritesZoom); // Scale column width
+
+                // =====================================================================================================================
+                // Display the image
+                // =====================================================================================================================
+                ImVec2 imageSize = ImVec2(100 * currentSpritesZoom, 100 * currentSpritesZoom); // Scale images
+                ImGui::Image((ImTextureID)entity->getSprite()->getTextures(i), imageSize);
+                ImGui::NextColumn();
 
                 // the path will be hella long we wanna only get the last /...... the ......
                 size_t lastSlash = spritePaths[i].path.find_last_of('/');
                 std::string name =  spritePaths[i].path.substr(lastSlash + 1);
 
                 // =====================================================================================================================
-                // Display the image
+                // Display the name and delete button (scaled)
                 // =====================================================================================================================
-                ImGui::Image((ImTextureID)entity->getSprite()->getTextures(i), ImVec2(100, 100));
-
                 ImGui::Text("%s", name.c_str());
                 ImGui::SameLine();
-                if(ImGui::Button("Delete"))
+                if (ImGui::Button(("Delete##" + std::to_string(i)).c_str(), ImVec2(50 * currentSpritesZoom, 20 * currentSpritesZoom)))
                 {
-                    // entity->getSprite()->removeSpritePath(i);
                     selected = i;
                     showDeletePopup = true;
                 }
-                
+
                 // =====================================================================================================================
-                // Configure Sprite Button
+                // Displaying Width and Height
                 // =====================================================================================================================
-                std::string configureText = "Configure Sprite";
                 if (
-                    !entity->getSprite()->getSpritePaths()[i].height ||
-                    !entity->getSprite()->getSpritePaths()[i].width  ||
-                    !entity->getSprite()->getSpritePaths()[i].numFramesX ||
-                    !entity->getSprite()->getSpritePaths()[i].numFramesY ||
-                    !entity->getSprite()->getSpritePaths()[i].currentFrame ||
-                    !entity->getSprite()->getSpritePaths()[i].texture ||
-                    entity->getSprite()->getSpritePaths()[i].path.empty()
+                    entity->getSprite()->getSpritePaths()[i].width && 
+                    entity->getSprite()->getSpritePaths()[i].height
                 )
                 {
-                    configureText = "Configure Sprite (Incomplete)";
+                    // Show The Width and allow the user to change it
+                    ImGui::Text("Width: %d", entity->getSprite()->getSpritePaths()[i].width);
+                    ImGui::SameLine();
+                    ImGui::Text("Height: %d", entity->getSprite()->getSpritePaths()[i].height);
                 }
-                if (ImGui::Button(configureText.c_str()))
+                // =====================================================================================================================
+                // Displaying Number of Frames X and Y
+                // =====================================================================================================================
+                if (
+                    entity->getSprite()->getSpritePaths()[i].numFramesX &&
+                    entity->getSprite()->getSpritePaths()[i].numFramesY
+                )
                 {
-                    // Need To Implement
-                    // This will open a new window to configure the sprite
+                    // Show The Number of Frames X and allow the user to change it
+                    ImGui::Text("Frames X: %d", entity->getSprite()->getSpritePaths()[i].numFramesX);
+                    ImGui::SameLine();
+                    ImGui::Text("Frames Y: %d", entity->getSprite()->getSpritePaths()[i].numFramesY);
                 }
+
+                ImGui::Columns(1); // Reset column layout
+                ImGui::Separator();
             }
-            ImGui::Separator();
+            ImGui::EndChild();
+            ImGui::PopStyleVar();
             // =====================================================================================================================
             // Delete Popup (Not a real delete till you save it)
             // =====================================================================================================================
@@ -931,7 +958,34 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
         // =====================================================================================================================
         if (ImGui::Button("Save Sprite?")) 
         {
-            saveSpritesConfigs(entity->getSprite(), onboardingSpritePath);
+
+            // checks to make sure no empty values are passed
+
+
+            // Query texture to get size and stuff
+            if (onboardingTexture && !onboardingSpritePath.empty())
+            {
+                SDL_Point size;
+                SDL_QueryTexture(onboardingTexture, NULL, NULL, &size.x, &size.y);
+
+
+                // Attempt to create to a sprite object
+                Sprites::Sprite sprite;
+                sprite.path = onboardingSpritePath;
+                sprite.numFramesX = framesX;
+                sprite.numFramesY = framesY;
+                sprite.width = size.x;
+                sprite.height = size.y;
+                sprite.currentFrame = 0;
+                sprite.texture = onboardingTexture;
+
+                entity->getSprite()->addSprite(sprite);
+            }
+
+            // TODO : Need to also pass in a sprite object instead of just the path to save the sprite
+            // I want the user to be able to have the ability to either configure the sprite now or later
+            // but cannot apply to the entity until its fully configured
+            saveSpritesConfigs(entity->getSprite());
             onboardingSpritePath = "";
             numDeleted = 0;
         }

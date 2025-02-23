@@ -1,16 +1,39 @@
 #include "utils/sprite.h"
 #include "comfy_lib.h"
 #include "entity/player.h"
+#include "debug_gui.h"
 
 Sprites::Sprites(Player *player)
 {
     fetchSpritesConfigs(this);
+
+    // Once we have the sprites, the width and the height is not saved so we can easily
+    // query it
+    this->queryTexureDimensions();
+
     if (this->sprites.empty())
     {
         SM_WARN("No sprites found");
         // init a empty sprite (maybe the gui will handle this)
         this->sprites = std::vector<Sprites::Sprite>();
     }
+}
+
+void Sprites::queryTexureDimensions()
+{
+    for (int i = 0; i < this->sprites.size(); i++)
+    {
+        int w, h;
+        SDL_QueryTexture(this->sprites[i].texture, NULL, NULL, &w, &h);
+        this->sprites[i].width = w;
+        this->sprites[i].height = h;
+    }
+    DebugGUI::addDebugLog("Queried texture dimensions", false, "SPRITE");
+}
+
+void Sprites::addSprite(Sprite sprite)
+{
+    this->sprites.push_back(sprite);
 }
 
 // Getters

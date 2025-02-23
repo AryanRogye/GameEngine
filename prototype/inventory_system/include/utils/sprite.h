@@ -37,8 +37,10 @@ class Sprites
     // Setters
 
     void addSpritePath(std::string path);
+    void addSprite(Sprite sprite);
     void removeSpritePath(int index);
     void clearSpritePaths();
+    void queryTexureDimensions();
 };
 
 #endif
