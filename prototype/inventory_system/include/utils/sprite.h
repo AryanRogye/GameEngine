@@ -37,6 +37,9 @@ class Sprites
     // Setters
 
     void addSpritePath(std::string path);
+    void addSpriteFramesX(int index, int numFramesX);
+    void addSpriteFramesY(int index, int numFramesY);
+
     void addSprite(Sprite sprite);
     void removeSpritePath(int index);
     void clearSpritePaths();

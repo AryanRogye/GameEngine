@@ -62,7 +62,7 @@ void Player::setSprite(Sprites *value) { sprite = value; }
 void Player::loadPlayer() 
 { 
     fetchPlayerConfigs(this);
-    DebugGUI::addDebugLog("Player File Loaded");
+    DebugGUI::addDebugLog("Player File Loaded", ErrorCode::SUCCESS);
 }
 void Player::draw(float dt, float scale)
 {

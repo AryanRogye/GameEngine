@@ -1,5 +1,6 @@
 #include "comfy_lib.h"
 // Needs to be included in this file to avoid circular dependencies
+#include "debug_gui.h"
 #include "entity/player.h"
 // end of last checked includes
 
@@ -256,6 +257,12 @@ bool fetchMapConfigs(std::string& outPath)
     return true;  
 }
 
+
+
+/** 
+    TODO: Bug in this function idk what it is yet i'm gonna fix the logging first
+**/
+
 bool fetchSpritesConfigs(Sprites *sprites)
 {
     std::string basePath = __FILE__;
@@ -284,8 +291,10 @@ bool fetchSpritesConfigs(Sprites *sprites)
                 sprites->clearSpritePaths();
                 while (std::getline(pathStream, path, ',')) {
                     sprites->addSpritePath(path);
+                    DebugGUI::addDebugLog("Added Sprite Path\n" + path, ErrorCode::NONE);
                 }
-                DebugGUI::addDebugLog("Loaded Sprite Paths from config", false, "SPRITE");
+                DebugGUI::addDebugLog("Loaded Sprite Paths from config", ErrorCode::NONE);
+                // give the user a log of the paths
             }
             if (key == "numFramesX")
             {
@@ -293,10 +302,11 @@ bool fetchSpritesConfigs(Sprites *sprites)
                 std::string path;
                 int i = 0;
                 while (std::getline(numFramesXStream, path, ',')) {
-                    sprites->getSpritePaths()[i].numFramesX = std::stoi(path);
+                    sprites->addSpriteFramesX(i, std::stoi(path));
+                    DebugGUI::addDebugLog("Loaded NumFrameX: " + path, ErrorCode::NONE);
                     i++;
                 }
-                DebugGUI::addDebugLog("Loaded numFramesX from config", false, "SPRITE");
+                DebugGUI::addDebugLog("Loaded numFramesX from config", ErrorCode::NONE);
             }
             if (key == "numFramesY")
             {
@@ -304,10 +314,11 @@ bool fetchSpritesConfigs(Sprites *sprites)
                 std::string path;
                 int i = 0;
                 while (std::getline(numFramesYStream, path, ',')) {
-                    sprites->getSpritePaths()[i].numFramesY = std::stoi(path);
+                    sprites->addSpriteFramesY(i, std::stoi(path));
+                    DebugGUI::addDebugLog("Loaded NumFrameY: " + path, ErrorCode::NONE);
                     i++;
                 }
-                DebugGUI::addDebugLog("Loaded numFramesY from config", false, "SPRITE");
+                DebugGUI::addDebugLog("Loaded numFramesY from config", ErrorCode::NONE);
             }
         }
     }
@@ -332,7 +343,7 @@ bool saveSpritesConfigs(Sprites *sprites, std::string path)
     if (!path.empty())
     {
         sprites->addSpritePath(path);
-        DebugGUI::addDebugLog("Added Sprite Path\n" + path, false, "SPRITE");
+        DebugGUI::addDebugLog("Added Sprite Path\n" + path, ErrorCode::NONE);
     }
 
     // ======================================================================

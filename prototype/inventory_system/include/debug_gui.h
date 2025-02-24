@@ -12,6 +12,7 @@
 #include <map>
 #include <SDL_clipboard.h>
 #include <ctime>
+#include "comfy_lib.h"
 
 #include "entity/entity.h"
 #include "entity/player.h"
@@ -21,6 +22,14 @@ class DebugGUI {
 public:
     static void Init(SDL_Window* window, SDL_Renderer* renderer);
     static void ApplyGuiStyle();
+
+
+    static void renderLogs();
+    static void renderMapInfo();
+    static void renderLayerInfo();
+    static void renderTexturesInfo();
+    static void renderPlayerInfo(SDL_Renderer* renderer);
+
     static void renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer);
     static void Render(SDL_Renderer* renderer);
 
@@ -33,7 +42,7 @@ public:
         bool colorForDifferentLayer = false;
         bool drawGridOverTexture = false;
         std::vector<bool> layerInfo;
-        std::vector<std::pair<std::string, bool>> debugLogs;
+        std::vector<std::pair<std::string, ErrorCode>> debugLogs;
 
         // Current Layer Mouse is on
         int currentMouseLayer = -1;
@@ -53,7 +62,9 @@ public:
     static void SetMapName(const std::string& mapName);
     static GUIValues guiValues;
     static std::vector<bool> layerInfo;
-    static void addDebugLog(const std::string& log, bool copyClipboard = false ,const std::string& label="");
     static void showSelectedSDLTexture(SDL_Texture* texture, int x, int y, int w, int h);
     static void setMapScale(float *scale);
+
+    static void addDebugLog(const std::string& log, std::vector<ErrorCode> = {});
+    static void addDebugLog(const std::string& log, ErrorCode = ErrorCode::NONE);
 };

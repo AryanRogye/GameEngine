@@ -1,4 +1,5 @@
 #include "TSDL.h"
+#include "comfy_lib.h"
 
     /** 
     Load the map and store it inside the TSDL_TileMap Struct
@@ -10,8 +11,7 @@
         // Open the file
         if (!file.is_open())
         {
-            DebugGUI::addDebugLog("Error: Could not open the file:", false, "Json");
-            DebugGUI::addDebugLog(jsonPath, true);
+            DebugGUI::addDebugLog("Error: Could not open the file:", std::vector<ErrorCode>{ErrorCode::FILE_ERROR, ErrorCode::JSON_ERROR});
             return false;
         }
 
@@ -87,21 +87,21 @@
         }
         if (!loadTsx(tileMap, path))
         {
-            DebugGUI::addDebugLog("Error: Could not load the tsx file: (" + path + ")", false, "TSDL");
-            DebugGUI::addDebugLog(path, true, "TSDL");
+            DebugGUI::addDebugLog("Error: Could not load the tsx file: (" + path + ")", {ErrorCode::FILE_ERROR, ErrorCode::MAP_ERROR});
+            DebugGUI::addDebugLog(path, ErrorCode::FILE_ERROR);
             return false;
         }
 
         if (!loadTexture(renderer, tileMap))
         {
-            DebugGUI::addDebugLog("Error: Could not load the texture from the tsx file: (" + path + ")", false, "TSDL");
-            DebugGUI::addDebugLog(path, true, "TSDL");
+            DebugGUI::addDebugLog("Error: Could not load the texture from the tsx file: (" + path + ")", {ErrorCode::TEXTURE_ERROR, ErrorCode::MAP_ERROR});
+            DebugGUI::addDebugLog(path, ErrorCode::TEXTURE_ERROR);
             return false;
         }
 
-        DebugGUI::addDebugLog("Succesfully Loaded Json Into Map Struct", false, "TSDL");
+        DebugGUI::addDebugLog("Succesfully Loaded Json Into Map Struct", ErrorCode::SUCCESS);
         /*std::cout << "Path: " << path << std::endl;*/
-        DebugGUI::addDebugLog("Sources: " + std::to_string(tileMap->tilesets.size()), false, "TSDL");
+        DebugGUI::addDebugLog("Sources: " + std::to_string(tileMap->tilesets.size()), ErrorCode::SUCCESS);
         for (int i = 0; i < tileMap->tilesets.size(); i++)
         {
             TSDL_Tileset tile = tileMap->tilesets[i];
@@ -110,9 +110,9 @@
             int endGid = tile.firstGid + tileSource.tileCount;
             tileMap->maxTileCount = endGid;
 
-            DebugGUI::addDebugLog("Source:\t" + tile.source + " | " + std::to_string(tile.firstGid) + " -> " + std::to_string(endGid), false, "TSDL");
+            DebugGUI::addDebugLog("Source:\t" + tile.source + " | " + std::to_string(tile.firstGid) + " -> " + std::to_string(endGid), ErrorCode::SUCCESS);
         }
-        DebugGUI::addDebugLog("Max Size: " + std::to_string(tileMap->maxTileCount), false, "TSDL");
+        DebugGUI::addDebugLog("Max Size: " + std::to_string(tileMap->maxTileCount), ErrorCode::NONE);
         std::cout << "======================================" << std::endl;
         
         return true;
@@ -167,7 +167,7 @@
 
             // Add to the vector
             tileMap->tilesetSources.push_back(ts);
-            DebugGUI::addDebugLog("Succesfully Loaded Tsx: " + ts.name, false, "TSDL");
+            DebugGUI::addDebugLog("Succesfully Loaded Tsx: " + ts.name, ErrorCode::SUCCESS);
         }
         return true;
     }

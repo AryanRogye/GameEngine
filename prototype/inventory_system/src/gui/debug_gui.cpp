@@ -1,6 +1,5 @@
 // DebugGUI.cpp
 #include "debug_gui.h"
-#include "comfy_lib.h"
 #include "imgui.h"
 #include "utils/collision.h"
 #include "TSDL.h"
@@ -83,19 +82,6 @@ void DebugGUI::Init(SDL_Window* window, SDL_Renderer* renderer)
 }
 
 
-void DebugGUI::addDebugLog(const std::string& log, bool copyClipboard ,const std::string& label)
-{
-    std::string toAdd = "";
-    if (label != "")
-    {
-        toAdd += "(" + label + ") ";
-    }
-    toAdd += log;
-
-    const std::string timestamp = getTimeStamp();
-    guiValues.debugLogs.emplace_back(timestamp + " | " + toAdd, copyClipboard);
-}
-
 void DebugGUI::Render(SDL_Renderer* renderer)
 {
     if (!guiValues.toggleGui) return;
@@ -148,29 +134,7 @@ void DebugGUI::Render(SDL_Renderer* renderer)
         // =====================================================================================================================
         if(ImGui::BeginTabItem("Logs"))
         {
-            for (size_t i = 0; i < guiValues.debugLogs.size(); ++i)
-            {
-                const auto &[logText, copy] = guiValues.debugLogs[i];
-                // If the log should be copied, show the button
-                ImGui::TextWrapped("%s", logText.c_str());
-                if (copy)
-                {
-                    std::string buttonText = "Copy##" + std::to_string(i);
-                    if (ImGui::Button(buttonText.c_str()))
-                    {
-                        // Use SDL clipboard for other platforms
-                        if (SDL_SetClipboardText(logText.c_str()) == 0)
-                        {
-                            std::cout << "✅ Successfully copied!" << std::endl;
-                        }
-                        else
-                    {
-                            std::cerr << "❌ SDL Clipboard Error: " << SDL_GetError() << std::endl;
-                        }
-                        addDebugLog("Copied to clipboard", false);
-                    }
-                }         
-            }
+            renderLogs();
             ImGui::EndTabItem();
         }
 
@@ -179,36 +143,7 @@ void DebugGUI::Render(SDL_Renderer* renderer)
         // =====================================================================================================================
         if(ImGui::BeginTabItem("Map"))
         {
-            // =====================================================================================================================
-            // Display Map Name
-            // =====================================================================================================================
-            // trim just till the last slash
-            size_t lastSlash = guiValues.mapName.find_last_of('/');
-            std::string name =  guiValues.mapName.substr(lastSlash + 1);
-            ImGui::Text("Map Name: %s", name.c_str());
-
-            // =====================================================================================================================
-            // Change Map
-            // =====================================================================================================================
-            if (ImGui::Button("Change Map (New Json)"))
-            {
-                std::string path;
-                #if defined(__APPLE__)
-                    char buffer[1024]; // Buffer to store path
-                    FILE* pipe = popen("osascript -e 'POSIX path of (choose file with prompt \"Select a Project Folder:\")'", "r");
-                    if (pipe) {
-                        if(fgets(buffer, sizeof(buffer), pipe))
-                        {
-                            buffer[strcspn(buffer, "\n")] = 0;
-                            path = buffer;
-                        }
-                        pclose(pipe);
-                    }
-                #endif
-                    if (!path.empty()) {
-                        loadMapConfigs(path);
-                    }
-            }
+            renderMapInfo();
             ImGui::EndTabItem();
         }
 
@@ -217,45 +152,7 @@ void DebugGUI::Render(SDL_Renderer* renderer)
         // =====================================================================================================================
         if(ImGui::BeginTabItem("Layers"))
         {
-            // =====================================================================================================================
-            // Toggle Layers
-            // =====================================================================================================================
-            if (ImGui::Button("Toggle Layers"))
-            {
-                guiValues.showLayerInfo = !guiValues.showLayerInfo;
-            }
-            ImGui::SameLine();
-            ImGui::Text(guiValues.showLayerInfo ? "On" : "Off");
-            ImGui::Checkbox("Color for different Layers", &guiValues.colorForDifferentLayer);
-
-            // =====================================================================================================================
-            // Layer Visibility
-            // =====================================================================================================================
-            if (ImGui::TreeNode("Layer Visibility"))
-            {
-                for (size_t i = 0; i < guiValues.layerInfo.size(); i++)
-                {
-                    std::string buttonLabel = (guiValues.layerInfo[i] ? "🟢 " : "🔴 ") + std::to_string(i);
-                    if (ImGui::Button(buttonLabel.c_str()))
-                    {
-                        guiValues.layerInfo[i] = !guiValues.layerInfo[i];
-                    }
-
-                    if (i % 4 != 3) ImGui::SameLine(); // Arrange in rows of 4
-                }
-                ImGui::TreePop();
-            }
-            ImGui::Separator();
-
-            // =====================================================================================================================
-            // Layer Settings
-            // =====================================================================================================================
-            ImGui::Text(
-                guiValues.currentMouseLayer == -1 
-                ? "Not Set/Implimented Yet"
-                : "Current Mouse Layer: %d",
-                guiValues.currentMouseLayer
-            );
+            renderLayerInfo();
             ImGui::EndTabItem();
         }
 
@@ -264,42 +161,7 @@ void DebugGUI::Render(SDL_Renderer* renderer)
         // =====================================================================================================================
         if(ImGui::BeginTabItem("Textures"))
         {
-            // =====================================================================================================================
-            // Image of Tile
-            // =====================================================================================================================
-            if (guiValues.currentTileTexture)
-            {
-                ImGui::Image((ImTextureID)guiValues.currentTileTexture, ImVec2(100, 100));
-            }
-            // =====================================================================================================================
-            // Texture Name
-            // =====================================================================================================================
-            ImGui::Text(
-                guiValues.currentTextureName == "" 
-                ? "Not Set/Implimented Yet"
-                : "Texture: %s",
-                guiValues.currentTextureName.c_str()
-            );
-            // =====================================================================================================================
-            // Texture Settings
-            // =====================================================================================================================
-            ImGui::Checkbox("Color for different textures", &guiValues.colorForDifferentTexture);
-            if (guiValues.colorForDifferentTexture)
-            {
-                guiValues.showLayerInfo = true;
-            }
-            // =====================================================================================================================
-            // Mouse Tile
-            // =====================================================================================================================
-            ImGui::Text(
-                guiValues.currentMouseTileX == -1 || guiValues.currentMouseTileY == -1 
-                ? "Not Set/Implimented Yet"
-                : "Current Mouse Tile: (%d, %d)",
-                guiValues.currentMouseTileX,
-                guiValues.currentMouseTileY
-            );
-            ImGui::Checkbox("Show Grid Over Texture", &guiValues.drawGridOverTexture);
-
+            renderTexturesInfo();
             ImGui::EndTabItem();
         }
 
@@ -308,257 +170,7 @@ void DebugGUI::Render(SDL_Renderer* renderer)
         // =====================================================================================================================
         if(ImGui::BeginTabItem("Player"))
         {
-            if (guiValues.player) 
-            {
-                // Main Player Info
-                ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1.0f),"Player Status");
-                ImGui::Separator();
-
-                // =====================================================================================================================
-                // Player Position
-                // =====================================================================================================================
-                ImGui::Text("(%.1f, %.1f)", guiValues.player->getX(),guiValues.player->getY());
-
-                // =====================================================================================================================
-                // Player Stats
-                // =====================================================================================================================
-                // never rlly thought I would need this lol till i got stuck in a collision wall
-                float playerX = guiValues.player->getX();
-                float playerY = guiValues.player->getY();
-                ImGui::SliderFloat("X", &playerX, 0, 2000);
-                ImGui::SliderFloat("Y", &playerY, 0, 2000);
-                guiValues.player->setX(playerX);
-                guiValues.player->setY(playerY);
-
-
-                // =====================================================================================================================
-                // Player State
-                // =====================================================================================================================
-                switch(guiValues.player->getState())
-                {
-                    case Player::PlayerState::COLLIDING:
-                        ImGui::Text("Colliding");
-                        break;
-                    case Player::PlayerState::IDLE:
-                        ImGui::Text("Idle");
-                        break;
-                    case Player::PlayerState::WALKING:
-                        ImGui::Text("Walking");
-                        break;
-                    case Player::PlayerState::ATTACK:
-                        ImGui::Text("Attacking");
-                        break;
-                    default:
-                        ImGui::Text("Unknown State");
-                        break;
-                }
-                ImGui::Separator();
-
-
-                // =====================================================================================================================
-                // Show Player Collision status
-                // =====================================================================================================================
-                if (guiValues.player->getCollision())
-                {
-                    ImGui::Text("Collision Set");
-                }
-                ImGui::Separator();
-
-                // =====================================================================================================================
-                // Show Player Camera Status
-                // =====================================================================================================================
-                if (guiValues.player->getCamera())
-                {
-                    ImGui::Text("Camera Set");
-                }
-                ImGui::Separator();
-
-                // =====================================================================================================================
-                // Player Stats
-                // =====================================================================================================================
-                if (ImGui::CollapsingHeader("Stats")) 
-                {
-                    int health = guiValues.player->getHealth();
-                    int maxHealth = guiValues.player->getMaxHealth();
-                    int level = guiValues.player->getLevel();
-                    int experience = guiValues.player->getExperience();
-
-                    // =====================================================================================================================
-                    // Health Progress Bar
-                    // =====================================================================================================================
-                    float healthPercentage = (float)health / (float)maxHealth;
-                    ImGui::ProgressBar(healthPercentage, ImVec2(200, 20), "Health");
-                    ImGui::SameLine();
-                    ImGui::Text("(%d/%d)", health, maxHealth);
-
-                    // =====================================================================================================================
-                    // Experience Progress Bar
-                    // =====================================================================================================================
-                    ImGui::ProgressBar((float)experience / 100.0f, ImVec2(200, 20), "EXP");
-                    ImGui::SameLine();
-                    ImGui::Text("Level %d", level);
-
-                    // =====================================================================================================================
-                    // Input fields for precise adjustments
-                    // =====================================================================================================================
-                    ImGui::InputInt("Health", &health);
-                    ImGui::InputInt("Level", &level);
-                    ImGui::InputInt("Experience", &experience);
-
-                    // Apply changes back to the player
-                    guiValues.player->setHealth(health);
-                    guiValues.player->setLevel(level);
-                    guiValues.player->setExperience(experience);
-
-                    // =====================================================================================================================
-                    // Save Button
-                    // =====================================================================================================================
-                    if (ImGui::Button("Save"))
-                    {
-                        // Need To Implement
-                        // Player should have a save function
-                    }
-                }
-
-                if (ImGui::CollapsingHeader("Collision"))
-                {
-                    // Wanna display Collision Information we will get this instance through the player
-                    Collision *collision = guiValues.player->getCollision();
-
-                    bool showCollision = collision->getShowingCollision();
-                    SDL_Color collisionColor = collision->getCollisionColor();
-                    float collisionWidth = collision->getWidth();
-                    float collisionHeight = collision->getHeight();
-
-                    float xOffset = collision->getXOffset();
-                    float yOffset = collision->getYOffset();
-
-                    // =====================================================================================================================
-                    // Allow Showing Collision 
-                    // =====================================================================================================================
-                    ImGui::Checkbox("Show Collision", &showCollision);
-                    ImGui::Separator();
-
-                    // =====================================================================================================================
-                    // TileMap Information
-                    // =====================================================================================================================
-                    if (guiValues.player->getTileMap()->maxTileCount &&
-                        guiValues.player->getTileMap()->tileHeight &&
-                        guiValues.player->getTileMap()->tileWidth &&
-                        !guiValues.player->getTileMap()->layers.empty()
-                    )
-                    {
-                        ImGui::Text("Player Has Recieved TileMap");
-                    }
-
-                    // =====================================================================================================================
-                    // Color Picker for Collision
-                    // =====================================================================================================================
-                    // float color[4] = {collisionColor.r, collisionColor.g, collisionColor.b, collisionColor.a};
-
-                    // =====================================================================================================================
-                    // Collision Size
-                    // =====================================================================================================================
-                    ImGui::SliderFloat("Width", &collisionWidth, 0, 2000);
-                    ImGui::SliderFloat("Height", &collisionHeight, 0, 2000);
-                    ImGui::Separator();
-                    // =====================================================================================================================
-                    // Collision Offset
-                    // =====================================================================================================================
-                    ImGui::SliderFloat("X Offset", &xOffset, 0, 2000);
-                    ImGui::SliderFloat("Y Offset", &yOffset, 0, 2000);
-
-                    // =====================================================================================================================
-                    // Save Button
-                    // =====================================================================================================================
-                    if (ImGui::Button("Save"))
-                    {
-                        // Need To Implement
-                        // Collision should have a save function
-                        saveCollisionConfigs(collision);
-                    }
-
-                    // =====================================================================================================================
-                    // Apply Changes
-                    // =====================================================================================================================
-                    collision->setShowingCollision(showCollision);
-                    collision->setWidth(collisionWidth);
-                    collision->setHeight(collisionHeight);
-                    collision->setXOffset(xOffset);
-                    collision->setYOffset(yOffset);
-                    // collision.setCollisionColor({(Uint8)color[0], (Uint8)color[1], (Uint8)color[2], (Uint8)color[3]});
-
-                    // We also wanna control the collision box
-                }
-
-                if (ImGui::CollapsingHeader("Movement")) 
-                {
-                    float maxSpeed = guiValues.player->getMaxSpeed();
-                    float acceleration = guiValues.player->getAcceleration();
-                    float friction = guiValues.player->getFriction();
-                    float velocityX = guiValues.player->getVelocityX();
-                    float velocityY = guiValues.player->getVelocityY();
-
-                    // =====================================================================================================================
-                    // Input fields for precise control
-                    // =====================================================================================================================
-                    ImGui::InputFloat("Acceleration", &acceleration);
-                    ImGui::InputFloat("Max Speed", &maxSpeed);
-                    ImGui::InputFloat("Friction", &friction);
-
-                    // =====================================================================================================================
-                    // Show current velocity
-                    // =====================================================================================================================
-                    ImGui::Text("Velocity: (%.2f, %.2f)", velocityX, velocityY);
-
-                    // Apply changes
-                    guiValues.player->setAcceleration(acceleration);
-                    guiValues.player->setMaxSpeed(maxSpeed);
-                    guiValues.player->setFriction(friction);
-                }
-
-                // =====================================================================================================================
-                // Camera Settings
-                // =====================================================================================================================
-                if (ImGui::CollapsingHeader("Camera Control"))
-                {
-                    float x     = guiValues.player->getCamera()->getX();
-                    float y     = guiValues.player->getCamera()->getY();
-                    float w     = guiValues.player->getCamera()->getWidth();
-                    float h     = guiValues.player->getCamera()->getHeight();
-                    float zoom  = guiValues.player->getCamera()->getZoom();
-
-                    // =====================================================================================================================
-                    // Input fields for precise control
-                    // =====================================================================================================================
-                    ImGui::InputFloat("X##", &x);
-                    ImGui::InputFloat("Y##", &y);
-                    ImGui::InputFloat("Width##", &w);
-                    ImGui::InputFloat("Height##", &h);
-                    ImGui::InputFloat("Zoom##", &zoom);
-
-                    // Apply changes
-                    guiValues.player->getCamera()->setX(x);
-                    guiValues.player->getCamera()->setY(y);
-                    guiValues.player->getCamera()->setWidth(w);
-                    guiValues.player->getCamera()->setHeight(h);
-                    guiValues.player->getCamera()->setZoom(zoom);
-
-                    // =====================================================================================================================
-                    // Save button
-                    // =====================================================================================================================
-                    if (ImGui::Button("Save"))
-                    {
-                        // Need To Implement
-                        // Camera should have a save function
-                    }
-                }
-
-                // =====================================================================================================================
-                // Future: Collapsible section for Sprite Control
-                // =====================================================================================================================
-                renderEntitySpriteOptions(guiValues.player, renderer);
-              }
+            renderPlayerInfo(renderer);
             ImGui::EndTabItem();
         }
 
@@ -576,6 +188,9 @@ we will read that base class cuz the base class is what is gonna have the sprite
 implement that right now so we will just use the player class for now
 
 **/
+// TODO Impliment this for each sprite that the user already has in the path or one that was just added to it
+// make sure that we check hte resize of this 
+static std::vector<int> activeSpriteGrids(allErrorCodes.size(), 0);
 void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer) {
     if (ImGui::CollapsingHeader("Sprite Control")) 
     {

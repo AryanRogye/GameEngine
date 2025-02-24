@@ -48,9 +48,15 @@ add_executable(prototype_map_system
 
     src/entity/player.cpp
 
+    src/gui/debug_gui.cpp
+    src/gui/debug_gui_logs.cpp
+    src/gui/debug_gui_map.cpp
+    src/gui/debug_gui_layers.cpp
+    src/gui/debug_gui_textures.cpp
+    src/gui/debug_gui_players.cpp
+
     src/game.cpp
     src/comfy_lib.cpp
-    src/debug_gui.cpp
     src/TSDL.cpp
     src/main.cpp
     ${IMGUI_SOURCES}  # Add ImGui source files to the build

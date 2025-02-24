@@ -1,4 +1,5 @@
 #include "game.h"
+#include "comfy_lib.h"
 #define WIDTH 800
 #define HEIGHT 600
 
@@ -31,7 +32,7 @@ void Game::start_game()
         fileChanged(currentTime);
         if (lastTime != currentTime)
         {
-            DebugGUI::addDebugLog("File Changed", false, "FILE");
+            DebugGUI::addDebugLog("File Changed", ErrorCode::SUCCESS);
             this->loadMap();
             this->player->setTileMap(this->map);
             lastTime = currentTime;
@@ -86,7 +87,7 @@ void Game::loadMap()
 
     if (path.empty())
     {
-        DebugGUI::addDebugLog("No Path Found", false, "MAP");
+        DebugGUI::addDebugLog("No Path Found", ErrorCode::MAP_ERROR);
         // Still Resize To 0
         this->map = new TSDL_TileMap();
         // And Resize the layerInfo to 0
@@ -177,18 +178,18 @@ void Game::loadFontNumbers()
         SDL_Surface *surface = TTF_RenderText_Solid(this->font, std::to_string(i).c_str(), {255, 255, 255});
         if (!surface)
         {
-            DebugGUI::addDebugLog("Failed to create surface from text", false, "FONT");
+            DebugGUI::addDebugLog("Failed to create surface from text", ErrorCode::SURFACE_ERROR);
             return;
         }
         this->fontNumbers[i] = SDL_CreateTextureFromSurface(this->renderer, surface);
         if (!this->fontNumbers[i])
         {
-            DebugGUI::addDebugLog("Failed to create texture from surface", false, "FONT");
+            DebugGUI::addDebugLog("Failed to create texture from surface", ErrorCode::TEXTURE_ERROR);
             return;
         }
         SDL_FreeSurface(surface);
     }
-    DebugGUI::addDebugLog("Loaded Font Numbers", false, "FONT");
+    DebugGUI::addDebugLog("Loaded Font Numbers", ErrorCode::NONE);
 }
 
 void Game::initWindow()
@@ -213,7 +214,7 @@ void Game::initWindow()
     SDL_SetWindowResizable(this->window, SDL_TRUE);
     // maximize window
     SDL_MaximizeWindow(this->window);
-    DebugGUI::addDebugLog("Window Made Resizable", false, "WINDOW");
+    DebugGUI::addDebugLog("Window Made Resizable" , ErrorCode::NONE);
 }
 
 void Game::initRenderer()
@@ -231,16 +232,16 @@ void Game::initRenderer()
     int vsync = SDL_GetHintBoolean(SDL_HINT_RENDER_VSYNC, SDL_FALSE);
     if (vsync)
     {
-        DebugGUI::addDebugLog("Vsync is enabled", false, "VSYNC");
+        DebugGUI::addDebugLog("Vsync is enabled", ErrorCode::NONE);
         SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
     }
     else
     {
-        DebugGUI::addDebugLog("Vsync is disabled", false, "VSYNC");
+        DebugGUI::addDebugLog("Vsync is disabled", ErrorCode::NONE);
     }
     SDL_DisplayMode mode;
     SDL_GetCurrentDisplayMode(0, &mode);
-    DebugGUI::addDebugLog("Monitor Resolution: " + std::to_string(mode.w) + "x" + std::to_string(mode.h), false,"RENDERER");
+    DebugGUI::addDebugLog("Monitor Resolution: " + std::to_string(mode.w) + "x" + std::to_string(mode.h), ErrorCode::NONE);
 }
 
 void Game::initGui() { DebugGUI::Init(this->window, this->renderer); }

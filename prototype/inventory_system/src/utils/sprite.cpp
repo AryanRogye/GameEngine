@@ -2,6 +2,7 @@
 #include "comfy_lib.h"
 #include "entity/player.h"
 #include "debug_gui.h"
+#include <SDL_surface.h>
 
 Sprites::Sprites(Player *player)
 {
@@ -28,7 +29,7 @@ void Sprites::queryTexureDimensions()
         this->sprites[i].width = w;
         this->sprites[i].height = h;
     }
-    DebugGUI::addDebugLog("Queried texture dimensions", false, "SPRITE");
+    DebugGUI::addDebugLog("Queried texture dimensions", ErrorCode::SPRITE_ERROR);
 }
 
 void Sprites::addSprite(Sprite sprite)
@@ -49,20 +50,22 @@ SDL_Texture *Sprites::getTextures(int index)
 // Setters
 void Sprites::addSpritePath(std::string path)
 {
+    // Getting the surface
     SDL_Surface* surface = IMG_Load(path.c_str());
     if (!surface)
     {
         SM_WARN("Failed to load surface: {0}");
         return;
     }
-
+    // getting the texture
     SDL_Texture* texture = SDL_CreateTextureFromSurface(SDL_GetRenderer(SDL_GetWindowFromID(1)), surface);
     if (!texture)
     {
+        SDL_FreeSurface(surface);
         SM_WARN("Failed to load texture: {0}");
         return;
     }
-    DebugGUI::addDebugLog("Added SDL Texture\n" + path, false, "SPRITE");
+    DebugGUI::addDebugLog("Added SDL Texture\n" + path, ErrorCode::SPRITE_ERROR);
 
     // Construct the object
     Sprite sprite;
@@ -71,6 +74,16 @@ void Sprites::addSpritePath(std::string path)
     // add it to the list
     this->sprites.push_back(sprite);
 }
+
+void Sprites::addSpriteFramesX(int index, int numFramesX)
+{
+    this->sprites[index].numFramesX = numFramesX;
+}
+void Sprites::addSpriteFramesY(int index, int numFramesY)
+{
+    this->sprites[index].numFramesY = numFramesY;
+}
+
 void Sprites::removeSpritePath(int index)
 {
     this->sprites.erase(this->sprites.begin() + index);

@@ -63,6 +63,71 @@ enum TextColor
     TEXT_COLOR_COUNT
 };
 
+enum class LogLevel
+{
+    TRACE,
+    WARN,
+    ERROR
+};
+
+enum class ErrorCode
+{
+    // General Errors
+    SUCCESS,
+    NONE,
+    ERROR,
+    // File Errors
+    FILE_ERROR,
+    // Sprite Errors
+    SPRITE_ERROR,
+    // Texture Errors
+    TEXTURE_ERROR,
+    // Surface Errors
+    SURFACE_ERROR,
+    // Map Errors
+    MAP_ERROR,
+    // Collision Errors
+    COLLISION_ERROR,
+    // Player Errors
+    PLAYER_ERROR,
+
+    JSON_ERROR,
+};
+// Define an array of all enum values
+constexpr std::array<ErrorCode, 11> allErrorCodes = {
+    ErrorCode::SUCCESS,
+    ErrorCode::NONE,
+    ErrorCode::ERROR,
+    ErrorCode::FILE_ERROR,
+    ErrorCode::SPRITE_ERROR,
+    ErrorCode::TEXTURE_ERROR,
+    ErrorCode::SURFACE_ERROR,
+    ErrorCode::MAP_ERROR,
+    ErrorCode::COLLISION_ERROR,
+    ErrorCode::PLAYER_ERROR,
+    ErrorCode::JSON_ERROR
+};
+
+// Function to convert enum to string
+inline std::string errorCodeToString(ErrorCode code)
+{
+    switch (code)
+    {
+        case ErrorCode::SUCCESS: return "SUCCESS";
+        case ErrorCode::NONE: return "NONE";
+        case ErrorCode::ERROR: return "ERROR";
+        case ErrorCode::FILE_ERROR: return "FILE_ERROR";
+        case ErrorCode::SPRITE_ERROR: return "SPRITE_ERROR";
+        case ErrorCode::TEXTURE_ERROR: return "TEXTURE_ERROR";
+        case ErrorCode::SURFACE_ERROR: return "SURFACE_ERROR";
+        case ErrorCode::MAP_ERROR: return "MAP_ERROR";
+        case ErrorCode::COLLISION_ERROR: return "COLLISION_ERROR";
+        case ErrorCode::PLAYER_ERROR: return "PLAYER_ERROR";
+        case ErrorCode::JSON_ERROR: return "JSON_ERROR";
+        default: return "UNKNOWN";
+    }
+}
+
 template <typename... Args>
 void _log(const std::string& prefix,const std::string& msg,TextColor textColor,Args... args)
 {
