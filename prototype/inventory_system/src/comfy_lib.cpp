@@ -8,9 +8,11 @@ std::string getTimeStamp()
 {
     auto now = std::chrono::system_clock::now();
     auto now_c = std::chrono::system_clock::to_time_t(now);
-    std::string timeString = std::ctime(&now_c);
-    timeString.pop_back(); // remove the newline character
-    return timeString;
+
+    std::ostringstream stream;
+    stream << std::put_time(std::gmtime(&now_c), "%H:%M:%S");
+
+    return stream.str();
 }
 
 
@@ -33,12 +35,14 @@ bool loadMapConfigs(std::string& inPath)
     std::ofstream configFile(configPath);
     if (!configFile)
     {
+        DebugGUI::addDebugLog("No map_data.ini found. Using default map.", ErrorCode::MAP_ERROR);
         std::cerr << "⚠️ No map_data.ini found. Using default map." << std::endl;
         return false;
     }
 
     configFile << "default_path='" << inPath << "'" << std::endl;
 
+    DebugGUI::addDebugLog("Default map path written to " + configPath, ErrorCode::NONE);
     std::cout << "Default map path written to " << configPath << std::endl;
     return true;
 }
@@ -66,6 +70,7 @@ bool fetchPlayerConfigs(Player *player) // not sure how i want to get these valu
     std::ifstream configFile(configPath);
     if (!configFile)
     {
+        DebugGUI::addDebugLog("No player_data.ini found. Using default player.", ErrorCode::PLAYER_ERROR);
         std::cerr << "⚠️ No player_data.ini found. Using default player." << std::endl;
         return false;
     }
@@ -197,6 +202,7 @@ bool fetchPlayerConfigs(Player *player) // not sure how i want to get these valu
             }
         }
     }
+    DebugGUI::addDebugLog("Loaded Player Configs from config", ErrorCode::NONE);
     return true;
 }
 
@@ -215,6 +221,7 @@ bool fetchMapConfigs(std::string& outPath)
     std::ifstream configFile(configPath);
     if (!configFile)
     {
+        DebugGUI::addDebugLog("No map_data.ini found. Using default map.", ErrorCode::MAP_ERROR);
         std::cerr << "⚠️ No map_data.ini found. Using default map." << std::endl;
         outPath = basePath + "/../assets/map.json";  // Make sure default also uses absolute path
         loadMapConfigs(outPath);
@@ -245,7 +252,7 @@ bool fetchMapConfigs(std::string& outPath)
                 {
                     value = basePath + "/../" + value;
                 }
-                std::cout << "Absolute path: " << value << std::endl;
+                DebugGUI::addDebugLog("Loaded Map Path from config", ErrorCode::NONE);
                 outPath = value;
                 return true;
             }
@@ -273,6 +280,7 @@ bool fetchSpritesConfigs(Sprites *sprites)
     std::ifstream configFile(configPath);
     if (!configFile)
     {
+        DebugGUI::addDebugLog("No sprites_data.ini found. Using default sprites.", ErrorCode::SPRITE_ERROR);
         std::cerr << "⚠️ No sprites_data.ini found. Using default sprites." << std::endl;
         return false;
     }
@@ -291,10 +299,8 @@ bool fetchSpritesConfigs(Sprites *sprites)
                 sprites->clearSpritePaths();
                 while (std::getline(pathStream, path, ',')) {
                     sprites->addSpritePath(path);
-                    DebugGUI::addDebugLog("Added Sprite Path\n" + path, ErrorCode::NONE);
                 }
                 DebugGUI::addDebugLog("Loaded Sprite Paths from config", ErrorCode::NONE);
-                // give the user a log of the paths
             }
             if (key == "numFramesX")
             {
@@ -303,7 +309,6 @@ bool fetchSpritesConfigs(Sprites *sprites)
                 int i = 0;
                 while (std::getline(numFramesXStream, path, ',')) {
                     sprites->addSpriteFramesX(i, std::stoi(path));
-                    DebugGUI::addDebugLog("Loaded NumFrameX: " + path, ErrorCode::NONE);
                     i++;
                 }
                 DebugGUI::addDebugLog("Loaded numFramesX from config", ErrorCode::NONE);
@@ -315,7 +320,6 @@ bool fetchSpritesConfigs(Sprites *sprites)
                 int i = 0;
                 while (std::getline(numFramesYStream, path, ',')) {
                     sprites->addSpriteFramesY(i, std::stoi(path));
-                    DebugGUI::addDebugLog("Loaded NumFrameY: " + path, ErrorCode::NONE);
                     i++;
                 }
                 DebugGUI::addDebugLog("Loaded numFramesY from config", ErrorCode::NONE);
@@ -336,6 +340,7 @@ bool saveSpritesConfigs(Sprites *sprites, std::string path)
     std::ofstream spriteFile(spritePath);
     if (!spriteFile)
     {
+        DebugGUI::addDebugLog("No collision_data.ini found. Using default collision.", ErrorCode::SPRITE_ERROR);
         std::cerr << "⚠️ No collision_data.ini found. Using default collision." << std::endl;
         return false;
     }
@@ -409,7 +414,7 @@ bool saveSpritesConfigs(Sprites *sprites, std::string path)
 
     spriteFile.close();
 
-    std::cout << "Collision data written to " << spritePath << std::endl;
+    DebugGUI::addDebugLog("Collision data written to " + spritePath, ErrorCode::NONE);
     return true;
 }
 
@@ -423,6 +428,7 @@ bool fetchCollisionConfigs(Collision *collision)
     std::ifstream configFile(configPath);
     if (!configFile)
     {
+        DebugGUI::addDebugLog("No collision_data.ini found. Using default collision.", ErrorCode::SPRITE_ERROR);
         std::cerr << "⚠️ No collision_data.ini found. Using default collision." << std::endl;
         return false;
     }
@@ -439,28 +445,24 @@ bool fetchCollisionConfigs(Collision *collision)
             if (key == "width")
             {
                 removePadding(value);
-                std::cout << "Value: " << value << std::endl;
                 // convert string to a float
                 collision->setWidth(std::stof(value));
             }
             if (key == "height")
             {
                 removePadding(value);
-                std::cout << "Value: " << value << std::endl;
                 // convert string to a float
                 collision->setHeight(std::stof(value));
             }
             if (key == "xOffset")
             {
                 removePadding(value);
-                std::cout << "Value: " << value << std::endl;
                 // convert string to a float
                 collision->setXOffset(std::stof(value));
             }
             if (key == "yOffset")
             {
                 removePadding(value);
-                std::cout << "Value: " << value << std::endl;
                 // convert string to a float
                 collision->setYOffset(std::stof(value));
             }

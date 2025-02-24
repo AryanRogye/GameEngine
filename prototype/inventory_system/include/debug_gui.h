@@ -13,6 +13,7 @@
 #include <SDL_clipboard.h>
 #include <ctime>
 #include "comfy_lib.h"
+#include <string.h>
 
 #include "entity/entity.h"
 #include "entity/player.h"
@@ -34,6 +35,11 @@ public:
     static void Render(SDL_Renderer* renderer);
 
     struct GUIValues {
+
+        int monitorWidth = 0;
+        int monitorHeight = 0;
+        bool vsync = true;
+
         std::string mapName = "";
         bool toggleGui = true;
         float *mapScale;
@@ -65,6 +71,6 @@ public:
     static void showSelectedSDLTexture(SDL_Texture* texture, int x, int y, int w, int h);
     static void setMapScale(float *scale);
 
-    static void addDebugLog(const std::string& log, std::vector<ErrorCode> = {});
-    static void addDebugLog(const std::string& log, ErrorCode = ErrorCode::NONE);
+    static void addDebugLog(std::string log, std::vector<ErrorCode> = {});
+    static void addDebugLog(std::string log, ErrorCode = ErrorCode::NONE);
 };

@@ -101,12 +101,32 @@ void DebugGUI::Render(SDL_Renderer* renderer)
     // =====================================================================================================================
     // FPS Display
     // =====================================================================================================================
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 5)); // Adjust spacing
+    ImGui::Columns(2);
     ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+    ImGui::NextColumn();
+
+    // =====================================================================================================================
+    // Monitor Display
+    // =====================================================================================================================
+    ImGui::Text("Monitor Resolution: %dx%d", guiValues.monitorWidth, guiValues.monitorHeight);
+    ImGui::Columns(1);
+    ImGui::PopStyleVar(); // Reset spacing
 
     // =====================================================================================================================
     // Mouse Position
     // =====================================================================================================================
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 5)); // Adjust spacing
+    ImGui::Columns(2);
     ImGui::Text("(%.1f, %.1f)", ImGui::GetIO().MousePos.x, ImGui::GetIO().MousePos.y);
+    ImGui::NextColumn();
+
+    // =====================================================================================================================
+    // Vsync Information
+    // =====================================================================================================================
+    ImGui::Text("Vsync: %s", guiValues.vsync ? "Enabled" : "Disabled");
+    ImGui::Columns(1);
+    ImGui::PopStyleVar(); // Reset spacing
 
     // =====================================================================================================================
     // Map Scale Slider
@@ -215,7 +235,8 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
 
             // Push a style for a rounded frame and a subtle background color
             ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f);
-            ImGui::BeginChild("SpritesChild", ImVec2(0, 300), true, ImGuiWindowFlags_AlwaysUseWindowPadding);
+            float childWidth = 500 * currentSpritesZoom;
+            ImGui::BeginChild("SpritesChild", ImVec2(childWidth, 300), true, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_HorizontalScrollbar);
 
             // =====================================================================================================================
             // Display the sprite paths

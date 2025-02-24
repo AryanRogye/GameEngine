@@ -230,18 +230,12 @@ void Game::initRenderer()
     }
 
     int vsync = SDL_GetHintBoolean(SDL_HINT_RENDER_VSYNC, SDL_FALSE);
-    if (vsync)
-    {
-        DebugGUI::addDebugLog("Vsync is enabled", ErrorCode::NONE);
-        SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
-    }
-    else
-    {
-        DebugGUI::addDebugLog("Vsync is disabled", ErrorCode::NONE);
-    }
+    DebugGUI::guiValues.vsync = vsync;
     SDL_DisplayMode mode;
     SDL_GetCurrentDisplayMode(0, &mode);
-    DebugGUI::addDebugLog("Monitor Resolution: " + std::to_string(mode.w) + "x" + std::to_string(mode.h), ErrorCode::NONE);
+
+    DebugGUI::guiValues.monitorWidth = mode.w;
+    DebugGUI::guiValues.monitorHeight = mode.h;
 }
 
 void Game::initGui() { DebugGUI::Init(this->window, this->renderer); }

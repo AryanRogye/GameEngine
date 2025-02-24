@@ -3,19 +3,35 @@
 #include "imgui.h"
 
 
-void DebugGUI::addDebugLog(const std::string& log, std::vector<ErrorCode> codes)
+// TODO Make sure that for debug logs we check for \n if there is one then we want to treat that
+// newline as a new log
+void DebugGUI::addDebugLog(std::string log, std::vector<ErrorCode> codes)
 {
     for (auto code : codes)
     addDebugLog(log, code);
 }
 
-void DebugGUI::addDebugLog(const std::string& log, ErrorCode code)
+void DebugGUI::addDebugLog(std::string log, ErrorCode code)
 {
-    std::string toAdd = "";
-    toAdd += log;
-
     const std::string timestamp = getTimeStamp();
-    guiValues.debugLogs.emplace_back(timestamp + " | " + toAdd, code);
+    
+    size_t start = 0;
+    size_t end = log.find("\n");
+
+    while (end != std::string::npos)
+    {
+        // Extract and store each log line separately
+        guiValues.debugLogs.emplace_back(timestamp + " | " + log.substr(start, end - start), code);
+
+        // Move to the next part of the string
+        start = end + 1;
+        end = log.find("\n", start);
+    }
+
+    // Add the last part (or the whole log if there were no newlines)
+    if (start < log.size()) {
+        guiValues.debugLogs.emplace_back(timestamp + " | " + log.substr(start), code);
+    }
 }
 
 static std::vector<int> errorCodes(allErrorCodes.size(), 0);

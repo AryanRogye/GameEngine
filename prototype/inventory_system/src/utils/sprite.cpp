@@ -65,7 +65,7 @@ void Sprites::addSpritePath(std::string path)
         SM_WARN("Failed to load texture: {0}");
         return;
     }
-    DebugGUI::addDebugLog("Added SDL Texture\n" + path, ErrorCode::SPRITE_ERROR);
+    DebugGUI::addDebugLog("Added SDL Texture: " + path, ErrorCode::SPRITE_ERROR);
 
     // Construct the object
     Sprite sprite;
