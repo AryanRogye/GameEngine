@@ -158,6 +158,7 @@ Game::Game()
 
     this->initWindow();
     this->initRenderer();
+    SDL_RenderSetViewport(this->renderer, &gameViewport);
     this->loadFontNumbers();
     this->initGui();
 
@@ -220,7 +221,7 @@ void Game::initWindow()
 void Game::initRenderer()
 {
     this->renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-
+    // Check valid renderer
     if(!this->renderer)
     {
         printf("Failed To Get the surface from the window");
@@ -228,7 +229,15 @@ void Game::initRenderer()
         SDL_Quit();
         return;
     }
-
+    // defining a viewport for the renderer
+    gameViewport.x = 100;
+    gameViewport.y = 100;
+    gameViewport.w = 600;
+    gameViewport.h = 500;
+    
+    /** 
+        Debug GUI Renderer Information
+    **/
     SDL_RendererInfo info;
     SDL_GetRendererInfo(this->renderer, &info);
     DebugGUI::guiValues.rendererName = info.name;

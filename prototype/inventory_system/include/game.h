@@ -25,17 +25,27 @@ This File is a protype for my library for loading a tiled map
 class Game 
 {
 private:
+    
+    /** 
+        SDL Variables
+    **/
+    SDL_Window      *window;
+    SDL_Renderer    *renderer;
+    SDL_Rect        gameViewport;
+    
+    /** 
+        Game Variables
+    **/
+    TTF_Font                    *font;
+    std::vector<SDL_Texture*>   fontNumbers;
 
+    /** 
+        Game Entities
+    **/
+    Player          *player;
+    TSDL_TileMap    *map;
 
-
-    SDL_Window *window;
-    SDL_Renderer *renderer;
-    TTF_Font *font;
-    TSDL_TileMap *map;
-    std::vector<SDL_Texture*> fontNumbers;
-
-    Player* player;
-    float gameScale;
+    float   gameScale;
 
     void initWindow();
     void initRenderer();
