@@ -114,6 +114,12 @@ bool Collision::collidesWithMapLayer(TSDL_TileMap *tileMap, float scale)
         SDL_RenderDrawRectF(this->getPlayer()->getRenderer(), &debugRect);
     }
 
+    // wanna check if the player is going out of bounds
+    if (playerLeft < 0 || playerRight > tileMap->width * tileMap->tileWidth * scale ||
+        playerTop < 0 || playerBottom > tileMap->height * tileMap->tileHeight * scale) {
+        return true;
+    }
+
     // Check collision layer
     for (auto &layer : tileMap->layers) {
         if (layer.name == "Collision") {

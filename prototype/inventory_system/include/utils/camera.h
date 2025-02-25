@@ -46,7 +46,7 @@ public:
     void setHeight(float height);
     void setZoom(float zoom);
 
-    void update(int width = 0, int height = 0);
+    void update(int width = 0, int height = 0, float mapScale = 1.0f);
     /** 
         This is just in the chance that the user wants to detach from the entity
         and attach to another, maybe for a dialog or something idk yet

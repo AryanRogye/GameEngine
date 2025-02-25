@@ -38,7 +38,7 @@ void Game::start_game()
             lastTime = currentTime;
         }
         // Draw Here
-        this->player->getCamera()->update(this->viewportWidth, this->viewportHeight);
+        this->player->getCamera()->update(this->viewportWidth, this->viewportHeight, this->gameScale);
         this->drawMap();
         this->player->draw(dt, this->gameScale);
         this->renderGui();

@@ -13,11 +13,16 @@ sprite(new Sprites(this))
     this->loadPlayer();
     // Give a pointer to the debug gui to display its values
     DebugGUI::SetPlayer(this);
+    // lol be tiny at first
+    this->width = 0;
+    this->height = 0;
 }
 
 // Getters
 float Player::getX() { return position.x; }
 float Player::getY() { return position.y; }
+float Player::getWidth() { return width; }
+float Player::getHeight() { return height; }
 int Player::getHealth() { return health; }
 int Player::getDamage() { return damage; }
 int Player::getLevel() { return level; }
@@ -51,7 +56,12 @@ void Player::setFriction(float value) { friction = value; }
 void Player::setVelocityX(float value) { velocity.x = value; }
 void Player::setVelocityY(float value) { velocity.y = value; }
 void Player::setCollision(Collision *value) { collision = value; }
-void Player::setTileMap(TSDL_TileMap *value) { tileMap = value; }
+void Player::setTileMap(TSDL_TileMap *value) 
+{ 
+    tileMap = value; 
+    this->width = tileMap->tileWidth;
+    this->height = tileMap->tileHeight;
+}
 void Player::setState(Player::PlayerState value) { state = value; }
 void Player::setPlayerScale(float value) { playerScale = value; }
 void Player::setCamera(Camera *value) { camera = value; }
@@ -81,8 +91,8 @@ void Player::draw(float dt, float scale)
     SDL_FRect playerRect = {
         (position.x - this->camera->getX()) * scale,  // Offset by camera X
         (position.y - this->camera->getY()) * scale,  // Offset by camera Y
-        this->tileMap->tileWidth * scale,
-        this->tileMap->tileHeight * scale
+        this->width * scale,
+        this->height * scale
     };
     SDL_RenderFillRectF(renderer, &playerRect);
 

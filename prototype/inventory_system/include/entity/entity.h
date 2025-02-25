@@ -10,6 +10,8 @@
 
 class Entity {
 protected:
+    float width;
+    float height;
     std::string     name;
     Vec2            position;
     float           maxSpeed;
@@ -22,6 +24,9 @@ public:
     // Common Getters
     virtual float getX() { return position.x; }
     virtual float getY() { return position.y; }
+    virtual float getWidth() { return width; }
+    virtual float getHeight() { return height; }
+
     virtual Vec2 getPosition() { return position; }
     virtual float getMaxSpeed() { return maxSpeed; }
     virtual Sprites* getSprite() { return sprite; }

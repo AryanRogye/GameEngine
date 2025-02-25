@@ -31,6 +31,8 @@ private:
     int             maxHealth;
     PlayerState     state;
 
+    float           width;
+    float           height;
     Vec2            position;
     Vec2            velocity;
     float           acceleration;
@@ -53,6 +55,8 @@ public:
     // Getters
     float getX() override;
     float getY() override;
+    float getWidth() override;
+    float getHeight() override;
     int getHealth();
     int getDamage();
     int getLevel();

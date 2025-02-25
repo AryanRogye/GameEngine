@@ -25,7 +25,7 @@ Camera::Camera(Entity *entity)
 This Function is used to follow the attached entity
 
 **/
-void Camera::update(int width, int height)
+void Camera::update(int width, int height, float gameScale)
 {
     if (!this->entity) return;
 
@@ -33,8 +33,20 @@ void Camera::update(int width, int height)
 
     // so in most cases the width and the height is the viewport size
 
-    this->x = this->entity->getX();
-    this->y = this->entity->getY();
+    // Get entity's center position (assuming entity position is top-left)
+    float entityCenterX = this->entity->getX() + (this->entity->getWidth() / 2);
+    float entityCenterY = this->entity->getY() + (this->entity->getHeight() / 2);
+    
+    // Calculate camera position to center the entity
+    // Divide by gameScale if your entity positions are in scaled world coordinates
+    this->x = entityCenterX - (width / (2 * gameScale));
+    this->y = entityCenterY - (height / (2 * gameScale));
+
+    // dont allow camera to go out of the world
+    if (this->x < 0) this->x = 0;
+    if (this->y < 0) this->y = 0;
+    if (this->x > 800 - width) this->x = 800 - width;
+    if (this->y > 600 - height) this->y = 600 - height;
 }
 
 /** 
