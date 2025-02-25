@@ -1,16 +1,55 @@
 #include "utils/camera.h"
-#include "entity/player.h"
 
 
-Camera::Camera(Player* player)
-: player(player) {
+Camera::Camera(Entity *entity)
+: entity(entity) {
 
-    this->x = this->player->getX();
-    this->y = this->player->getY();
+    if (entity)
+    {
+        this->x = this->entity->getX();
+        this->y = this->entity->getY();
+    } 
+    else 
+    {
+        this->x = 0;
+        this->y = 0;
+    }
 
     this->width = 800;
     this->height = 600;
     this->zoom = 1.0;
+}
+
+/** 
+
+This Function is used to follow the attached entity
+
+**/
+void Camera::update(int width, int height)
+{
+    if (!this->entity) return;
+
+    // we wanna follow the entity so we need to update the camera position
+
+    // so in most cases the width and the height is the viewport size
+
+    this->x = this->entity->getX();
+    this->y = this->entity->getY();
+}
+
+/** 
+
+    Check Function Definition in utils/camera.h for more details
+    on how this is used
+
+**/
+void Camera::attachEntity(Entity *entity)
+{
+    this->entity = entity;
+}
+void Camera::detachEntity()
+{
+    this->entity = nullptr;
 }
 
 

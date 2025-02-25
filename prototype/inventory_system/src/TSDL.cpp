@@ -313,13 +313,18 @@
                     // ==========================================================================================================================
                     // Calculate the mouse position in tile coordinates
                     // ==========================================================================================================================
-                    int tileX = mouseX / (tileMap->tileWidth * mapScale);
-                    int tileY = mouseY / (tileMap->tileHeight * mapScale);
+                    // Convert mouse coordinates from screen to world coordinates
+                    int worldMouseX = mouseX / mapScale + camera->getX();
+                    int worldMouseY = mouseY / mapScale + camera->getY();
+
+                    // Then calculate which tile that corresponds to
+                    int hoveredTileX = worldMouseX / tileMap->tileWidth;
+                    int hoveredTileY = worldMouseY / tileMap->tileHeight;
 
                     // ==========================================================================================================================
                     // Debug Mouse related Texture/Layer Info
                     // ==========================================================================================================================
-                    if (tileX == x && tileY == y)
+                    if (hoveredTileX == x && hoveredTileY == y)
                     {
                         DebugGUI::guiValues.currentMouseLayer = i;
                         DebugGUI::guiValues.currentTextureName = tileMap->tilesetSources[textureIndex].name;
@@ -357,8 +362,8 @@
                         // Set position inside the tile (centered)
                         // ==========================================================================================================================
                         SDL_FRect textRect = {
-                            (x + 0.5f) * tileMap->tileWidth *  mapScale - (scaledTextW / 2.0f), 
-                            (y + 0.5f) * tileMap->tileHeight * mapScale - (scaledTextH / 2.0f), 
+                            ((x + 0.5f) * tileMap->tileWidth - camera->getX()) * mapScale - (scaledTextW / 2.0f), 
+                            ((y + 0.5f) * tileMap->tileHeight - camera->getY()) * mapScale - (scaledTextH / 2.0f), 
                             scaledTextW, scaledTextH
                         };
 
@@ -366,10 +371,10 @@
                         // Create a rectangle for the tile boundary
                         // ==========================================================================================================================
                         SDL_FRect rect = {
-                            x * tileMap->tileWidth *  mapScale, 
-                            y * tileMap->tileHeight * mapScale, 
-                            tileMap->tileWidth *      mapScale, 
-                            tileMap->tileHeight *     mapScale
+                            (x * tileMap->tileWidth - camera->getX()) * mapScale, 
+                            (y * tileMap->tileHeight - camera->getY()) * mapScale, 
+                            tileMap->tileWidth * mapScale, 
+                            tileMap->tileHeight * mapScale
                         };
 
                         // ==========================================================================================================================
@@ -439,10 +444,10 @@
                         // Calculate the destination rectangle (on screen)
                         // ==========================================================================================================================
                         SDL_FRect destRect = {
-                            x * tileMap->tileWidth *  float(mapScale), 
-                            y * tileMap->tileHeight * float(mapScale), 
-                            tileMap->tileWidth *      float(mapScale), 
-                            tileMap->tileHeight *     float(mapScale)
+                            (x * tileMap->tileWidth - camera->getX()) * mapScale, 
+                            (y * tileMap->tileHeight - camera->getY()) * mapScale, 
+                            tileMap->tileWidth * float(mapScale), 
+                            tileMap->tileHeight * float(mapScale)
                         };
 
                         // ==========================================================================================================================
@@ -458,21 +463,24 @@
                             SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
                             SDL_RenderDrawRectF(renderer, &destRect);
 
-                            if (tileX == x && tileY == y)
+                            if (hoveredTileX == x && hoveredTileY == y)
                             {
-                                // We wanna highlight the current tile red 
-                                // by red rect and opacity 50
+                                // Highlight the current tile
                                 SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
                                 SDL_SetRenderDrawColor(renderer, 255, 0, 0, 50);
                                 SDL_RenderFillRectF(renderer, &destRect);
 
-                                int tempIndex = tileIndex + offset; 
+                                // Create a proper sub-texture from the tileset
                                 DebugGUI::showSelectedSDLTexture(
                                     texture,
-                                    (tileIndex % maxColumns) * tileMap->tileWidth,   
-                                    (tileIndex / maxColumns) * tileMap->tileHeight,  
-                                    tileMap->tileWidth,
-                                    tileMap->tileHeight
+                                    destRect.x,  // screen position X
+                                    destRect.y,  // screen position Y
+                                    destRect.w,  // screen width
+                                    destRect.h,  // screen height
+                                    tileIndex,   // the original tile index
+                                    maxColumns,  // columns in the tileset
+                                    sourceWidth, // original tile width in the tileset
+                                    sourceHeight // original tile height in the tileset
                                 );
                             }
                         }

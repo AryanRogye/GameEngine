@@ -1,5 +1,6 @@
 #include "utils/collision.h"
 // Required to be in this file to avoid circular imports
+#include "debug_gui.h"
 #include "entity/player.h"
 #include "TSDL.h"
 // End of last checked required includes
@@ -44,14 +45,21 @@ void Collision::setYOffset(float yOffset) {this->yOffset = yOffset;}
 // Methods
 void Collision::setPlayerCollision()
 {
-    // This will be a sdl rect that will be the players collision
     float scale = this->player->getPlayerScale();
-    this->playerCollisionRect = {
-        (this->player->getX() * scale) + (this->getXOffset() * scale),
-        (this->player->getY() * scale) + (this->getYOffset() * scale),
-        this->getWidth() * scale,
-        this->getHeight() * scale
-    };
+    if (this->getPlayer()->getCamera())
+    {
+        DebugGUI::addDebugLog("Player camera is not null", ErrorCode::NONE);
+        this->playerCollisionRect = {
+            ((this->player->getX() - this->player->getCamera()->getX()) * scale) + (this->getXOffset() * scale),
+            ((this->player->getY() - this->player->getCamera()->getY()) * scale) + (this->getYOffset() * scale),
+            this->getWidth() * scale,
+            this->getHeight() * scale
+        };
+    } 
+    else 
+    {
+        DebugGUI::addDebugLog("Player camera is null", ErrorCode::COLLISION_ERROR);
+    }
 }
 
 void Collision::drawPlayerCollision()

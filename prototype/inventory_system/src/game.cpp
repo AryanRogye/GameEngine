@@ -38,6 +38,7 @@ void Game::start_game()
             lastTime = currentTime;
         }
         // Draw Here
+        this->player->getCamera()->update(this->viewportWidth, this->viewportHeight);
         this->drawMap();
         this->player->draw(dt, this->gameScale);
         this->renderGui();
@@ -230,10 +231,10 @@ void Game::initRenderer()
         return;
     }
     // defining a viewport for the renderer
-    gameViewport.x = 100;
-    gameViewport.y = 100;
-    gameViewport.w = 600;
-    gameViewport.h = 500;
+    gameViewport.x = 0;
+    gameViewport.y = 0;
+    gameViewport.w = this->viewportWidth;
+    gameViewport.h = this->viewportHeight;
     
     /** 
         Debug GUI Renderer Information

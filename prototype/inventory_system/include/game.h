@@ -59,6 +59,10 @@ private:
     void initGui();
 
     bool running;
+
+
+    int viewportWidth = 600;
+    int viewportHeight = 500;
 public:
     Game();
     void start_game();

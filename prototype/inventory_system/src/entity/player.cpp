@@ -57,6 +57,9 @@ void Player::setPlayerScale(float value) { playerScale = value; }
 void Player::setCamera(Camera *value) { camera = value; }
 void Player::setSprite(Sprites *value) { sprite = value; }
 
+
+
+
 // Methods
 
 void Player::loadPlayer() 
@@ -76,8 +79,8 @@ void Player::draw(float dt, float scale)
     }
     SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
     SDL_FRect playerRect = {
-        (int)position.x * scale,
-        (int)position.y * scale,
+        (position.x - this->camera->getX()) * scale,  // Offset by camera X
+        (position.y - this->camera->getY()) * scale,  // Offset by camera Y
         this->tileMap->tileWidth * scale,
         this->tileMap->tileHeight * scale
     };

@@ -11,33 +11,61 @@
 
 DebugGUI::GUIValues DebugGUI::guiValues;
 
-void DebugGUI::showSelectedSDLTexture(SDL_Texture* texture, int x, int y, int w, int h)
+void DebugGUI::showSelectedSDLTexture(
+    SDL_Texture* texture,
+    float screenX, 
+    float screenY, 
+    float screenWidth, 
+    float screenHeight, 
+    int tileIndex,
+    int columns,
+    int tileWidth,
+    int tileHeight)
 {
-    if (!texture) return;
-
+if (!texture) return;
     SDL_Renderer* renderer = SDL_GetRenderer(SDL_GetWindowFromID(1));
     if (!renderer) return;
-
+    
     // Cleanup previous texture
     if (guiValues.currentTileTexture) 
     {
         SDL_DestroyTexture(guiValues.currentTileTexture);
         guiValues.currentTileTexture = nullptr;
     }
-
-    // Create a sub-texture to store the portion
-    SDL_Texture* subTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
-
+    
+    // Calculate the source rectangle from the tileset based on tileIndex
+    SDL_Rect srcRect = {
+        (tileIndex % columns) * tileWidth,
+        (tileIndex / columns) * tileHeight,
+        tileWidth,
+        tileHeight
+    };
+    
+    // Create a sub-texture of the original tile size (not the scaled size)
+    SDL_Texture* subTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, 
+                                               SDL_TEXTUREACCESS_TARGET, tileWidth, tileHeight);
     SDL_SetRenderTarget(renderer, subTexture);
-
-    SDL_Rect srcRect = {x, y, w, h};
-    SDL_Rect destRect = {0, 0, w, h};
+    SDL_SetTextureBlendMode(subTexture, SDL_BLENDMODE_BLEND);
+    
+    // Clear the texture
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+    SDL_RenderClear(renderer);
+    
+    // Copy just the specific tile from the tileset to our sub-texture
+    SDL_Rect destRect = {0, 0, tileWidth, tileHeight};
     SDL_RenderCopy(renderer, texture, &srcRect, &destRect);
-
+    
+    // Reset render target
     SDL_SetRenderTarget(renderer, nullptr);
-
+    
     // Store the new texture for ImGui
     guiValues.currentTileTexture = subTexture;
+    
+    // Store extra info if needed
+    guiValues.selectedTileScreenX = screenX;
+    guiValues.selectedTileScreenY = screenY;
+    guiValues.selectedTileScreenWidth = screenWidth;
+    guiValues.selectedTileScreenHeight = screenHeight;
 }
 void DebugGUI::ApplyGuiStyle()
 {

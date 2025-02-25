@@ -54,6 +54,12 @@ public:
         // Current Layer Mouse is on
         int currentMouseLayer = -1;
         std::string currentTextureName = "";
+
+        float selectedTileScreenX = 0;
+        float selectedTileScreenY = 0;
+        float selectedTileScreenWidth = 0;
+        float selectedTileScreenHeight = 0;
+
         // Current x and y of the tile of which the mouse is on
         int currentMouseTileX = -1;
         int currentMouseTileY = -1;
@@ -69,7 +75,19 @@ public:
     static void SetMapName(const std::string& mapName);
     static GUIValues guiValues;
     static std::vector<bool> layerInfo;
-    static void showSelectedSDLTexture(SDL_Texture* texture, int x, int y, int w, int h);
+
+    static void showSelectedSDLTexture(
+        SDL_Texture* texture,
+        float screenX, 
+        float screenY, 
+        float screenWidth, 
+        float screenHeight, 
+        int tileIndex,
+        int columns,
+        int tileWidth,
+        int tileHeight
+    );
+
     static void setMapScale(float *scale);
 
     static void addDebugLog(std::string log, std::vector<ErrorCode> = {});

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "entity/entity.h"
 #ifndef CAMERA_H
 #define CAMERA_H
 
@@ -21,7 +22,7 @@ class Player;
 class Camera
 {
 private:
-    Player* player;
+    Entity *entity;
 
     float x;
     float y;
@@ -30,7 +31,7 @@ private:
     float zoom;
 
 public:
-    Camera(Player *player);
+    Camera(Entity *entity = nullptr);
 
     // Getters
     float getX();
@@ -44,6 +45,14 @@ public:
     void setWidth(float width);
     void setHeight(float height);
     void setZoom(float zoom);
+
+    void update(int width = 0, int height = 0);
+    /** 
+        This is just in the chance that the user wants to detach from the entity
+        and attach to another, maybe for a dialog or something idk yet
+    **/
+    void attachEntity(Entity *entity);
+    void detachEntity();
 };
 
 
