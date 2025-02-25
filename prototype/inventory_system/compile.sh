@@ -35,4 +35,4 @@ if ! compile_project; then
 fi
 
 echo "Build completed successfully!"
-./prototype_map_system
+./ComfyGameEngine

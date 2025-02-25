@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(prototype_map_system)
+project(ComfyGameEngine)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -40,7 +40,7 @@ set(IMGUI_SOURCES
     ${IMGUI_BACKENDS}/imgui_impl_sdlrenderer2.cpp
 )
 
-add_executable(prototype_map_system
+add_executable(ComfyGameEngine
 
     src/utils/collision.cpp
     src/utils/camera.cpp
@@ -54,6 +54,7 @@ add_executable(prototype_map_system
     src/gui/debug_gui_layers.cpp
     src/gui/debug_gui_textures.cpp
     src/gui/debug_gui_players.cpp
+    src/gui/utils/debug_gui_sprites.cpp
 
     src/game.cpp
     src/comfy_lib.cpp
@@ -62,7 +63,7 @@ add_executable(prototype_map_system
     ${IMGUI_SOURCES}  # Add ImGui source files to the build
 )
 
-target_include_directories(prototype_map_system PRIVATE
+target_include_directories(ComfyGameEngine PRIVATE
         ${SDL2_INCLUDE_DIRS}
         ${SDL2_IMAGE_INCLUDE_DIRS}
         ${SDL2_TTF_INCLUDE_DIRS}
@@ -73,7 +74,7 @@ target_include_directories(prototype_map_system PRIVATE
         ${PugiXML_INCLUDE_DIRS}
 )
 
-target_link_libraries(prototype_map_system PRIVATE
+target_link_libraries(ComfyGameEngine PRIVATE
     SDL2::SDL2
     SDL2_image::SDL2_image
     SDL2_ttf::SDL2_ttf

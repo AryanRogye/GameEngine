@@ -229,6 +229,10 @@ void Game::initRenderer()
         return;
     }
 
+    SDL_RendererInfo info;
+    SDL_GetRendererInfo(this->renderer, &info);
+    DebugGUI::guiValues.rendererName = info.name;
+
     int vsync = SDL_GetHintBoolean(SDL_HINT_RENDER_VSYNC, SDL_FALSE);
     DebugGUI::guiValues.vsync = vsync;
     SDL_DisplayMode mode;

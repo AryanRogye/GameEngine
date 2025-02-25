@@ -3,8 +3,6 @@
 #include "imgui.h"
 
 
-// TODO Make sure that for debug logs we check for \n if there is one then we want to treat that
-// newline as a new log
 void DebugGUI::addDebugLog(std::string log, std::vector<ErrorCode> codes)
 {
     for (auto code : codes)

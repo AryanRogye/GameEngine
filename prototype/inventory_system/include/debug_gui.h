@@ -36,6 +36,7 @@ public:
 
     struct GUIValues {
 
+        std::string rendererName = "";
         int monitorWidth = 0;
         int monitorHeight = 0;
         bool vsync = true;
