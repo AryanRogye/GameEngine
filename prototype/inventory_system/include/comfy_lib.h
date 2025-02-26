@@ -180,7 +180,7 @@ class Player;
 class Collision;
 class Sprites;
 
-std::string getTimeStamp();
+extern "C" char* getTimeStamp();
 bool changeFileName(std::string& path, std::string& newName);
 bool loadMapConfigs(std::string& inPath);
 bool fetchPlayerConfigs(Player* player);

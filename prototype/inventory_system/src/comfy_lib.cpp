@@ -46,6 +46,8 @@ bool changeFileName(std::string& path, std::string& newName)
     return true;
 }
 
+/**
+Rewriting this function in zig lol cuz i can
 std::string getTimeStamp()
 {
     auto now = std::chrono::system_clock::now();
@@ -56,6 +58,7 @@ std::string getTimeStamp()
 
     return stream.str();
 }
+**/
 
 
 

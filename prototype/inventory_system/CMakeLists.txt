@@ -11,14 +11,14 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
 
 find_program(ZIG_EXECUTABLE NAMES zig REQUIRED)
 set(ZIG_SOURCE 
-    ${CMAKE_SOURCE_DIR}/include/Vec2.zig
+    ${CMAKE_SOURCE_DIR}/include/comfy_lib.zig
 )
 
 
 # Compile Zig into an object file
 add_custom_command(
-    OUTPUT vec2.o
-    COMMAND ${ZIG_EXECUTABLE} cc -c ${ZIG_SOURCE} -o vec2.o
+    OUTPUT comfy_lib_zig.o
+    COMMAND ${ZIG_EXECUTABLE} cc -c ${ZIG_SOURCE} -o comfy_lib_zig.o
     DEPENDS ${ZIG_SOURCE}
     COMMENT "Compiling Zig code"
 )
@@ -36,8 +36,17 @@ find_package(SDL2_ttf REQUIRED)
 # Json
 find_package(nlohmann_json REQUIRED)
 
+
 include_directories("/opt/homebrew/include")
 link_directories("/opt/homebrew/lib")
+
+# Just printing all the paths
+message("SDL2_INCLUDE_DIRS: ${SDL2_INCLUDE_DIRS}")
+message("SDL2_LIBRARIES: ${SDL2_LIBRARIES}")
+message("SDL2_IMAGE_INCLUDE_DIRS: ${SDL2_IMAGE_INCLUDE_DIRS}")
+message("SDL2_IMAGE_LIBRARIES: ${SDL2_IMAGE_LIBRARIES}")
+message("SDL2_TTF_INCLUDE_DIRS: ${SDL2_TTF_INCLUDE_DIRS}")
+message("SDL2_TTF_LIBRARIES: ${SDL2_TTF_LIBRARIES}")
 
 # ImGui Paths
 set(IMGUI_DIR 
@@ -57,7 +66,7 @@ set(IMGUI_SOURCES
 
 add_executable(ComfyGameEngine
 
-    vec2.o
+    comfy_lib_zig.o
 
     src/utils/collision.cpp
     src/utils/camera.cpp
