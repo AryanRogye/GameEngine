@@ -75,6 +75,15 @@ void Sprites::addSpritePath(std::string path)
     this->sprites.push_back(sprite);
 }
 
+/**
+    @param index: The index of the sprite to change
+    @param path:  the new path to change to
+**/
+void Sprites::changeSpritePathName(int index, std::string path)
+{
+    this->sprites[index].path = path;
+}
+
 void Sprites::addSpriteFramesX(int index, int numFramesX)
 {
     this->sprites[index].numFramesX = numFramesX;

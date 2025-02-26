@@ -13,10 +13,10 @@ static int scaleYColors[3] = { 0, 255, 0 };    // Green For Y
 static bool showFrameXColors = false;
 static bool showFrameYColors = false;
 
-
-// TODO Impliment this for each sprite that the user already has in the path or one that was just added to it
-// make sure that we check hte resize of this 
 static std::vector<int> activeSpriteGrids(allErrorCodes.size(), 0);
+static std::vector<int> activeSpriteRename(allErrorCodes.size(), 0);
+static std::vector<std::string> renameBuffers;
+
 
 /** 
 
@@ -33,6 +33,11 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
         // =====================================================================================================================
         if (entity->getSprite())
         {
+            // resize the rename buffers
+            if (renameBuffers.size() != entity->getSprite()->getSpritePaths().size())
+            {
+                renameBuffers.resize(entity->getSprite()->getSpritePaths().size());
+            }
             ImGui::Text("Current Sprites: %lu", entity->getSprite()->getSpritePaths().size());
             ImGui::Separator();
 
@@ -41,6 +46,7 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
             static int selected = -1;
             static bool showDeletePopup = false;
             static float currentSpritesZoom = 1.255f;
+
             // =====================================================================================================================
             // Add Slider zoom controls here
             // =====================================================================================================================
@@ -103,14 +109,100 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
                 std::string name =  spritePaths[i].path.substr(lastSlash + 1);
 
                 // =====================================================================================================================
-                // Display the name and delete button (scaled)
+                // Display the name (scaled)
                 // =====================================================================================================================
-                ImGui::Text("%s", name.c_str());
-                ImGui::SameLine();
-                if (ImGui::Button((" Delete## " + std::to_string(i)).c_str(), ImVec2(50 * currentSpritesZoom, 20 * currentSpritesZoom)))
+                bool rename = activeSpriteRename[i];
+                if (rename)
                 {
-                    selected = i;
-                    showDeletePopup = true;
+                    if (renameBuffers[i].empty()) {
+                        renameBuffers[i] = name; // Initialize buffer with the current name
+                    }
+                    char buffer[256];
+                    strncpy(buffer, renameBuffers[i].c_str(), sizeof(buffer));
+                    buffer[sizeof(buffer) - 1] = '\0'; // Ensure null termination
+
+                    if (ImGui::InputText(("##Rename" + std::to_string(i)).c_str(), buffer, IM_ARRAYSIZE(buffer))) {
+                        renameBuffers[i] = buffer; // Persist the new name
+                    }
+                } else {
+                    ImGui::Text("%s", name.c_str());
+                    // add a small collapsing header to show the full path of the sprite
+                }
+                ImGui::SameLine();
+                if (!rename)
+                {
+                    // =====================================================================================================================
+                    // Displaying Rename if the user isnt renaming
+                    // =====================================================================================================================
+                    if (ImGui::Button((" Rename## " + std::to_string(i)).c_str(), ImVec2(50 * currentSpritesZoom, 20 * currentSpritesZoom)))
+                    {
+                        activeSpriteRename[i] = 1;
+                    }
+                } 
+                else 
+                {
+                    // =====================================================================================================================
+                    // Displaying Cancel if the user is renaming
+                    // =====================================================================================================================
+                    if (ImGui::Button((" Cancel## " + std::to_string(i)).c_str(), ImVec2(50 * currentSpritesZoom, 20 * currentSpritesZoom)))
+                    {
+                        activeSpriteRename[i] = 0;
+                    }
+                    ImGui::SameLine();
+                    // =====================================================================================================================
+                    // Displaying Done if the user is renaming
+                    // =====================================================================================================================
+                    // TODO: Fix this its not doning right and not saving the name fully yet
+                    if (ImGui::Button((" Done## " + std::to_string(i)).c_str(), ImVec2(50 * currentSpritesZoom, 20 * currentSpritesZoom)))
+                    {
+                        activeSpriteRename[i] = 0;
+                        // make sure its not empty
+                        if (!renameBuffers[i].empty()) 
+                        {
+                            std::string oldName = spritePaths[i].path;
+                            std::string newName = renameBuffers[i];
+
+                            // Construct new full path
+                            std::string newPath = spritePaths[i].path.substr(0, lastSlash + 1) + newName;
+                
+                            // Update the sprite object
+                            entity->getSprite()->changeSpritePathName(i, newPath);
+                            if (!changeFileName(oldName, newPath))
+                            {
+                                // change everything back to how it was
+                                entity->getSprite()->changeSpritePathName(i, oldName);
+                            } else {
+                                if (!saveSpriteConfig(entity->getSprite(), newPath, i))
+                                {
+                                    entity->getSprite()->changeSpritePathName(i, oldName);
+                                }
+                            }
+                        }
+                    }
+                }
+                if (!rename)
+                {
+                    ImGui::SameLine();
+                    // =====================================================================================================================
+                    // Displaying Delete if the user isnt renaming
+                    // =====================================================================================================================
+                    if (ImGui::Button((" Delete## " + std::to_string(i)).c_str(), ImVec2(50 * currentSpritesZoom, 20 * currentSpritesZoom)))
+                    {
+                        selected = i;
+                        showDeletePopup = true;
+                    }
+                    // =====================================================================================================================
+                    // Displaying Full Path if the user isnt renaming
+                    // =====================================================================================================================
+                    if (ImGui::TreeNode("Full Path"))
+                    {
+                        ImGui::PushTextWrapPos(0.0f);  // Prevents wrapping and clipping
+                        ImGui::Text("%s", spritePaths[i].path.c_str());
+                        ImGui::PopTextWrapPos();       // Restore wrapping behavior
+                        ImGui::TreePop();
+
+                    }
+                    ImGui::Spacing();
                 }
 
                 // =====================================================================================================================
@@ -473,9 +565,6 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
                 entity->getSprite()->addSprite(sprite);
             }
 
-            // TODO : Need to also pass in a sprite object instead of just the path to save the sprite
-            // I want the user to be able to have the ability to either configure the sprite now or later
-            // but cannot apply to the entity until its fully configured
             saveSpritesConfigs(entity->getSprite());
             onboardingSpritePath = "";
             numDeleted = 0;

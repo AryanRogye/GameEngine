@@ -4,6 +4,48 @@
 #include "entity/player.h"
 // end of last checked includes
 
+/**  
+    this is assuming that the new name is a valid path name up to the last /
+    and that the new name is a valid name meaning has a .png or .jpg or .jpeg
+**/
+bool changeFileName(std::string& path, std::string& newName)
+{
+    size_t lastSlash = path.find_last_of('/');
+
+    if (lastSlash == std::string::npos)
+    {
+        DebugGUI::addDebugLog("Invalid path", ErrorCode::SPRITE_ERROR);
+        return false;
+    }
+
+    // make sure that the new name has a valid extension
+    if (newName.find(".png") == std::string::npos && 
+        newName.find(".jpg") == std::string::npos && 
+        newName.find(".jpeg") == std::string::npos
+    ) {
+        DebugGUI::addDebugLog("Invalid file extension", ErrorCode::SPRITE_ERROR);
+        return false;
+    }
+
+    // now we have to make sure that this isnt already a path inside the users system
+    if (std::filesystem::exists(newName))
+    {
+        // this means the path already exists
+        DebugGUI::addDebugLog("Path already exists", ErrorCode::SPRITE_ERROR);
+        return false;
+    }
+
+    // now we can rename the file
+    if (std::rename(path.c_str(), newName.c_str()) != 0)
+    {
+        DebugGUI::addDebugLog("Failed to rename file", ErrorCode::SPRITE_ERROR);
+        return false;
+    }
+
+    DebugGUI::addDebugLog("Renamed file", ErrorCode::NONE);
+    return true;
+}
+
 std::string getTimeStamp()
 {
     auto now = std::chrono::system_clock::now();
@@ -326,6 +368,103 @@ bool fetchSpritesConfigs(Sprites *sprites)
             }
         }
     }
+    return true;
+}
+
+bool saveSpriteConfig(Sprites *sprites, std::string path, int index)
+{
+    std::string basePath = __FILE__;
+    basePath = basePath.substr(0, basePath.find_last_of("/")); // Get directory of current file
+
+    // Construct the relative path to Data/sprites_data.ini
+    std::string spritePath = basePath + "/../Data/sprites_data.ini";
+
+    std::ifstream inputFile(spritePath);
+    if (!inputFile)
+    {
+        std::cerr << "❌ Error: Unable to open file: " << spritePath << std::endl;
+        return false;
+    }
+
+    std::vector<std::string> lines;
+    std::string line;
+    bool foundPaths = false;
+
+    while (std::getline(inputFile, line))
+    {
+        if (line.rfind("paths=", 0) == 0) // Check if the line starts with "paths="
+        {
+            foundPaths = true;
+            std::string pathsList = line.substr(6); // Extract everything after "paths="
+            std::stringstream ss(pathsList);
+            std::vector<std::string> spritePaths;
+            std::string sprite;
+
+            while (std::getline(ss, sprite, ',')) // Split by comma
+            {
+                spritePaths.push_back(sprite);
+            }
+
+            // Make sure the index is valid
+            if (index >= 0 && index < static_cast<int>(spritePaths.size()))
+            {
+                spritePaths[index] = path; // Update only the selected index
+            }
+            else if (index == static_cast<int>(spritePaths.size())) // If adding a new sprite
+            {
+                spritePaths.push_back(path);
+            }
+            else
+            {
+                std::cerr << "❌ Error: Invalid index " << index << std::endl;
+                return false;
+            }
+
+            // Reconstruct the paths line
+            std::ostringstream updatedPaths;
+            updatedPaths << "paths=";
+            for (size_t i = 0; i < spritePaths.size(); i++)
+            {
+                updatedPaths << spritePaths[i];
+                if (i < spritePaths.size() - 1)
+                {
+                    updatedPaths << ",";
+                }
+            }
+
+            lines.push_back(updatedPaths.str()); // Store the modified paths line
+        }
+        else
+        {
+            lines.push_back(line); // Keep all other lines unchanged
+        }
+    }
+    inputFile.close();
+
+    // If "paths=" wasn't found, we need to append it
+    if (!foundPaths)
+    {
+        std::cerr << "⚠️ Warning: No 'paths=' section found. Creating a new one." << std::endl;
+        lines.push_back("[Sprites]");
+        lines.push_back("paths=" + path); // Start a new paths section
+    }
+
+    // Write back the updated content without removing other existing data
+    std::ofstream outputFile(spritePath);
+    if (!outputFile)
+    {
+        std::cerr << "❌ Error: Unable to open file for writing: " << spritePath << std::endl;
+        return false;
+    }
+
+    for (const auto &l : lines)
+    {
+        outputFile << l << "\n";
+    }
+
+    outputFile.close();
+
+    DebugGUI::addDebugLog("✅ Sprite path at index " + std::to_string(index) + " updated to " + path, ErrorCode::NONE);
     return true;
 }
 

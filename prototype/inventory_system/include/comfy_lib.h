@@ -181,10 +181,13 @@ class Collision;
 class Sprites;
 
 std::string getTimeStamp();
+bool changeFileName(std::string& path, std::string& newName);
 bool loadMapConfigs(std::string& inPath);
 bool fetchPlayerConfigs(Player* player);
 
 bool fetchSpritesConfigs(Sprites *sprites);
+
+bool saveSpriteConfig(Sprites *sprites, std::string path, int index);
 bool saveSpritesConfigs(Sprites *sprites, std::string path = "");
 
 bool fetchCollisionConfigs(Collision* collision);

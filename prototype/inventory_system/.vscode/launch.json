@@ -5,7 +5,7 @@
             "name": "Debug C++ Executable",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/prototype_map_system",
+            "program": "${workspaceFolder}/build/ComfyGameEngine",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -24,7 +24,7 @@
             "name": "Run",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/prototype_map_system",
+            "program": "${workspaceFolder}/build/ComfyGameEngine",
             "args": [], // Command-line arguments
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

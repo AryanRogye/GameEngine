@@ -36,6 +36,8 @@ class Sprites
     SDL_Texture * getTextures(int index);
     // Setters
 
+    void changeSpritePathName(int index, std::string path);
+
     void addSpritePath(std::string path);
     void addSpriteFramesX(int index, int numFramesX);
     void addSpriteFramesY(int index, int numFramesY);
