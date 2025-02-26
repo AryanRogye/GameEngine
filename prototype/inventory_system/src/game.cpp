@@ -3,9 +3,11 @@
 #define WIDTH 800
 #define HEIGHT 600
 
+extern "C" void print_hello();
+
 void Game::start_game()
 {
-
+    print_hello();
     std::cout << "======================================" << std::endl;
     std::cout << "Game Started" << std::endl;
     std::cout << "======================================" << std::endl;

@@ -9,6 +9,21 @@ set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_FLAGS_DEBUG "-g")  # Ensure debug symbols are added
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
 
+find_program(ZIG_EXECUTABLE NAMES zig REQUIRED)
+set(ZIG_SOURCE 
+    ${CMAKE_SOURCE_DIR}/include/Vec2.zig
+)
+
+
+# Compile Zig into an object file
+add_custom_command(
+    OUTPUT vec2.o
+    COMMAND ${ZIG_EXECUTABLE} cc -c ${ZIG_SOURCE} -o vec2.o
+    DEPENDS ${ZIG_SOURCE}
+    COMMENT "Compiling Zig code"
+)
+
+
 
 # SDL 2
 set(SDL2_DIR "/opt/homebrew/opt/sdl2/lib/cmake/SDL2")
@@ -41,6 +56,8 @@ set(IMGUI_SOURCES
 )
 
 add_executable(ComfyGameEngine
+
+    vec2.o
 
     src/utils/collision.cpp
     src/utils/camera.cpp
