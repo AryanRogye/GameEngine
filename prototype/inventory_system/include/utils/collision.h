@@ -17,7 +17,7 @@ class TSDL_TileMap;
 class Collision {
 private:
     // By Default We Dont Want to show the collision box
-    bool showCollision = false;
+    bool showCollision = true;
     // Default Collision Color is Red
     SDL_Color collisionColor = {255, 0, 0, 255};
     Player* player;

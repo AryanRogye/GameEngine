@@ -8,6 +8,7 @@
 
 #include "SDL2/SDL.h"
 #include <SDL_image.h>
+#include "utils/facing.h"
 
 class Player;
 
@@ -46,6 +47,8 @@ class Sprites
     void removeSpritePath(int index);
     void clearSpritePaths();
     void queryTexureDimensions();
+
+    void drawSprite(Facing facing);
 };
 
 #endif

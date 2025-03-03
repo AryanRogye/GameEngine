@@ -16,7 +16,45 @@ static bool showFrameYColors = false;
 static std::vector<int> activeSpriteGrids(allErrorCodes.size(), 0);
 static std::vector<int> activeSpriteRename(allErrorCodes.size(), 0);
 static std::vector<std::string> renameBuffers;
+static bool showSpriteCreation = false;
 
+// TODO: Work on this
+void DebugGUI::renderEntitySpriteCreationMenu(Entity* entity, SDL_Renderer* renderer)
+{
+    ImGui::Begin("Sprite Creation", &showSpriteCreation, ImGuiWindowFlags_HorizontalScrollbar);
+
+    ImGui::Text("Sprite Splitting Tool");
+    ImGui::Separator();
+
+
+    // we have sprites lets ask the user to pick one
+    if (entity->getSprite())
+    {
+        std::vector<Sprites::Sprite> spritePaths = entity->getSprite()->getSpritePaths();
+
+        // now inside here we can just get a picker to pick the sprite maybe idk
+        static int selected = -1;
+        static int selectedFrame = -1;
+
+        // we wont display the image cuz the user can have that open at the same time, we will only provide
+        // the name
+
+        for (auto sprite : spritePaths)
+        {
+            // the path will be hella long we wanna only get the last /...... the ......
+            size_t lastSlash = sprite.path.find_last_of('/');
+            std::string name =  sprite.path.substr(lastSlash + 1);
+
+            if (ImGui::Selectable(name.c_str(), selected == spritePaths.size()))
+            {
+                selected = spritePaths.size();
+            }
+        }
+    }
+    
+
+    ImGui::End();
+}
 
 /** 
 
@@ -25,7 +63,8 @@ we will read that base class cuz the base class is what is gonna have the sprite
 implement that right now so we will just use the player class for now
 
 **/
-void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer) {
+void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer) 
+{
     if (ImGui::CollapsingHeader("Sprite Control")) 
     {
         // =====================================================================================================================
@@ -277,6 +316,22 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
         }
 
         // =====================================================================================================================
+        // In Here will be the a new thing I want to do called
+        // "Begin Sprite Creation" where a existing sprite can be seen with a play button
+        // will give ability to split a image into multiple images for couped together sprites which imo is 
+        // a cool thing and most engine's should do something like this
+        // =====================================================================================================================
+        if (ImGui::Button("Begin Sprite Creation"))
+        {
+            showSpriteCreation = true;
+        }
+
+        if (showSpriteCreation)
+        {
+            renderEntitySpriteCreationMenu(entity, renderer);
+        }
+
+        // =====================================================================================================================
         // Displaying the currently loading sprite
         // =====================================================================================================================
         if(!createdOnbroardingSurface && !onboardingSpritePath.empty())
@@ -309,6 +364,9 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
         static int framesX = 0;
         static int framesY = 0;
 
+        // =====================================================================================================================
+        // Display the image that was loaded
+        // =====================================================================================================================
         if (!onboardingSpritePath.empty() && onboardingTexture) 
         {
             // =====================================================================================================================

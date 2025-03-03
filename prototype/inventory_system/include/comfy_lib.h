@@ -18,6 +18,14 @@
 #include <format>
 #include <chrono>
 
+/**  
+
+I wanna port this entire file to rust or zig for fun
+
+timestamp is already done in zig
+
+**/
+
 
 #include "utils/collision.h"
 

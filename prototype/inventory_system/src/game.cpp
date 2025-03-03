@@ -3,71 +3,52 @@
 #define WIDTH 800
 #define HEIGHT 600
 
-extern "C" void print_hello();
+// Add a new update method to handle logic updates
+void Game::update(float dt)
+{
+    // Update game logic
+    if (this->player)
+        this->player->update(dt);
+}
 
 void Game::start_game()
 {
-    print_hello();
-    std::cout << "======================================" << std::endl;
-    std::cout << "Game Started" << std::endl;
-    std::cout << "======================================" << std::endl;
+    // Initialize if not already done
+    static bool initialized = false;
+    if (!initialized) {
+        std::cout << "Game initialized" << std::endl;
+        this->loadMap();
+        this->player->setTileMap(this->map);
+        initialized = true;
+    }
 
-    this->running = true;
-    time_t lastTime = -1;
+    // Get current time for hot reload
     time_t currentTime = 0;
+    static time_t lastTime = -1;
 
-    // This is used to get delta time
-    Uint32 lastTicks = SDL_GetTicks();
-
-    while (this->running)
+    // Hot Reload check
+    fileChanged(currentTime);
+    if (lastTime != currentTime)
     {
-        Uint32 nowTicks = SDL_GetTicks();
-        float dt = (nowTicks - lastTicks) * 0.001f;
-
-        SDL_Event e; while(SDL_PollEvent(&e)) this->handleEvent(e, dt);  
-        this->player->update(dt);
-
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); SDL_RenderClear(renderer);
-        SDL_RenderClear(renderer);
-
-        // Hot Reload
-        fileChanged(currentTime);
-        if (lastTime != currentTime)
-        {
-            DebugGUI::addDebugLog("File Changed", ErrorCode::SUCCESS);
-            this->loadMap();
-            this->player->setTileMap(this->map);
-            lastTime = currentTime;
-        }
-        // Draw Here
-        this->player->getCamera()->update(this->viewportWidth, this->viewportHeight, this->gameScale);
-        this->drawMap();
-        this->player->draw(dt, this->gameScale);
-        this->renderGui();
-
-        SDL_RenderPresent(this->renderer);
-        lastTicks = nowTicks;
-        SDL_Delay(16);
+        DebugGUI::addDebugLog("File Changed", ErrorCode::SUCCESS);
+        this->loadMap();
+        this->player->setTileMap(this->map);
+        lastTime = currentTime;
     }
 
-    // Cleanup
-    for (int i = 0; i < 300; i++)
-    {
-        SDL_DestroyTexture(this->fontNumbers[i]);
-    }
+    // Draw one frame
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
 
-    TTF_CloseFont(font);
-    TTF_Quit();
+    // Draw the game content
+    this->player->getCamera()->update(this->viewportWidth, this->viewportHeight, this->gameScale);
+    this->drawMap();
+    this->player->draw(0.016f, this->gameScale); // Using fixed dt for now
 
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-
-    ImGui_ImplSDL2_Shutdown();
-    ImGui_ImplSDLRenderer2_Shutdown();
-
-    ImGui::DestroyContext();
-
-    SDL_Quit();
+    std::cout << "Player Position: " << this->player->getPosition().x << " " << this->player->getPosition().y << std::endl;
+    std::cout << "Camera Position: " << this->player->getCamera()->getX() << " " << this->player->getCamera()->getY() << std::endl;
+    std::cout << "Viewport Width: " << this->viewportWidth << " Viewport Height: " << this->viewportHeight << std::endl;
+    std::cout << "Game Scale: " << this->gameScale << std::endl;
 }
 
 // want mouse as well
@@ -140,11 +121,11 @@ void Game::handleEvent(SDL_Event e, float dt)
 
 Game::Game()
 {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
-    {
-        std::cout << "Failed to Initialize SDL2 Library" << std::endl;
-        return;
-    }
+    /*if (SDL_Init(SDL_INIT_VIDEO) < 0)*/
+    /*{*/
+    /*    std::cout << "Failed to Initialize SDL2 Library" << std::endl;*/
+    /*    return;*/
+    /*}*/
 
     if (TTF_Init() < 0)
     {
@@ -159,9 +140,14 @@ Game::Game()
         return;
     }
 
-    this->initWindow();
-    this->initRenderer();
-    SDL_RenderSetViewport(this->renderer, &gameViewport);
+    /*this->initWindow();*/
+    /*this->initRenderer();*/
+    /*SDL_RenderSetViewport(this->renderer, &gameViewport);*/
+
+    this->gameViewport = {0, 0, WIDTH, HEIGHT};
+    this->viewportWidth = WIDTH;
+    this->viewportHeight = HEIGHT;
+
     this->loadFontNumbers();
     this->initGui();
 
@@ -215,23 +201,23 @@ void Game::initWindow()
     }
 
     // make resizeable window
-    SDL_SetWindowResizable(this->window, SDL_TRUE);
-    // maximize window
-    SDL_MaximizeWindow(this->window);
-    DebugGUI::addDebugLog("Window Made Resizable" , ErrorCode::NONE);
+    /*SDL_SetWindowResizable(this->window, SDL_TRUE);*/
+    /*// maximize window*/
+    /*SDL_MaximizeWindow(this->window);*/
+    /*DebugGUI::addDebugLog("Window Made Resizable" , ErrorCode::NONE);*/
 }
 
 void Game::initRenderer()
 {
-    this->renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    // Check valid renderer
-    if(!this->renderer)
-    {
-        printf("Failed To Get the surface from the window");
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return;
-    }
+    /*this->renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);*/
+    /*// Check valid renderer*/
+    /*if(!this->renderer)*/
+    /*{*/
+    /*    printf("Failed To Get the surface from the window");*/
+    /*    SDL_DestroyWindow(window);*/
+    /*    SDL_Quit();*/
+    /*    return;*/
+    /*}*/
     // defining a viewport for the renderer
     gameViewport.x = 0;
     gameViewport.y = 0;
@@ -241,18 +227,34 @@ void Game::initRenderer()
     /** 
         Debug GUI Renderer Information
     **/
+    /*SDL_RendererInfo info;*/
+    /*SDL_GetRendererInfo(this->renderer, &info);*/
+    /*DebugGUI::guiValues.rendererName = info.name;*/
+    /**/
+    /*int vsync = SDL_GetHintBoolean(SDL_HINT_RENDER_VSYNC, SDL_FALSE);*/
+    /*DebugGUI::guiValues.vsync = vsync;*/
+    /*SDL_DisplayMode mode;*/
+    /*SDL_GetCurrentDisplayMode(0, &mode);*/
+    /**/
+    /*DebugGUI::guiValues.monitorWidth = mode.w;*/
+    /*DebugGUI::guiValues.monitorHeight = mode.h;*/
+}
+
+void Game::setRenderer(SDL_Renderer *engineRenderer)
+{
+    this->renderer = engineRenderer;
+    
+    if (this->player)
+        this->player->setRenderer(this->renderer);
+        
+    // Get renderer info for debug
     SDL_RendererInfo info;
     SDL_GetRendererInfo(this->renderer, &info);
     DebugGUI::guiValues.rendererName = info.name;
 
     int vsync = SDL_GetHintBoolean(SDL_HINT_RENDER_VSYNC, SDL_FALSE);
     DebugGUI::guiValues.vsync = vsync;
-    SDL_DisplayMode mode;
-    SDL_GetCurrentDisplayMode(0, &mode);
-
-    DebugGUI::guiValues.monitorWidth = mode.w;
-    DebugGUI::guiValues.monitorHeight = mode.h;
 }
 
 void Game::initGui() { DebugGUI::Init(this->window, this->renderer); }
-void Game::renderGui() { DebugGUI::Render(this->renderer); }
+void Game::renderGui() { return; DebugGUI::Render(this->renderer); }

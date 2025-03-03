@@ -1,9 +1,5 @@
 const std = @import("std");
 
-pub export fn print_hello() void {
-    std.debug.print("Hello from Vec2.zig\n", .{});
-}
-
 // Get the current timestamp in the format HH:MM:SS
 var b: [9]u8 = undefined;
 export fn getTimeStamp() callconv(.C) [*c]const u8 {

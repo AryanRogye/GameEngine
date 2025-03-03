@@ -84,18 +84,18 @@ void DebugGUI::ApplyGuiStyle()
 }
 void DebugGUI::Init(SDL_Window* window, SDL_Renderer* renderer)
 {
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-
-    ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
-    ImGui_ImplSDLRenderer2_Init(renderer);
-    
-    ApplyGuiStyle();
-
-    io.Fonts->AddFontFromFileTTF("/Library/Fonts/SF-Pro.ttf", 16.0f);
-    ImGui_ImplSDLRenderer2_CreateFontsTexture();
+    /*IMGUI_CHECKVERSION();*/
+    /*ImGui::CreateContext();*/
+    /*ImGuiIO& io = ImGui::GetIO();*/
+    /*io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;*/
+    /**/
+    /*ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);*/
+    /*ImGui_ImplSDLRenderer2_Init(renderer);*/
+    /**/
+    /*ApplyGuiStyle();*/
+    /**/
+    /*io.Fonts->AddFontFromFileTTF("/Library/Fonts/SF-Pro.ttf", 16.0f);*/
+    /*ImGui_ImplSDLRenderer2_CreateFontsTexture();*/
 }
 
 

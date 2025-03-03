@@ -31,7 +31,6 @@ private:
     **/
     SDL_Window      *window;
     SDL_Renderer    *renderer;
-    SDL_Rect        gameViewport;
     
     /** 
         Game Variables
@@ -49,7 +48,6 @@ private:
 
     void initWindow();
     void initRenderer();
-    void handleEvent(SDL_Event e, float dt);
 
     void loadMap();
     void loadFontNumbers();
@@ -61,10 +59,15 @@ private:
     bool running;
 
 
+public:
+    SDL_Rect        gameViewport;
     int viewportWidth = 600;
     int viewportHeight = 500;
-public:
+
+    void update(float dt);
     Game();
     void start_game();
+    void handleEvent(SDL_Event e, float dt);
+    void setRenderer(SDL_Renderer *engineRenderer);
 };
 

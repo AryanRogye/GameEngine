@@ -68,6 +68,14 @@ add_executable(ComfyGameEngine
 
     comfy_lib_zig.o
 
+    src/engine/MainView.cpp
+    src/engine/GameEngine.cpp
+    # UI ELEMENTS OF THE ENGINE
+    src/engine/ui/ui_manager.cpp
+    src/engine/ui/toolbar.cpp
+    src/engine/ui/inspector.cpp
+    src/engine/ui/file_explorer.cpp
+
     src/utils/collision.cpp
     src/utils/camera.cpp
     src/utils/sprite.cpp

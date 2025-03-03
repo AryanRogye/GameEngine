@@ -13,6 +13,7 @@
 #include "Vec2.h"
 #include "comfy_lib.h"
 #include "debug_gui.h"
+#include "utils/facing.h"
 
 class Player : public Entity
 {
@@ -48,6 +49,7 @@ private:
     Sprites         *sprite;
 
     SDL_Renderer    *renderer;
+    Facing          facing;
 
 public:
     Player();

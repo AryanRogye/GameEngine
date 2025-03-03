@@ -16,6 +16,8 @@ sprite(new Sprites(this))
     // lol be tiny at first
     this->width = 0;
     this->height = 0;
+    // start with player facing down
+    this->facing = Facing::DOWN;
 }
 
 // Getters
@@ -77,6 +79,7 @@ void Player::loadPlayer()
     fetchPlayerConfigs(this);
     DebugGUI::addDebugLog("Player File Loaded", ErrorCode::SUCCESS);
 }
+
 void Player::draw(float dt, float scale)
 {
     if (this->playerScale != scale)
@@ -87,6 +90,7 @@ void Player::draw(float dt, float scale)
         std::cout << "No renderer set for player" << std::endl;
         return;
     }
+    this->getSprite()->drawSprite(this->facing);
     SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
     SDL_FRect playerRect = {
         (position.x - this->camera->getX()) * scale,  // Offset by camera X
@@ -95,7 +99,6 @@ void Player::draw(float dt, float scale)
         this->height * scale
     };
     SDL_RenderFillRectF(renderer, &playerRect);
-
 
     // Draw The Collision Box (This is a debug feature)
     // In Production You Wouldnt Want This
@@ -124,21 +127,25 @@ void Player::update(float dt)
     // W, S, A, D
     if (keysPressed[0]) 
     {
+        this->facing = Facing::UP;
         direction.y -= 1.0f; // W
         isMoving = true;
     }
     if (keysPressed[1]) 
     {
+        this->facing = Facing::DOWN;
         direction.y += 1.0f; // S
         isMoving = true;
     }
     if (keysPressed[2]) 
     {
+        this->facing = Facing::LEFT;
         direction.x -= 1.0f; // A
         isMoving = true;
     }
     if (keysPressed[3]) 
     {
+        this->facing = Facing::RIGHT;
         direction.x += 1.0f; // D
         isMoving = true;
     }

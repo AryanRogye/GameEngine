@@ -102,3 +102,47 @@ void Sprites::clearSpritePaths()
 {
     this->sprites.clear();
 }
+
+
+void Sprites::drawSprite(Facing facing)
+{
+    /**
+        so we have multiple sprites idk exactly how to handle this, probably by the direction of the player
+        so in this situation this is a "Game Engine" so in things like godot they have a lsp that knows what
+        the name of the sprite is but we dont have that so we will just have to run our engine and see what the
+        name is to enter into here
+    **/
+
+    // in here since we set it: the 
+    //      first row is the down facing
+    //      second row is left the facing 
+    //      third row is the right facing
+    //      fourth row is the back facing <- Only has 4 frames
+
+    /** before I can work on this I want to get the debugging better*/
+    switch (facing)
+    {
+        case Facing::DOWN:
+            // Draw the first row
+            // float sprite_index = static_cast<int>(sprite.width / sprite.numFramesX);
+            break;
+        case Facing::LEFT:
+            // Draw the second row
+            break;
+        case Facing::RIGHT:
+            // Draw the third row
+            break;
+        case Facing::UP:
+            // Draw the fourth row
+            break;
+        default:
+            break;
+    }
+
+    /*
+            for (Sprites::Sprite sprite : this->sprites)
+            {
+                DebugGUI::addDebugLog("Drawing Sprite: " + sprite.path, ErrorCode::NONE);
+            }
+    */
+}
