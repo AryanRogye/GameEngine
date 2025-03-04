@@ -32,6 +32,7 @@ public:
     static void renderPlayerInfo(SDL_Renderer* renderer);
 
     static void renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer);
+    static void renderEntitySpriteCreationMenu(Entity* entity, SDL_Renderer* renderer);
     static void Render(SDL_Renderer* renderer);
 
     struct GUIValues {
