@@ -182,6 +182,20 @@
             // Get the Image Path
              std::string imagePath = ts.imagePath;
 
+            // verify that the image path is a valid path
+            if (imagePath.empty())
+            {
+                std::cerr << "❌ Error: Image path is empty" << std::endl;
+                return false;
+            }
+
+            // make sure that the image path actually exists
+            if (!std::filesystem::exists(imagePath))
+            {
+                std::cerr << "❌ Error: Image path does not exist: (" << imagePath << ")" << std::endl;
+                return false;
+            }
+
             SDL_Surface *surface = IMG_Load(imagePath.c_str());
             if (!surface)
             {
