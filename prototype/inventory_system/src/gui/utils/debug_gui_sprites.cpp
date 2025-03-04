@@ -16,6 +16,152 @@ static bool showFrameYColors = false;
 static std::vector<int> activeSpriteGrids(allErrorCodes.size(), 0);
 static std::vector<int> activeSpriteRename(allErrorCodes.size(), 0);
 static std::vector<std::string> renameBuffers;
+static bool showSpriteCreation = false;
+
+static bool user_wants_play_sprite_animation = false;
+static int selected_frame = 0;
+
+
+// TODO: Work on this
+void DebugGUI::renderEntitySpriteCreationMenu(Entity* entity, SDL_Renderer* renderer)
+{
+    ImGui::Begin("Sprite Creation", &showSpriteCreation, ImGuiWindowFlags_HorizontalScrollbar);
+
+    ImGui::Text("Sprite Splitting Tool");
+    ImGui::Separator();
+
+    static int selected = -1;
+    static int selectedFrame = -1;
+    static float animationSpeed = 10.0f; // Frames per second
+    static float accumulatedTime = 0.0f;
+    static float currentSpritesZoom = 1.255f;
+
+    // we have sprites lets ask the user to pick one
+    if (entity->getSprite())
+    {
+        std::vector<Sprites::Sprite> spritePaths = entity->getSprite()->getSpritePaths();
+
+        // now inside here we can just get a picker to pick the sprite maybe idk
+
+        // we wont display the image cuz the user can have that open at the same time, we will only provide
+        // the name
+
+        ImGui::Text("Select a sprite:");
+        for (int i = 0; i < spritePaths.size(); i++)
+        {
+            // Extract filename from path
+            size_t lastSlash = spritePaths[i].path.find_last_of('/');
+            std::string name = spritePaths[i].path.substr(lastSlash + 1);
+            
+            if (ImGui::Selectable(name.c_str(), selected == i))
+            {
+                selected = i;
+                selectedFrame = 0; // Reset frame when selecting a new sprite
+                user_wants_play_sprite_animation = false; // Stop animation on new selection
+            }
+        }
+
+        if (selected >= 0 && selected < spritePaths.size())
+        {
+            // we wanna show the selected sprite as kind of a preview
+            Sprites::Sprite selectedSprite = spritePaths[selected];
+
+            // the texture of the image
+            SDL_Texture *tex = spritePaths[selected].texture = entity->getSprite()->getTextures(selected);
+            if (tex)
+            {
+                int tex_width = spritePaths[selected].width;
+                int tex_height = spritePaths[selected].height;
+
+                // each frame and width will be this length
+                int frame_width = tex_width / spritePaths[selected].numFramesX;
+                int frame_height = tex_height / spritePaths[selected].numFramesY;
+
+                static int total_frames = spritePaths[selected].numFramesX * spritePaths[selected].numFramesY;
+
+                ImGui::Separator();
+                ImGui::Text("Sprite Preview:");
+
+                if (user_wants_play_sprite_animation)
+                {
+                    // Get delta time (you'll need to implement this or use your engine's time system)
+                    float deltaTime = ImGui::GetIO().DeltaTime;
+                    accumulatedTime += deltaTime;
+                    
+                    if (accumulatedTime >= 1.0f / animationSpeed)
+                    {
+                        selectedFrame = (selectedFrame + 1) % total_frames;
+                        accumulatedTime = 0.0f;
+                    }
+                }
+
+                // Calculate frame position
+                int frame_x = selectedFrame % selectedSprite.numFramesX;
+                int frame_y = selectedFrame / selectedSprite.numFramesX;
+
+                // Set up source and destination rectangles
+                SDL_Rect src = { frame_x * frame_width, frame_y * frame_height, frame_width, frame_height };
+
+                // Create an ImGui image from the texture region
+                ImVec2 imageSize(frame_width * currentSpritesZoom, frame_height * currentSpritesZoom);
+                ImVec2 uv0((float)(frame_x * frame_width) / tex_width, 
+                           (float)(frame_y * frame_height) / tex_height);
+                ImVec2 uv1((float)((frame_x + 1) * frame_width) / tex_width, 
+                           (float)((frame_y + 1) * frame_height) / tex_height);
+
+                // Display the selected frame
+                ImGui::Image((ImTextureID)tex, imageSize, uv0, uv1);
+
+                // Animation controls
+                ImGui::Separator();
+                ImGui::Text("Animation Controls:");
+
+                // Play/Stop button
+                if (ImGui::Button(user_wants_play_sprite_animation ? "Stop" : "Play"))
+                {
+                    user_wants_play_sprite_animation = !user_wants_play_sprite_animation;
+                }
+
+                ImGui::SameLine();
+
+                // Animation speed slider
+                ImGui::SliderFloat("Speed (FPS)", &animationSpeed, 1.0f, 30.0f);
+
+                // Frame slider
+                if (!user_wants_play_sprite_animation)
+                {
+                    int tempFrame = selectedFrame;
+                    if (ImGui::SliderInt("Frame", &tempFrame, 0, total_frames - 1))
+                    {
+                        selectedFrame = tempFrame;
+                    }
+                }
+
+                // Zoom Slider
+                if (ImGui::SliderFloat("Zoom", &currentSpritesZoom, 0.1f, 10.0f))
+                {
+                    if (currentSpritesZoom < 0.1f) currentSpritesZoom = 0.1f;
+                }
+                
+
+                // Frame information
+                ImGui::Text("Current frame: %d/%d", selectedFrame + 1, total_frames);
+                ImGui::Text("Frame size: %dx%d", frame_width, frame_height);
+            }
+            else 
+            {
+                ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Failed to load texture!");
+            }
+        }
+    }
+    else
+    {
+        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "No sprites available!");
+    }
+    
+
+    ImGui::End();
+}
 
 
 /** 
@@ -274,6 +420,22 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
                 }
                 ImGui::EndPopup();
             }
+        }
+
+        // =====================================================================================================================
+        // In Here will be the a new thing I want to do called
+        // "Begin Sprite Creation" where a existing sprite can be seen with a play button
+        // will give ability to split a image into multiple images for couped together sprites which imo is 
+        // a cool thing and most engine's should do something like this
+        // =====================================================================================================================
+        if (ImGui::Button("Begin Sprite Creation"))
+        {
+            showSpriteCreation = true;
+        }
+
+        if (showSpriteCreation)
+        {
+            renderEntitySpriteCreationMenu(entity, renderer);
         }
 
         // =====================================================================================================================
