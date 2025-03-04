@@ -1,9 +1,8 @@
-#include "shared/start_game.h"
-#include "configs.h"
+#include <iostream>
+#include "game.h"
 
 int main()
 {
-    initializePaths();
-    StartGame start_game = StartGame();
-    start_game.start_screen();
+    Game game = Game();
+    game.start_game();
 }
