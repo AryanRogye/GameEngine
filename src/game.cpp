@@ -64,7 +64,6 @@ void Game::start_game()
 
     ImGui_ImplSDL2_Shutdown();
     ImGui_ImplSDLRenderer2_Shutdown();
-
     ImGui::DestroyContext();
 
     SDL_Quit();

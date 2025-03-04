@@ -1,4 +1,4 @@
-prototype/inventory_system/include/third_party/
+include/third_party/
 ./prototype/inventory_system/include/third_party/imgui/
 external/
 vendor/

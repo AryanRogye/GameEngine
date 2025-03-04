@@ -8,6 +8,11 @@
 #include <SDL_surface.h>
 #include <cstddef>
 #include <type_traits>
+#include "imconfig.h"
+#include "imgui.h"
+#include "imgui_impl_sdlrenderer2.h"
+#include "imgui_internal.h"
+#include "imgui_impl_sdl2.h"
 
 DebugGUI::GUIValues DebugGUI::guiValues;
 
@@ -88,6 +93,8 @@ void DebugGUI::Init(SDL_Window* window, SDL_Renderer* renderer)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
 
     ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer2_Init(renderer);
@@ -107,8 +114,9 @@ void DebugGUI::Render(SDL_Renderer* renderer)
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
-    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_FirstUseEver);
+    /*ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);*/
+    /*ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_FirstUseEver);*/
+    ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
     ImGui::Begin("Debug Window", nullptr);
     // =====================================================================================================================

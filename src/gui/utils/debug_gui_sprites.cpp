@@ -340,7 +340,9 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
                     // =====================================================================================================================
                     // Displaying Full Path if the user isnt renaming
                     // =====================================================================================================================
-                    if (ImGui::TreeNode("Full Path"))
+                    // TODO: Bit Buggy have to fix
+                    const char* id = ("##" + std::to_string(i)).c_str();
+                    if (ImGui::TreeNode(id, "Full Path"))
                     {
                         ImGui::PushTextWrapPos(0.0f);  // Prevents wrapping and clipping
                         ImGui::Text("%s", spritePaths[i].path.c_str());
