@@ -4,6 +4,40 @@
 #include "entity/player.h"
 // end of last checked includes
 
+bool create_file_in_data_dir(const char* filename)
+{
+    // get the absolute path of this file
+    std::string basePath = __FILE__;
+    basePath = basePath.substr(0, basePath.find_last_of("/")); // get directory of current file
+
+    // first we want to verify that the ../Data/ directory exists
+    std::string dataPath = basePath + "/../Data/";
+
+    if (!std::filesystem::exists(dataPath))
+    {
+        return false;
+    }
+    
+    // if we make it here then the ../Data/ directory exists
+    // now we want to create the file in the directory if it doesnt exist which we will check again
+    const std::string filePath = dataPath + filename;
+
+    if (std::filesystem::exists(filePath))
+    {
+        return false;
+    }
+
+    // now we can create the file
+    std::ofstream file(filePath);
+    if (!file)
+    {
+        return false;
+    }
+
+    file.close();
+    return true;
+}
+
 /**  
     this is assuming that the new name is a valid path name up to the last /
     and that the new name is a valid name meaning has a .png or .jpg or .jpeg
@@ -60,8 +94,6 @@ std::string getTimeStamp()
 }
 **/
 
-
-
 /** 
 Will write to the Data/map_data.ini file
 a default_path
@@ -81,7 +113,9 @@ bool loadMapConfigs(std::string& inPath)
     if (!configFile)
     {
         DebugGUI::addDebugLog("No map_data.ini found. Using default map.", ErrorCode::MAP_ERROR);
-        std::cerr << "⚠️ No map_data.ini found. Using default map." << std::endl;
+        DebugGUI::addDebugLog("If Data/ Exists will create map_data.ini", ErrorCode::MAP_ERROR);
+        create_file_in_data_dir("map_data.ini");
+
         return false;
     }
 
@@ -116,7 +150,7 @@ bool fetchPlayerConfigs(Player *player) // not sure how i want to get these valu
     if (!configFile)
     {
         DebugGUI::addDebugLog("No player_data.ini found. Using default player.", ErrorCode::PLAYER_ERROR);
-        std::cerr << "⚠️ No player_data.ini found. Using default player." << std::endl;
+        create_file_in_data_dir("player_data.ini");
         return false;
     }
 
@@ -267,7 +301,8 @@ bool fetchMapConfigs(std::string& outPath)
     if (!configFile)
     {
         DebugGUI::addDebugLog("No map_data.ini found. Using default map.", ErrorCode::MAP_ERROR);
-        std::cerr << "⚠️ No map_data.ini found. Using default map." << std::endl;
+        create_file_in_data_dir("map_data.ini");
+
         outPath = basePath + "/../assets/map.json";  // Make sure default also uses absolute path
         loadMapConfigs(outPath);
         return false;
@@ -326,7 +361,7 @@ bool fetchSpritesConfigs(Sprites *sprites)
     if (!configFile)
     {
         DebugGUI::addDebugLog("No sprites_data.ini found. Using default sprites.", ErrorCode::SPRITE_ERROR);
-        std::cerr << "⚠️ No sprites_data.ini found. Using default sprites." << std::endl;
+        create_file_in_data_dir("sprites_data.ini");
         return false;
     }
 
@@ -571,7 +606,7 @@ bool fetchCollisionConfigs(Collision *collision)
     if (!configFile)
     {
         DebugGUI::addDebugLog("No collision_data.ini found. Using default collision.", ErrorCode::SPRITE_ERROR);
-        std::cerr << "⚠️ No collision_data.ini found. Using default collision." << std::endl;
+        create_file_in_data_dir("collision_data.ini");
         return false;
     }
 

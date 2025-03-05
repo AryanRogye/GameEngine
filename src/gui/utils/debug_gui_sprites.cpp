@@ -73,11 +73,19 @@ void DebugGUI::renderEntitySpriteCreationMenu(Entity* entity, SDL_Renderer* rend
                 int tex_width = spritePaths[selected].width;
                 int tex_height = spritePaths[selected].height;
 
+                int numFramesY = spritePaths[selected].numFramesY;
+                if (numFramesY <= 0)
+                {
+                    numFramesY = 1;
+                }
+
                 // each frame and width will be this length
                 int frame_width = tex_width / spritePaths[selected].numFramesX;
-                int frame_height = tex_height / spritePaths[selected].numFramesY;
+                int frame_height = tex_height / numFramesY;
 
-                static int total_frames = spritePaths[selected].numFramesX * spritePaths[selected].numFramesY;
+                // sometimes height will be 0 cuz itll just be a strip
+
+                static int total_frames = spritePaths[selected].numFramesX * numFramesY;
 
                 ImGui::Separator();
                 ImGui::Text("Sprite Preview:");
@@ -340,8 +348,8 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
                     // =====================================================================================================================
                     // Displaying Full Path if the user isnt renaming
                     // =====================================================================================================================
-                    // TODO: Bit Buggy have to fix
-                    const char* id = ("##" + std::to_string(i)).c_str();
+                    std::string temp_id = ("##" + std::to_string(i)).c_str();
+                    const char* id = temp_id.c_str();
                     if (ImGui::TreeNode(id, "Full Path"))
                     {
                         ImGui::PushTextWrapPos(0.0f);  // Prevents wrapping and clipping

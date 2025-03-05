@@ -39,14 +39,15 @@ void Camera::update(int width, int height, float gameScale)
     
     // Calculate camera position to center the entity
     // Divide by gameScale if your entity positions are in scaled world coordinates
-    this->x = entityCenterX - (width / (2 * gameScale));
-    this->y = entityCenterY - (height / (2 * gameScale));
+    this->x = entityCenterX - (width / (2 * gameScale * this->zoom));
+    this->y = entityCenterY - (height / (2 * gameScale * this->zoom));
 
     // dont allow camera to go out of the world
     if (this->x < 0) this->x = 0;
     if (this->y < 0) this->y = 0;
     if (this->x > 800 - width) this->x = 800 - width;
     if (this->y > 600 - height) this->y = 600 - height;
+
 }
 
 /** 

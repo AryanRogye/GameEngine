@@ -181,6 +181,10 @@ class Collision;
 class Sprites;
 
 extern "C" char* getTimeStamp();
+
+
+bool create_file_in_data_dir(const char* filename);
+
 bool changeFileName(std::string& path, std::string& newName);
 bool loadMapConfigs(std::string& inPath);
 bool fetchPlayerConfigs(Player* player);
