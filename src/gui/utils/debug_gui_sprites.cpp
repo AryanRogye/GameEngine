@@ -1,4 +1,5 @@
 #include "debug_gui.h"
+#include "imgui.h"
 
 
 static int numDeleted = 0;
@@ -20,6 +21,8 @@ static bool showSpriteCreation = false;
 
 static bool user_wants_play_sprite_animation = false;
 static int selected_frame = 0;
+
+static bool show_sprite_splitting = false;
 
 
 // TODO: Work on this
@@ -52,7 +55,7 @@ void DebugGUI::renderEntitySpriteCreationMenu(Entity* entity, SDL_Renderer* rend
             // Extract filename from path
             size_t lastSlash = spritePaths[i].path.find_last_of('/');
             std::string name = spritePaths[i].path.substr(lastSlash + 1);
-            
+
             if (ImGui::Selectable(name.c_str(), selected == i))
             {
                 selected = i;
@@ -95,7 +98,7 @@ void DebugGUI::renderEntitySpriteCreationMenu(Entity* entity, SDL_Renderer* rend
                     // Get delta time (you'll need to implement this or use your engine's time system)
                     float deltaTime = ImGui::GetIO().DeltaTime;
                     accumulatedTime += deltaTime;
-                    
+
                     if (accumulatedTime >= 1.0f / animationSpeed)
                     {
                         selectedFrame = (selectedFrame + 1) % total_frames;
@@ -112,9 +115,9 @@ void DebugGUI::renderEntitySpriteCreationMenu(Entity* entity, SDL_Renderer* rend
 
                 // Create an ImGui image from the texture region
                 ImVec2 imageSize(frame_width * currentSpritesZoom, frame_height * currentSpritesZoom);
-                ImVec2 uv0((float)(frame_x * frame_width) / tex_width, 
+                ImVec2 uv0((float)(frame_x * frame_width) / tex_width,
                            (float)(frame_y * frame_height) / tex_height);
-                ImVec2 uv1((float)((frame_x + 1) * frame_width) / tex_width, 
+                ImVec2 uv1((float)((frame_x + 1) * frame_width) / tex_width,
                            (float)((frame_y + 1) * frame_height) / tex_height);
 
                 // Display the selected frame
@@ -150,13 +153,28 @@ void DebugGUI::renderEntitySpriteCreationMenu(Entity* entity, SDL_Renderer* rend
                 {
                     if (currentSpritesZoom < 0.1f) currentSpritesZoom = 0.1f;
                 }
-                
+
+                // we want the user to be able to split off their frames into multiple files and store it in a dir
+                if (ImGui::Button("Split Sprite"))
+                {
+                    show_sprite_splitting = !show_sprite_splitting;
+                }
+
+                if (show_sprite_splitting)
+                {
+
+                    // we want to show kind of like a preivew of the sprite but then we want the user to be able to select
+                    // the different frames, we want them to be able to select multiple groups of frames and then save them
+                    // as a new sprite/texture/whatever into the director of their assets/ or whatever, we will have to use
+                    // loadSprite
+                    renderEntitySpriteSplit(spritePaths[selected]);
+                }
 
                 // Frame information
                 ImGui::Text("Current frame: %d/%d", selectedFrame + 1, total_frames);
                 ImGui::Text("Frame size: %dx%d", frame_width, frame_height);
             }
-            else 
+            else
             {
                 ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Failed to load texture!");
             }
@@ -166,13 +184,194 @@ void DebugGUI::renderEntitySpriteCreationMenu(Entity* entity, SDL_Renderer* rend
     {
         ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "No sprites available!");
     }
-    
 
     ImGui::End();
 }
 
 
-/** 
+void DebugGUI::renderEntitySpriteSplit(Sprites::Sprite sprite)
+{
+
+    static float zoom = 1.0f;
+
+
+    // so the sprite contains all that we need we will open up a seperate gui window for this
+    ImGui::Begin("Sprite Split");
+
+    // =====================================================================================================================
+    // Create a zoom slider
+    // =====================================================================================================================
+    ImGui::SliderFloat("Zoom", &zoom, 0.1f, 5.0f);
+
+    // =====================================================================================================================
+    // Controls for Colors
+    // =====================================================================================================================
+    static std::vector<std::vector<float>> groups;
+
+    static int current_index = -1;
+    if (ImGui::Button("Start New Group"))
+    {
+        // we want to make a default color for the new group
+        groups.push_back({1.0f, 1.0f, 1.0f});
+        current_index = groups.size() - 1;
+    }
+    // underneath will be new color pickers being created for the new groups we have
+    // TODO: Last Left Here we will store in a vector
+    for (int i = 0; i < groups.size(); i++)
+    {
+        // show a picker for what it is
+        if (ImGui::ColorEdit3(("Color##" + std::to_string(i)).c_str(), groups[i].data(), ImGuiColorEditFlags_NoInputs))
+        {
+            scaleXColors[0] = static_cast<int>(groups[i][0] * 255.0f);
+            scaleXColors[1] = static_cast<int>(groups[i][1] * 255.0f);
+            scaleXColors[2] = static_cast<int>(groups[i][2] * 255.0f);
+        }
+        if(i != groups.size() - 1)
+        {
+            ImGui::SameLine();
+        }
+    }
+
+    // =====================================================================================================================
+    // Current Color
+    // =====================================================================================================================
+    if (current_index >= 0)
+    {
+        if (ImGui::Button("<"))
+        {
+            current_index--;
+            if (current_index < 0)
+            {
+                current_index = groups.size() - 1;
+            }
+        }
+        ImGui::SameLine();
+        std::string temp =  "Current Color Index: " + std::to_string(current_index);
+        ImGui::Text("%s", temp.c_str());
+        ImGui::SameLine();
+        if (ImGui::Button(">"))
+        {
+            current_index++;
+            if (current_index >= groups.size())
+            {
+                current_index = 0;
+            }
+        }
+        ImGui::SameLine();
+        ImGui::Spacing();
+        ImGui::SameLine();
+    }
+    if(ImGui::Button("Pop"))
+    {
+        if (!groups.empty())
+        {
+            groups.pop_back();
+            current_index = groups.size() - 1;
+        }
+    }
+
+    // Calculate the new dimensions based on the zoom level
+    float new_width = sprite.width * zoom;
+    float new_height = sprite.height * zoom;
+
+    // =====================================================================================================================
+    // Render the sprite with the new dimensions
+    // =====================================================================================================================
+    ImTextureID image = (ImTextureID)sprite.texture;
+    ImVec2 imagePos = ImGui::GetCursorScreenPos();
+    ImGui::Image(image, ImVec2(new_width, new_height));
+
+    // =====================================================================================================================
+    // Grid X
+    // =====================================================================================================================
+    float cellWidth  = new_width / sprite.numFramesX; // Width of each frame
+    float cellHeight = new_height / sprite.numFramesY; // Height of each frame
+
+    static std::set<std::pair<int, int>> selectedFrames;
+    static std::map<std::pair<int, int>, int> frameColors; // Maps (x, y) → color index
+
+    // Draw vertical lines
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    for (int i = 1; i < sprite.numFramesX; i++) {
+        float x = imagePos.x + i * cellWidth;  // Use image's position as a reference
+        drawList->AddLine(ImVec2(x, imagePos.y), ImVec2(x, imagePos.y + new_height), IM_COL32(255, 255, 255, 255));
+    }
+
+    // Draw horizontal lines
+    for (int j = 1; j < sprite.numFramesY; j++) {
+        float y = imagePos.y + j * cellHeight;  // Use image's position as a reference
+        drawList->AddLine(ImVec2(imagePos.x, y), ImVec2(imagePos.x + new_width, y), IM_COL32(255, 255, 255, 255));
+    }
+
+    for (const auto& frame : selectedFrames)
+    {
+        int frameX = frame.first;
+        int frameY = frame.second;
+
+        int colorIndex = frameColors[frame];
+        ImVec4 highlightColor = ImVec4(groups[colorIndex][0], groups[colorIndex][1], groups[colorIndex][2], 0.5f);
+
+        float x = imagePos.x + frameX * cellWidth;
+        float y = imagePos.y + frameY * cellHeight;
+
+        // Draw colored rectangle over selected frames
+        drawList->AddRectFilled(ImVec2(x, y), ImVec2(x + cellWidth, y + cellHeight),
+                                ImGui::ColorConvertFloat4ToU32(highlightColor), 0.0f);
+    }
+
+
+    // Check if mouse clicked inside sprite bounds
+    if (ImGui::IsItemHovered() && (ImGui::IsMouseClicked(0) || ImGui::IsMouseDown(0)))
+    {
+        // if the groups is empty then return
+        if (groups.empty() || current_index < 0)
+        {
+            // Just skip the selection, don't return from the whole function
+        }
+        else // Add this else clause to only process when there are valid groups
+        {
+            ImVec2 mousePos = ImGui::GetMousePos();
+
+            // Convert mouse position to frame grid coordinates
+            int frameX = (mousePos.x - imagePos.x) / cellWidth;
+            int frameY = (mousePos.y - imagePos.y) / cellHeight;
+
+            // Ensure the frame is inside bounds
+            if (frameX >= 0 && frameX < sprite.numFramesX &&
+                frameY >= 0 && frameY < sprite.numFramesY)
+            {
+                if (current_index >= 0 && current_index < groups.size())
+                {
+                    selectedFrames.insert({frameX, frameY});
+                    frameColors[{frameX, frameY}] = current_index;
+                }
+            }
+        }
+    }
+
+    if (ImGui::IsItemHovered() && (ImGui::IsMouseClicked(1) || ImGui::IsMouseDown(1)))
+    {
+        if (groups.empty() || current_index < 0)
+        {
+            // Skip processing when there are no valid groups
+        }
+        else
+        {
+            ImVec2 mousePos = ImGui::GetMousePos();
+
+            int frameX = (mousePos.x - imagePos.x) / cellWidth;
+            int frameY = (mousePos.y - imagePos.y) / cellHeight;
+
+            selectedFrames.erase({frameX, frameY});
+            frameColors.erase({frameX, frameY}); // Remove color
+        }
+    }
+
+    ImGui::End();
+}
+
+
+/**
 
 Right now this is a player but as we add on more "human" or "person" objects itll be derived from a base class
 we will read that base class cuz the base class is what is gonna have the sprite later on but tbh i'm too lazy too
@@ -180,7 +379,7 @@ implement that right now so we will just use the player class for now
 
 **/
 void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer) {
-    if (ImGui::CollapsingHeader("Sprite Control")) 
+    if (ImGui::CollapsingHeader("Sprite Control"))
     {
         // =====================================================================================================================
         // Show The Current Sprites That are in
@@ -239,19 +438,19 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
                     int numFramesX = entity->getSprite()->getSpritePaths()[i].numFramesX;
                     int numFramesY = entity->getSprite()->getSpritePaths()[i].numFramesY;
 
-                    float cellWidth  = imageSize.x / numFramesX; // Width of each frame 
+                    float cellWidth  = imageSize.x / numFramesX; // Width of each frame
                     float cellHeight = imageSize.y / numFramesY; // Height of each frame
 
                     // Draw vertical lines
                     for (int i = 1; i < numFramesX; i++) {
                         float x = imagePos.x + i * cellWidth;
-                        drawList->AddLine(ImVec2(x, imagePos.y), ImVec2(x, imagePos.y + imageSize.y), IM_COL32(255, 255, 255, 255));
+                        drawList->AddLine(ImVec2(x, imagePos.y), ImVec2(x, imagePos.y + imageSize.y), IM_COL32(scaleXColors[0], scaleXColors[1], scaleXColors[2], 255));
                     }
 
                     // Draw horizontal lines
                     for (int j = 1; j < numFramesY; j++) {
                         float y = imagePos.y + j * cellHeight;
-                        drawList->AddLine(ImVec2(imagePos.x, y), ImVec2(imagePos.x + imageSize.x, y), IM_COL32(255, 255, 255, 255));
+                        drawList->AddLine(ImVec2(imagePos.x, y), ImVec2(imagePos.x + imageSize.x, y), IM_COL32(scaleYColors[0], scaleYColors[1], scaleYColors[2], 255));
                     }
                 }
 
@@ -292,8 +491,8 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
                     {
                         activeSpriteRename[i] = 1;
                     }
-                } 
-                else 
+                }
+                else
                 {
                     // =====================================================================================================================
                     // Displaying Cancel if the user is renaming
@@ -311,14 +510,14 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
                     {
                         activeSpriteRename[i] = 0;
                         // make sure its not empty
-                        if (!renameBuffers[i].empty()) 
+                        if (!renameBuffers[i].empty())
                         {
                             std::string oldName = spritePaths[i].path;
                             std::string newName = renameBuffers[i];
 
                             // Construct new full path
                             std::string newPath = spritePaths[i].path.substr(0, lastSlash + 1) + newName;
-                
+
                             // Update the sprite object
                             entity->getSprite()->changeSpritePathName(i, newPath);
                             if (!changeFileName(oldName, newPath))
@@ -365,7 +564,7 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
                 // Displaying Width and Height
                 // =====================================================================================================================
                 if (
-                    entity->getSprite()->getSpritePaths()[i].width && 
+                    entity->getSprite()->getSpritePaths()[i].width &&
                     entity->getSprite()->getSpritePaths()[i].height
                 )
                 {
@@ -382,6 +581,32 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
                 // =====================================================================================================================
                 if (ImGui::Checkbox(("Show Grid##" + std::to_string(i)).c_str(), &checked)) {
                     activeSpriteGrids[i] = checked; // Convert bool to int
+                }
+
+                static float floatColorX[3] = {
+                    (float)scaleXColors[0] / 255.0f,
+                    (float)scaleXColors[1] / 255.0f,
+                    (float)scaleXColors[2] / 255.0f
+                };
+                static float floatColorY[3] = {
+                    (float)scaleYColors[0] / 255.0f,
+                    (float)scaleYColors[1] / 255.0f,
+                    (float)scaleYColors[2] / 255.0f
+                };
+
+
+                // we want to allow the user to see the colors for the grid
+                ImGui::SameLine();
+                if (ImGui::ColorEdit3(("X Color" + std::to_string(i)).c_str(), floatColorX, ImGuiColorEditFlags_NoInputs)) {
+                    scaleXColors[0] = static_cast<int>(floatColorX[0] * 255.0f);
+                    scaleXColors[1] = static_cast<int>(floatColorX[1] * 255.0f);
+                    scaleXColors[2] = static_cast<int>(floatColorX[2] * 255.0f);
+                }
+                ImGui::SameLine();
+                if (ImGui::ColorEdit3(("Y Color" + std::to_string(i)).c_str(), floatColorY, ImGuiColorEditFlags_NoInputs)) {
+                    scaleYColors[0] = static_cast<int>(floatColorY[0] * 255.0f);
+                    scaleYColors[1] = static_cast<int>(floatColorY[1] * 255.0f);
+                    scaleYColors[2] = static_cast<int>(floatColorY[2] * 255.0f);
                 }
 
                 // =====================================================================================================================
@@ -435,7 +660,7 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
         // =====================================================================================================================
         // In Here will be the a new thing I want to do called
         // "Begin Sprite Creation" where a existing sprite can be seen with a play button
-        // will give ability to split a image into multiple images for couped together sprites which imo is 
+        // will give ability to split a image into multiple images for couped together sprites which imo is
         // a cool thing and most engine's should do something like this
         // =====================================================================================================================
         if (ImGui::Button("Begin Sprite Creation"))
@@ -481,7 +706,7 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
         static int framesX = 0;
         static int framesY = 0;
 
-        if (!onboardingSpritePath.empty() && onboardingTexture) 
+        if (!onboardingSpritePath.empty() && onboardingTexture)
         {
             // =====================================================================================================================
             // Table Structure
@@ -666,7 +891,7 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
         bool showLoadPopup = false;
         if (onboardingSpritePath.empty())
         {
-            if (ImGui::Button("Load Sprite")) 
+            if (ImGui::Button("Load Sprite"))
             {
                 // we wanna open the file up
                 std::string path;
@@ -675,9 +900,9 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
                     FILE *pipe = popen("osascript -e 'POSIX path of (choose file "
                                     "with prompt \"Select a Project Folder:\")'",
                                     "r");
-                    if (pipe) 
+                    if (pipe)
                     {
-                        if (fgets(buffer, sizeof(buffer), pipe)) 
+                        if (fgets(buffer, sizeof(buffer), pipe))
                         {
                             buffer[strcspn(buffer, "\n")] = 0;
                             path = buffer;
@@ -687,7 +912,7 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
                 #endif
                 // This is to set the onboarding sprite to a value that we can
                 // later on use to decide what we wanna do with it
-                if (!path.empty()) 
+                if (!path.empty())
                 {
                     onboardingSpritePath = path;
                     showLoadPopup = true;
@@ -711,7 +936,7 @@ void DebugGUI::renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer)
         // =====================================================================================================================
         // save button
         // =====================================================================================================================
-        if (ImGui::Button("Save Sprite?")) 
+        if (ImGui::Button("Save Sprite?"))
         {
 
             // checks to make sure no empty values are passed

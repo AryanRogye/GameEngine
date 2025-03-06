@@ -77,6 +77,9 @@ void Player::loadPlayer()
     fetchPlayerConfigs(this);
     DebugGUI::addDebugLog("Player File Loaded", ErrorCode::SUCCESS);
 }
+
+
+// sprite is now ready so we can start drawing that instead of a rectangle
 void Player::draw(float dt, float scale)
 {
     if (this->playerScale != scale)

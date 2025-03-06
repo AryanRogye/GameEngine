@@ -6,14 +6,15 @@
 #include <SDL_render.h>
 #include <vector>
 #include <iostream>
-#include <SDL2/SDL.h> 
-#include <SDL_image.h> 
+#include <SDL2/SDL.h>
+#include <SDL_image.h>
 #include <string>
 #include <map>
 #include <SDL_clipboard.h>
 #include <ctime>
 #include "comfy_lib.h"
 #include <string.h>
+#include <set>
 
 #include "entity/entity.h"
 #include "entity/player.h"
@@ -33,6 +34,7 @@ public:
 
     static void renderEntitySpriteOptions(Entity *entity, SDL_Renderer* renderer);
     static void renderEntitySpriteCreationMenu(Entity* entity, SDL_Renderer* renderer);
+    static void renderEntitySpriteSplit(Sprites::Sprite sprite);
     static void Render(SDL_Renderer* renderer);
 
     struct GUIValues {
@@ -79,10 +81,10 @@ public:
 
     static void showSelectedSDLTexture(
         SDL_Texture* texture,
-        float screenX, 
-        float screenY, 
-        float screenWidth, 
-        float screenHeight, 
+        float screenX,
+        float screenY,
+        float screenWidth,
+        float screenHeight,
         int tileIndex,
         int columns,
         int tileWidth,
