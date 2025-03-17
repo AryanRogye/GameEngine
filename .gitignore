@@ -4,3 +4,7 @@ build/
 compile_commands.json
 prototype/inventory_system/build/
 prototype/inventory_system/Data/
+
+CMakeCache.txt
+CMakeFiles/
+build/

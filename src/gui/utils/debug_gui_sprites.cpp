@@ -193,6 +193,7 @@ void DebugGUI::renderEntitySpriteSplit(Sprites::Sprite sprite)
 {
 
     static float zoom = 1.0f;
+    static std::set<std::pair<int, int>> selectedFrames;
 
 
     // so the sprite contains all that we need we will open up a seperate gui window for this
@@ -269,6 +270,45 @@ void DebugGUI::renderEntitySpriteSplit(Sprites::Sprite sprite)
             current_index = groups.size() - 1;
         }
     }
+    ImGui::SameLine();
+    // =====================================================================================================================
+    // Add A Chop Button
+    // =====================================================================================================================
+    if (ImGui::Button("Chop"))
+    {
+        // we want to chop the image into multiple images
+        // in here we have alot of rules that the user must follow
+
+        /*[] This is for all groups or no groups
+
+        - to chop at least 1 group must be made */
+        if (groups.empty()) 
+        {
+
+        } 
+        else 
+        {
+            /*
+            [] This is  indivudual to a group
+
+                - if the user chooses a row then they must choose the next row the same length as the start
+                - if the user chooses a column then they must choose the next column the same length as the start
+
+                - We can verify this by checking the selected frames, there must be some algorithm which is super fast that can
+                - do this
+        */
+            // we will first check if the user has any selected frames
+            if (selectedFrames.empty())
+            {
+
+            }
+            else
+            {
+                // in here we now want to check if the user has selected frames vertically or horizontally
+                // we will do this by checking the first frame and then checking the next frame
+            }
+        }
+    }
 
     // Calculate the new dimensions based on the zoom level
     float new_width = sprite.width * zoom;
@@ -287,7 +327,6 @@ void DebugGUI::renderEntitySpriteSplit(Sprites::Sprite sprite)
     float cellWidth  = new_width / sprite.numFramesX; // Width of each frame
     float cellHeight = new_height / sprite.numFramesY; // Height of each frame
 
-    static std::set<std::pair<int, int>> selectedFrames;
     static std::map<std::pair<int, int>, int> frameColors; // Maps (x, y) → color index
 
     // Draw vertical lines
